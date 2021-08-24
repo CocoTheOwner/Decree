@@ -4,9 +4,9 @@ main: ${main}
 load: STARTUP
 authors: [ CocoTheOwner ]
 website: codevs.nl
-description: Beware the raids!
+description: Decree command system
 commands:
-  raiders:
-    aliases: [ raider, raid, raids ]
+  command:
+    aliases: [ cmmd, cmd, cd ]
 api-version: ${apiversion}
 hotload-dependencies: false

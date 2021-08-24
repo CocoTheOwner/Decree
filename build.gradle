@@ -137,7 +137,7 @@ shadowJar
         {
             minimize()
             append("plugin.yml")
-            relocate 'io.papermc.lib', 'nl.codevs.raiders.util.paper'
+            relocate 'io.papermc.lib', 'nl.codevs.decree.util.paper'
             dependencies {
                 include(dependency('io.papermc:paperlib'))
                 include(dependency('net.kyori:'))
