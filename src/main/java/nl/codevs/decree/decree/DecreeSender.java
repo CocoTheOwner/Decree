@@ -24,6 +24,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import nl.codevs.decree.decree.objects.DecreeOrigin;
 import nl.codevs.decree.decree.objects.DecreeParameter;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.Form;
@@ -357,6 +358,13 @@ public class DecreeSender implements CommandSender {
             String realText = i.getPath() + " >" + "<#46826a>⇀<gradient:#42ecf5:#428df5> " + i.getName();
             String hoverTitle = i.getNames().copy().reverse().convert((f) -> "<#42ecf5>" + f).toString(", ");
             String description = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + i.getDescription();
+            DecreeOrigin origin = i.getOrigin();
+            String originText = "<#dbe61c>⌘ <#d61aba><#ff33cc><font:minecraft:uniform>" + Form.capitalize(origin.toString().toLowerCase());
+            if (origin.validFor(this)) {
+                originText += "<#0ba10b> origin, so you can run it.";
+            } else {
+                originText += "<#c4082e> origin, so you cannot run it.";
+            }
             String usage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform>";
             String onClick;
             if (i.isNode()) {
@@ -430,7 +438,8 @@ public class DecreeSender implements CommandSender {
                         description + newline +
                         usage +
                         suggestion + //Newlines for suggestions are added when they're built, to prevent blanklines.
-                        suggestions + // ^
+                        suggestions + newline +
+                        originText +
                     "'>" +
                     "<click:" +
                         onClick +

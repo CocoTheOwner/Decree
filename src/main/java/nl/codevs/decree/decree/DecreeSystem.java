@@ -95,7 +95,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
 
     default List<String> decreeTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         KList<String> enhanced = new KList<>(args);
-        KList<String> v = getRoot().tabComplete(enhanced, enhanced.toString(" "));
+        KList<String> v = getRoot().tabComplete(enhanced, enhanced.toString(" "), new DecreeSender(sender, instance(), this));
         v.removeDuplicates();
         return v;
     }

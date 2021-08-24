@@ -24,6 +24,7 @@ import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.*;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -89,6 +90,10 @@ public class DecreeVirtualCommand {
         return c;
     }
 
+    public DecreeOrigin getOrigin(){
+        return isNode() ? getNode().getOrigin() : getType().getDeclaredAnnotation(Decree.class).origin();
+    }
+
     public String getPath() {
         KList<String> n = new KList<>();
         DecreeVirtualCommand cursor = this;
@@ -138,14 +143,14 @@ public class DecreeVirtualCommand {
         return node != null;
     }
 
-    public KList<String> tabComplete(KList<String> args, String raw) {
+    public KList<String> tabComplete(KList<String> args, String raw, DecreeSender sender) {
         KList<Integer> skip = new KList<>();
         KList<String> tabs = new KList<>();
-        invokeTabComplete(args, skip, tabs, raw);
+        invokeTabComplete(args, skip, tabs, raw, sender);
         return tabs;
     }
 
-    private boolean invokeTabComplete(KList<String> args, KList<Integer> skip, KList<String> tabs, String raw) {
+    private boolean invokeTabComplete(KList<String> args, KList<Integer> skip, KList<String> tabs, String raw, DecreeSender sender) {
 
         if (isNode()) {
             tab(args, tabs);
@@ -161,11 +166,11 @@ public class DecreeVirtualCommand {
         String head = args.get(0);
 
         if (args.size() > 1 || head.endsWith(" ")) {
-            DecreeVirtualCommand match = matchNode(head, skip);
+            DecreeVirtualCommand match = matchNode(head, skip, sender);
 
             if (match != null) {
                 args.pop();
-                return match.invokeTabComplete(args, skip, tabs, raw);
+                return match.invokeTabComplete(args, skip, tabs, raw, sender);
             }
 
             skip.add(hashCode());
@@ -342,7 +347,7 @@ public class DecreeVirtualCommand {
         }
 
         String head = args.get(0);
-        DecreeVirtualCommand match = matchNode(head, skip);
+        DecreeVirtualCommand match = matchNode(head, skip, sender);
 
         if (match != null) {
             args.pop();
@@ -443,7 +448,7 @@ public class DecreeVirtualCommand {
         return true;
     }
 
-    public KList<DecreeVirtualCommand> matchAllNodes(String in) {
+    public KList<DecreeVirtualCommand> matchAllNodes(String in, DecreeSender sender) {
         KList<DecreeVirtualCommand> g = new KList<>();
 
         if (in.trim().isEmpty()) {
@@ -452,13 +457,13 @@ public class DecreeVirtualCommand {
         }
 
         for (DecreeVirtualCommand i : nodes) {
-            if (i.matches(in)) {
+            if (i.matches(in) && i.getOrigin().validFor(sender)) {
                 g.add(i);
             }
         }
 
         for (DecreeVirtualCommand i : nodes) {
-            if (i.deepMatches(in)) {
+            if (i.deepMatches(in) && i.getOrigin().validFor(sender)) {
                 g.add(i);
             }
         }
@@ -467,7 +472,8 @@ public class DecreeVirtualCommand {
         return g;
     }
 
-    public DecreeVirtualCommand matchNode(String in, KList<Integer> skip) {
+    public DecreeVirtualCommand matchNode(String in, KList<Integer> skip, DecreeSender sender) {
+
         if (in.trim().isEmpty()) {
             return null;
         }
@@ -477,7 +483,7 @@ public class DecreeVirtualCommand {
                 continue;
             }
 
-            if (i.matches(in)) {
+            if (i.matches(in) && i.getOrigin().validFor(sender)) {
                 return i;
             }
         }
@@ -487,7 +493,7 @@ public class DecreeVirtualCommand {
                 continue;
             }
 
-            if (i.deepMatches(in)) {
+            if (i.deepMatches(in) && i.getOrigin().validFor(sender)) {
                 return i;
             }
         }

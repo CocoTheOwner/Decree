@@ -19,6 +19,7 @@
 package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
+import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
@@ -34,11 +35,11 @@ public class DecreeParameter {
     private transient final AtomicCache<DecreeParameterHandler<?>> handlerCache = new AtomicCache<>();
 
     public DecreeParameter(Parameter parameter) {
-        this.parameter = parameter;
-        this.param = parameter.getDeclaredAnnotation(Param.class);
-        if (param == null) {
+        if (!parameter.isAnnotationPresent(Param.class)) {
             throw new RuntimeException("Cannot instantiate DecreeParameter on " + parameter.getName() + " in method " + parameter.getDeclaringExecutable().getName() + "(...) in class " + parameter.getDeclaringExecutable().getDeclaringClass().getCanonicalName() + " not annotated by @Param");
         }
+        this.parameter = parameter;
+        this.param = parameter.getDeclaredAnnotation(Param.class);
     }
 
     public DecreeParameterHandler<?> getHandler() {

@@ -31,12 +31,12 @@ public class DecreeNode {
     private final Decree decree;
 
     public DecreeNode(Object instance, Method method) {
+        if (!method.isAnnotationPresent(Decree.class)) {
+            throw new RuntimeException("Cannot instantiate DecreeNode on method " + method.getName() + " in " + method.getDeclaringClass().getCanonicalName() + " not annotated by @Decree");
+        }
         this.instance = instance;
         this.method = method;
         this.decree = method.getDeclaredAnnotation(Decree.class);
-        if (decree == null) {
-            throw new RuntimeException("Cannot instantiate DecreeNode on method " + method.getName() + " in " + method.getDeclaringClass().getCanonicalName() + " not annotated by @Decree");
-        }
     }
 
     /**
