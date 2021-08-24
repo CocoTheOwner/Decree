@@ -16,8 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package nl.codevs.decree.decree.annotations;
+package nl.codevs.decree.decree.objects;
 
+
+import nl.codevs.decree.decree.objects.DecreeOrigin;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -25,41 +27,39 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
-public @interface Param {
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface Decree {
+
     String DEFAULT_DESCRIPTION = "No Description Provided";
 
     /**
-     * The main name of this command.<br>
-     * Required parameter.<br>
-     * This is what is used in game, alongside any (if specified) {@link #aliases() aliases}
+     * The name of this command, which is the Method's name by default
      */
     String name() default "";
 
     /**
-     * The description of this parameter, used in help-popups in game.<br>
-     * The default value is {@link #DEFAULT_DESCRIPTION}
+     * If the node's functions MUST be run in sync, set this to true.<br>
+     * Defaults to false
+     */
+    boolean sync() default false;
+
+    /**
+     * The description of this command.<br>
+     * Is {@link #DEFAULT_DESCRIPTION} by default
      */
     String description() default DEFAULT_DESCRIPTION;
 
     /**
-     * The default value for this argument.<br>
-     * The entered string is parsed to the value similarly to how commandline-text would be.<br>
-     * Which indicates the variable MUST be defined by the person running the command.<br>
-     * If you define this, the variable automatically becomes non-required, but can still be set.
+     * The origin this command must come from.<br>
+     * Must be elements of the {@link DecreeOrigin} enum<br>
+     * By default, is {@link DecreeOrigin#BOTH}, meaning both console & player can send the command
      */
-    String defaultValue() default "";
+    DecreeOrigin origin() default DecreeOrigin.BOTH;
 
     /**
      * The aliases of this parameter (instead of just the {@link #name() name} (if specified) or Method Name (name of method))<br>
      * Can be initialized as just a string (ex. "alias") or as an array (ex. {"alias1", "alias2"})<br>
-     * If someone uses /plugin foo bar=baz and you specify alias="b" here, /plugin foo b=baz will do the exact same.
+     * If someone uses /plugin foo and you specify alias="f" here, /plugin f will do the exact same.
      */
     String[] aliases() default "";
-
-    /**
-     * Attempts to dynamically pull context from the player, default data or something else for supported types.</br>
-     * Requires a context handler in {@link nl.codevs.decree.decree.context}
-     */
-    boolean contextual() default false;
 }

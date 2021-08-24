@@ -28,7 +28,7 @@ import nl.codevs.decree.decree.objects.DecreeParameterHandler;
 import nl.codevs.decree.decree.util.AtomicCache;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.KList;
-import nl.codevs.decree.decree.virtual.VirtualDecreeCommand;
+import nl.codevs.decree.decree.objects.DecreeVirtualCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.command.Command;
@@ -40,7 +40,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
-    AtomicCache<VirtualDecreeCommand> commandCache = new AtomicCache<>();
+    AtomicCache<DecreeVirtualCommand> commandCache = new AtomicCache<>();
     KList<DecreeParameterHandler<?>> handlers = new KList<>(
             new BlockVectorHandler(),
             new BooleanHandler(),
@@ -76,10 +76,10 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
         Bukkit.getConsoleSender().sendMessage();
     }
 
-    default VirtualDecreeCommand getRoot() {
+    default DecreeVirtualCommand getRoot() {
         return commandCache.aquire(() -> {
             try {
-                return VirtualDecreeCommand.createRoot(getRootClass(), this);
+                return DecreeVirtualCommand.createRoot(getRootClass(), this);
             } catch (Throwable e) {
                 e.printStackTrace();
             }

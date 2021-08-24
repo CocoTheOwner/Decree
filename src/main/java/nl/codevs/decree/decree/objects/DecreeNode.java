@@ -19,8 +19,6 @@
 package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
-import nl.codevs.decree.decree.annotations.Decree;
-import nl.codevs.decree.decree.annotations.Param   ;
 import nl.codevs.decree.decree.util.KList;
 
 import java.lang.reflect.Method;

@@ -2,8 +2,8 @@ package nl.codevs.decree.decrees;
 
 import nl.codevs.decree.decree.objects.DecreeNodeExecutor;
 import nl.codevs.decree.decree.objects.DecreeOrigin;
-import nl.codevs.decree.decree.annotations.Decree;
-import nl.codevs.decree.decree.annotations.Param;
+import nl.codevs.decree.decree.objects.Decree;
+import nl.codevs.decree.decree.objects.Param;
 
 @Decree(name = "command", aliases = {"cmmd", "cmd", "cd"}, description = "Main commands")
 public class MainCommandClass implements DecreeNodeExecutor {

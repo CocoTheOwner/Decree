@@ -16,17 +16,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package nl.codevs.decree.decree.virtual;
+package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
 import nl.codevs.decree.decree.*;
-import nl.codevs.decree.decree.annotations.Decree;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
-import nl.codevs.decree.decree.objects.DecreeContext;
-import nl.codevs.decree.decree.objects.DecreeContextHandler;
-import nl.codevs.decree.decree.objects.DecreeNode;
-import nl.codevs.decree.decree.objects.DecreeParameter;
 import nl.codevs.decree.decree.util.*;
 import org.bukkit.Bukkit;
 
@@ -37,14 +32,14 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Data
-public class VirtualDecreeCommand {
+public class DecreeVirtualCommand {
     private final Class<?> type;
-    private final VirtualDecreeCommand parent;
-    private final KList<VirtualDecreeCommand> nodes;
+    private final DecreeVirtualCommand parent;
+    private final KList<DecreeVirtualCommand> nodes;
     private final DecreeNode node;
     private final DecreeSystem system;
 
-    private VirtualDecreeCommand(Class<?> type, VirtualDecreeCommand parent, KList<VirtualDecreeCommand> nodes, DecreeNode node, DecreeSystem system) {
+    private DecreeVirtualCommand(Class<?> type, DecreeVirtualCommand parent, KList<DecreeVirtualCommand> nodes, DecreeNode node, DecreeSystem system) {
         this.parent = parent;
         this.type = type;
         this.nodes = nodes;
@@ -52,12 +47,12 @@ public class VirtualDecreeCommand {
         this.system = system;
     }
 
-    public static VirtualDecreeCommand createRoot(Object v, DecreeSystem system) throws Throwable {
+    public static DecreeVirtualCommand createRoot(Object v, DecreeSystem system) throws Throwable {
         return createRoot(null, v, system);
     }
 
-    public static VirtualDecreeCommand createRoot(VirtualDecreeCommand parent, Object v, DecreeSystem system) throws Throwable {
-        VirtualDecreeCommand c = new VirtualDecreeCommand(v.getClass(), parent, new KList<>(), null, system);
+    public static DecreeVirtualCommand createRoot(DecreeVirtualCommand parent, Object v, DecreeSystem system) throws Throwable {
+        DecreeVirtualCommand c = new DecreeVirtualCommand(v.getClass(), parent, new KList<>(), null, system);
 
         for (Field i : v.getClass().getDeclaredFields()) {
             if (Modifier.isStatic(i.getModifiers()) || Modifier.isFinal(i.getModifiers()) || Modifier.isTransient(i.getModifiers()) || Modifier.isVolatile(i.getModifiers())) {
@@ -88,7 +83,7 @@ public class VirtualDecreeCommand {
                 continue;
             }
 
-            c.getNodes().add(new VirtualDecreeCommand(v.getClass(), c, new KList<>(), new DecreeNode(v, i), system));
+            c.getNodes().add(new DecreeVirtualCommand(v.getClass(), c, new KList<>(), new DecreeNode(v, i), system));
         }
 
         return c;
@@ -96,7 +91,7 @@ public class VirtualDecreeCommand {
 
     public String getPath() {
         KList<String> n = new KList<>();
-        VirtualDecreeCommand cursor = this;
+        DecreeVirtualCommand cursor = this;
 
         while (cursor.getParent() != null) {
             cursor = cursor.getParent();
@@ -166,7 +161,7 @@ public class VirtualDecreeCommand {
         String head = args.get(0);
 
         if (args.size() > 1 || head.endsWith(" ")) {
-            VirtualDecreeCommand match = matchNode(head, skip);
+            DecreeVirtualCommand match = matchNode(head, skip);
 
             if (match != null) {
                 args.pop();
@@ -236,7 +231,7 @@ public class VirtualDecreeCommand {
                     }
                 }
             } else {
-                for (VirtualDecreeCommand i : getNodes()) {
+                for (DecreeVirtualCommand i : getNodes()) {
                     String m = i.getName();
                     if (m.equalsIgnoreCase(last) || m.toLowerCase().contains(last.toLowerCase()) || last.toLowerCase().contains(m.toLowerCase())) {
                         tabs.addAll(i.getNames());
@@ -347,7 +342,7 @@ public class VirtualDecreeCommand {
         }
 
         String head = args.get(0);
-        VirtualDecreeCommand match = matchNode(head, skip);
+        DecreeVirtualCommand match = matchNode(head, skip);
 
         if (match != null) {
             args.pop();
@@ -448,21 +443,21 @@ public class VirtualDecreeCommand {
         return true;
     }
 
-    public KList<VirtualDecreeCommand> matchAllNodes(String in) {
-        KList<VirtualDecreeCommand> g = new KList<>();
+    public KList<DecreeVirtualCommand> matchAllNodes(String in) {
+        KList<DecreeVirtualCommand> g = new KList<>();
 
         if (in.trim().isEmpty()) {
             g.addAll(nodes);
             return g;
         }
 
-        for (VirtualDecreeCommand i : nodes) {
+        for (DecreeVirtualCommand i : nodes) {
             if (i.matches(in)) {
                 g.add(i);
             }
         }
 
-        for (VirtualDecreeCommand i : nodes) {
+        for (DecreeVirtualCommand i : nodes) {
             if (i.deepMatches(in)) {
                 g.add(i);
             }
@@ -472,12 +467,12 @@ public class VirtualDecreeCommand {
         return g;
     }
 
-    public VirtualDecreeCommand matchNode(String in, KList<Integer> skip) {
+    public DecreeVirtualCommand matchNode(String in, KList<Integer> skip) {
         if (in.trim().isEmpty()) {
             return null;
         }
 
-        for (VirtualDecreeCommand i : nodes) {
+        for (DecreeVirtualCommand i : nodes) {
             if (skip.contains(i.hashCode())) {
                 continue;
             }
@@ -487,7 +482,7 @@ public class VirtualDecreeCommand {
             }
         }
 
-        for (VirtualDecreeCommand i : nodes) {
+        for (DecreeVirtualCommand i : nodes) {
             if (skip.contains(i.hashCode())) {
                 continue;
             }
@@ -519,7 +514,7 @@ public class VirtualDecreeCommand {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof VirtualDecreeCommand)) {
+        if (!(obj instanceof DecreeVirtualCommand)) {
             return false;
         }
         return this.hashCode() == obj.hashCode();

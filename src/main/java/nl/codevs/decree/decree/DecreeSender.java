@@ -29,7 +29,7 @@ import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.Form;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
-import nl.codevs.decree.decree.virtual.VirtualDecreeCommand;
+import nl.codevs.decree.decree.objects.DecreeVirtualCommand;
 import org.bukkit.Server;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -288,7 +288,7 @@ public class DecreeSender implements CommandSender {
         return s.spigot();
     }
 
-    private String pickRandoms(int max, VirtualDecreeCommand command) {
+    private String pickRandoms(int max, DecreeVirtualCommand command) {
         KList<String> randoms = new KList<>();
         if (!command.isNode() || command.getNode().getParameters().isEmpty()) {
             return "";
@@ -330,7 +330,7 @@ public class DecreeSender implements CommandSender {
         sendHeader(name, 46);
     }
 
-    public void sendDecreeHelp(VirtualDecreeCommand v) {
+    public void sendDecreeHelp(DecreeVirtualCommand v) {
         int m = v.getNodes().size();
 
         if (v.getNodes().isNotEmpty()) {
@@ -339,7 +339,7 @@ public class DecreeSender implements CommandSender {
                 sendMessageRaw("<hover:show_text:'" + "<#b54b38>Click to go back to <#3299bf>" + Form.capitalize(v.getParent().getName()) + " Help" + "'><click:run_command:" + v.getParent().getPath() + "><font:minecraft:uniform><#f58571>〈 Back</click></hover>");
             }
 
-            for (VirtualDecreeCommand i : v.getNodes()) {
+            for (DecreeVirtualCommand i : v.getNodes()) {
                 sendDecreeHelpNode(i);
             }
         } else {
@@ -347,7 +347,7 @@ public class DecreeSender implements CommandSender {
         }
     }
 
-    public void sendDecreeHelpNode(VirtualDecreeCommand i){
+    public void sendDecreeHelpNode(DecreeVirtualCommand i){
         if (isPlayer()) {
 
             String newline = "<reset>\n";
