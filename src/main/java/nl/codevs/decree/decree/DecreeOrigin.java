@@ -16,5 +16,28 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-rootProject.name = 'Decree'
+package nl.codevs.decree.decree;
 
+
+public enum DecreeOrigin {
+    PLAYER,
+    CONSOLE,
+    /**
+     * Both the player and the console
+     */
+    BOTH;
+
+    /**
+     * Check if the origin is valid for a sender
+     *
+     * @param sender The sender to check
+     * @return True if valid for origin
+     */
+    public boolean validFor(DecreeSender sender) {
+        if (sender.isPlayer()) {
+            return this.equals(PLAYER) || this.equals(BOTH);
+        } else {
+            return this.equals(CONSOLE) || this.equals(BOTH);
+        }
+    }
+}

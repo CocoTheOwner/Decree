@@ -16,5 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-rootProject.name = 'Decree'
+package nl.codevs.decree.decree.exceptions;
 
+/**
+ * Thrown when more than one option is available for a singular mapping<br>
+ * Like having a hashmap where one input maps to two outputs.
+ */
+public class DecreeWhichException extends Exception {
+    public DecreeWhichException() {
+        super();
+    }
+}

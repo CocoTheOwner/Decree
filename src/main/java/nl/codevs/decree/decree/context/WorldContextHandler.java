@@ -16,5 +16,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-rootProject.name = 'Decree'
+package nl.codevs.decree.decree.context;
 
+import nl.codevs.decree.decree.DecreeContextHandler;
+import nl.codevs.decree.decree.DecreeSender;
+import org.bukkit.World;
+
+public class WorldContextHandler implements DecreeContextHandler<World> {
+    public Class<World> getType() {
+        return World.class;
+    }
+
+    public World handle(DecreeSender sender) {
+        return sender.isPlayer() ? sender.player().getWorld() : null;
+    }
+}
