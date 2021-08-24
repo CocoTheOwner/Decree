@@ -16,8 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package nl.codevs.decree.decree;
+package nl.codevs.decree.decree.objects;
 
+
+import nl.codevs.decree.decree.DecreeSender;
 
 public enum DecreeOrigin {
     PLAYER,

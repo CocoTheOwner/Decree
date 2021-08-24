@@ -18,7 +18,7 @@
 
 package nl.codevs.decree.decree.handlers;
 
-import nl.codevs.decree.decree.DecreeParameterHandler;
+import nl.codevs.decree.decree.objects.DecreeParameterHandler;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.KList;

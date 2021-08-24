@@ -18,7 +18,7 @@
 
 package nl.codevs.decree.decree.context;
 
-import nl.codevs.decree.decree.DecreeContextHandler;
+import nl.codevs.decree.decree.objects.DecreeContextHandler;
 import nl.codevs.decree.decree.DecreeSender;
 import org.bukkit.World;
 

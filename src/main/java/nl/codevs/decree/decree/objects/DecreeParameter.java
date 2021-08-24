@@ -16,9 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package nl.codevs.decree.decree;
+package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
+import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.annotations.Param;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;

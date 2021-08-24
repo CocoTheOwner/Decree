@@ -23,6 +23,10 @@ import nl.codevs.decree.decree.*;
 import nl.codevs.decree.decree.annotations.Decree;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
+import nl.codevs.decree.decree.objects.DecreeContext;
+import nl.codevs.decree.decree.objects.DecreeContextHandler;
+import nl.codevs.decree.decree.objects.DecreeNode;
+import nl.codevs.decree.decree.objects.DecreeParameter;
 import nl.codevs.decree.decree.util.*;
 import org.bukkit.Bukkit;
 

@@ -16,13 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package nl.codevs.decree.decree;
+package nl.codevs.decree.decree.objects;
 
+import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.util.C;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-public interface DecreeExecutor {
+public interface DecreeNodeExecutor {
     default DecreeSender sender() {
         return DecreeContext.get();
     }

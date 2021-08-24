@@ -22,6 +22,9 @@ package nl.codevs.decree.decree;
 
 import nl.codevs.decree.decree.exceptions.DecreeException;
 import nl.codevs.decree.decree.handlers.*;
+import nl.codevs.decree.decree.objects.DecreeContext;
+import nl.codevs.decree.decree.objects.DecreeNodeExecutor;
+import nl.codevs.decree.decree.objects.DecreeParameterHandler;
 import nl.codevs.decree.decree.util.AtomicCache;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.KList;
@@ -36,7 +39,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public interface DecreeSystem extends CommandExecutor, TabCompleter {
+public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     AtomicCache<VirtualDecreeCommand> commandCache = new AtomicCache<>();
     KList<DecreeParameterHandler<?>> handlers = new KList<>(
             new BlockVectorHandler(),
@@ -56,7 +59,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter {
     /**
      * The root class to start command searching from
      */
-    DecreeExecutor getRootClass();
+    DecreeNodeExecutor getRootClass();
 
     /**
      * Before you fill out these functions. Read the README.md file in the decree directory.

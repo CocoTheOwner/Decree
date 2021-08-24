@@ -19,7 +19,7 @@
 package nl.codevs.decree.decree.annotations;
 
 
-import nl.codevs.decree.decree.DecreeOrigin;
+import nl.codevs.decree.decree.objects.DecreeOrigin;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

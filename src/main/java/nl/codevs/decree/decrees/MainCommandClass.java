@@ -1,14 +1,14 @@
 package nl.codevs.decree.decrees;
 
-import nl.codevs.decree.decree.DecreeExecutor;
-import nl.codevs.decree.decree.DecreeOrigin;
+import nl.codevs.decree.decree.objects.DecreeNodeExecutor;
+import nl.codevs.decree.decree.objects.DecreeOrigin;
 import nl.codevs.decree.decree.annotations.Decree;
 import nl.codevs.decree.decree.annotations.Param;
 
 @Decree(name = "command", aliases = {"cmmd", "cmd", "cd"}, description = "Main commands")
-public class MainCommandClass implements DecreeExecutor {
+public class MainCommandClass implements DecreeNodeExecutor {
 
-    // This line here
+    // This line is a category pointer
     private SubCommandClass nameDoesNotMatterHere;
 
     @Decree(
