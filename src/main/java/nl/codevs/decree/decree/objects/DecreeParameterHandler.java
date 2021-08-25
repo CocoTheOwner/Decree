@@ -22,7 +22,6 @@ package nl.codevs.decree.decree.objects;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.KList;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -111,29 +110,13 @@ public interface DecreeParameterHandler<T> {
         return matches;
     }
 
-    /**
-     * Return a random value that may be entered
-     * @return A random default value
-     */
     default String getRandomDefault() {
-        return "NO DEFAULT";
+        return "NOEXAMPLE";
     }
 
-    /**
-     * Calculate integer multiplier value for an input<br>
-     * Values used are<br>
-     * - k > 1.000<br>
-     * - m > 1.000.000<br>
-     * - r > 512<br>
-     * - h > 100<br>
-     * - c > 16<br>
-     * ! This does not return the actual value, just the multiplier!
-     * @param value The inputted value
-     * @return
-     */
-    default int getMultiplier(AtomicReference<String> value) {
-        int multiplier = 1;
-        String in = value.get();
+    default double getMultiplier(AtomicReference<String> g) {
+        double multiplier = 1;
+        String in = g.get();
         boolean valid = true;
         while (valid) {
             boolean trim = false;
@@ -161,7 +144,7 @@ public interface DecreeParameterHandler<T> {
             }
         }
 
-        value.set(in);
+        g.set(in);
         return multiplier;
     }
 }

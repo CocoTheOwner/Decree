@@ -24,20 +24,12 @@ import nl.codevs.decree.decree.util.KList;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
-/**
- * Represents a single command (non-category)
- */
 @Data
 public class DecreeNode {
     private final Method method;
     private final Object instance;
     private final Decree decree;
 
-    /**
-     * Create a node
-     * @param instance The instantiated class containing the
-     * @param method Method that represents a Decree (must be annotated by @{@link Decree})
-     */
     public DecreeNode(Object instance, Method method) {
         if (!method.isAnnotationPresent(Decree.class)) {
             throw new RuntimeException("Cannot instantiate DecreeNode on method " + method.getName() + " in " + method.getDeclaringClass().getCanonicalName() + " not annotated by @Decree");
@@ -64,41 +56,24 @@ public class DecreeNode {
                 optional.add(p);
             }
         }
-
+        
         required.addAll(optional);
 
         return required;
     }
 
-    /**
-     * Get the primary name of the node<br>
-     * This uses the {@link Decree} if specified, or the method name if not.
-     * @return The name of this node
-     */
     public String getName() {
         return decree.name().isEmpty() ? method.getName() : decree.name();
     }
 
-    /**
-     * Get the origin of the node from the {@link Decree}<br>
-     * @return The origin of this node
-     */
     public DecreeOrigin getOrigin() {
         return decree.origin();
     }
 
-    /**
-     * Get the description of the node<br>
-     * @return The description of this node
-     */
     public String getDescription() {
         return decree.description().isEmpty() ? Decree.DEFAULT_DESCRIPTION : decree.description();
     }
 
-    /**
-     * Get a concatenated list of the primary & alias name(s)
-     * @return The names of this node
-     */
     public KList<String> getNames() {
         KList<String> d = new KList<>();
 
@@ -116,19 +91,7 @@ public class DecreeNode {
         return d;
     }
 
-    /**
-     * Get whether this node requires a synchronous runtime or not
-     * @return True or false based on the above
-     */
     public boolean isSync() {
         return decree.sync();
-    }
-
-    /**
-     * Get the required permission for this node
-     * @return The permission of this node
-     */
-    public String getPermission() {
-        return decree.permission();
     }
 }

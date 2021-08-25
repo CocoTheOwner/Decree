@@ -21,9 +21,6 @@ package nl.codevs.decree.decree.objects;
 
 import nl.codevs.decree.decree.DecreeSender;
 
-/**
- * The origin from which the {@link Decree} command must come
- */
 public enum DecreeOrigin {
     PLAYER,
     CONSOLE,
@@ -33,10 +30,10 @@ public enum DecreeOrigin {
     BOTH;
 
     /**
-     * Check if the {@link DecreeOrigin} is valid for a sender
+     * Check if the origin is valid for a sender
      *
-     * @param sender The {@link DecreeSender} to check
-     * @return True if valid for this {@link DecreeOrigin}
+     * @param sender The sender to check
+     * @return True if valid for origin
      */
     public boolean validFor(DecreeSender sender) {
         if (sender.isPlayer()) {

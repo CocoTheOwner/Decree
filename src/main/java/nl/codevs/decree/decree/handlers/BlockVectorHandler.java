@@ -30,11 +30,10 @@ import nl.codevs.decree.decree.util.Maths;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BlockVector;
-import org.jetbrains.annotations.NotNull;
 
 public class BlockVectorHandler implements DecreeParameterHandler<BlockVector> {
     @Override
-    public @NotNull KList<BlockVector> getPossibilities() {
+    public KList<BlockVector> getPossibilities() {
         KList<BlockVector> vx = new KList<>();
         DecreeSender s = DecreeContext.get();
 

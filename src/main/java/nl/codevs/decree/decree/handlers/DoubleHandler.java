@@ -24,7 +24,6 @@ import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.util.Form;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.atomic.AtomicReference;
 

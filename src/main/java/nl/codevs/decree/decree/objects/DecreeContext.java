@@ -29,21 +29,13 @@ public class DecreeContext {
     private static final ChronoLatch cl = new ChronoLatch(60000);
     private static final ConcurrentHashMap<Thread, DecreeSender> context = new ConcurrentHashMap<>();
 
-    /**
-     * Get the sender from the current thread's context
-     * @return The {@link DecreeSender} for this thread
-     */
     public static DecreeSender get() {
         return context.get(Thread.currentThread());
     }
 
-    /**
-     * Add the {@link DecreeSender} to the context map
-     * @param sender The sender
-     */
-    public static void touch(DecreeSender sender) {
+    public static void touch(DecreeSender c) {
         synchronized (context) {
-            context.put(Thread.currentThread(), sender);
+            context.put(Thread.currentThread(), c);
 
             if (cl.flip()) {
                 for (Thread i : contextKeys()) {
@@ -55,10 +47,6 @@ public class DecreeContext {
         }
     }
 
-    /**
-     * Get all keys in the context map
-     * @return All context keys (threads)
-     */
     private static KList<Thread> contextKeys() {
         KList<Thread> k = new KList<>();
         Enumeration<Thread> kk = DecreeContext.context.keys();
