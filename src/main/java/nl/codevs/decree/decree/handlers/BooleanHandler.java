@@ -23,11 +23,12 @@ import nl.codevs.decree.decree.objects.DecreeParameterHandler;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
+import org.jetbrains.annotations.NotNull;
 
 public class BooleanHandler implements DecreeParameterHandler<Boolean> {
     @Override
-    public KList<Boolean> getPossibilities() {
-        return null;
+    public @NotNull KList<Boolean> getPossibilities() {
+        return new KList<>(true, false);
     }
 
     @Override

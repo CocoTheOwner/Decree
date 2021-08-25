@@ -31,6 +31,7 @@ import org.bukkit.FluidCollisionMode;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 public class VectorHandler implements DecreeParameterHandler<Vector> {
 
@@ -44,14 +45,7 @@ public class VectorHandler implements DecreeParameterHandler<Vector> {
 
     @Override
     public KList<Vector> getPossibilities() {
-        KList<Vector> vx = new KList<>();
-        DecreeSender s = DecreeContext.get();
-
-        if (s.isPlayer()) {
-            vx.add(s.player().getLocation().toVector());
-        }
-
-        return vx;
+        return null;
     }
 
     @Override

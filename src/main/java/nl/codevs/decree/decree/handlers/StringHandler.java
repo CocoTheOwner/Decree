@@ -22,6 +22,7 @@ package nl.codevs.decree.decree.handlers;
 import nl.codevs.decree.decree.objects.DecreeParameterHandler;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.util.KList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Abstraction can sometimes breed stupidity

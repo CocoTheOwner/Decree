@@ -24,7 +24,6 @@ import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.*;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -34,28 +33,28 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 public class DecreeVirtualCommand {
-    private final Class<?> type;
+    private final Class<? extends DecreeNodeExecutor> realClass;
     private final DecreeVirtualCommand parent;
     private final KList<DecreeVirtualCommand> nodes;
     private final DecreeNode node;
     private final DecreeSystem system;
 
-    private DecreeVirtualCommand(Class<?> type, DecreeVirtualCommand parent, KList<DecreeVirtualCommand> nodes, DecreeNode node, DecreeSystem system) {
+    private DecreeVirtualCommand(Class<? extends DecreeNodeExecutor> realClass, DecreeVirtualCommand parent, KList<DecreeVirtualCommand> nodes, DecreeNode node, DecreeSystem system) {
+        this.realClass = realClass;
         this.parent = parent;
-        this.type = type;
         this.nodes = nodes;
         this.node = node;
         this.system = system;
     }
 
-    public static DecreeVirtualCommand createRoot(Object v, DecreeSystem system) throws Throwable {
-        return createRoot(null, v, system);
+    public static DecreeVirtualCommand createRoot(DecreeNodeExecutor rootClass, DecreeSystem system) throws Throwable {
+        return createRoot(null, rootClass, system);
     }
 
-    public static DecreeVirtualCommand createRoot(DecreeVirtualCommand parent, Object v, DecreeSystem system) throws Throwable {
-        DecreeVirtualCommand c = new DecreeVirtualCommand(v.getClass(), parent, new KList<>(), null, system);
+    public static DecreeVirtualCommand createRoot(DecreeVirtualCommand parent, DecreeNodeExecutor rootClass, DecreeSystem system) throws Throwable {
+        DecreeVirtualCommand c = new DecreeVirtualCommand(rootClass.getClass(), parent, new KList<>(), null, system);
 
-        for (Field i : v.getClass().getDeclaredFields()) {
+        for (Field i : rootClass.getClass().getDeclaredFields()) {
             if (Modifier.isStatic(i.getModifiers()) || Modifier.isFinal(i.getModifiers()) || Modifier.isTransient(i.getModifiers()) || Modifier.isVolatile(i.getModifiers())) {
                 continue;
             }
@@ -65,17 +64,17 @@ public class DecreeVirtualCommand {
             }
 
             i.setAccessible(true);
-            Object childRoot = i.get(v);
+            Object childRoot = i.get(rootClass);
 
             if (childRoot == null) {
                 childRoot = i.getType().getConstructor().newInstance();
-                i.set(v, childRoot);
+                i.set(rootClass, childRoot);
             }
 
-            c.getNodes().add(createRoot(c, childRoot, system));
+            c.getNodes().add(createRoot(c, (DecreeNodeExecutor) childRoot, system));
         }
 
-        for (Method i : v.getClass().getDeclaredMethods()) {
+        for (Method i : rootClass.getClass().getDeclaredMethods()) {
             if (Modifier.isStatic(i.getModifiers()) || Modifier.isFinal(i.getModifiers()) || Modifier.isPrivate(i.getModifiers())) {
                 continue;
             }
@@ -84,14 +83,14 @@ public class DecreeVirtualCommand {
                 continue;
             }
 
-            c.getNodes().add(new DecreeVirtualCommand(v.getClass(), c, new KList<>(), new DecreeNode(v, i), system));
+            c.getNodes().add(new DecreeVirtualCommand(rootClass.getClass(), c, new KList<>(), new DecreeNode(rootClass, i), system));
         }
 
         return c;
     }
 
     public DecreeOrigin getOrigin(){
-        return isNode() ? getNode().getOrigin() : getType().getDeclaredAnnotation(Decree.class).origin();
+        return isNode() ? getNode().getOrigin() : getRealClass().getDeclaredAnnotation(Decree.class).origin();
     }
 
     public String getPath() {
@@ -111,11 +110,11 @@ public class DecreeVirtualCommand {
     }
 
     public String getName() {
-        return isNode() ? getNode().getName() : getType().getDeclaredAnnotation(Decree.class).name();
+        return isNode() ? getNode().getName() : getRealClass().getDeclaredAnnotation(Decree.class).name();
     }
 
     public String getDescription() {
-        return isNode() ? getNode().getDescription() : getType().getDeclaredAnnotation(Decree.class).description();
+        return isNode() ? getNode().getDescription() : getRealClass().getDeclaredAnnotation(Decree.class).description();
     }
 
     public KList<String> getNames() {
@@ -124,7 +123,7 @@ public class DecreeVirtualCommand {
         }
 
         KList<String> d = new KList<>();
-        Decree dc = getType().getDeclaredAnnotation(Decree.class);
+        Decree dc = getRealClass().getDeclaredAnnotation(Decree.class);
         for (String i : dc.aliases()) {
             if (i.isEmpty()) {
                 continue;
@@ -515,7 +514,7 @@ public class DecreeVirtualCommand {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getDescription(), getType(), getPath());
+        return Objects.hash(getName(), getDescription(), getRealClass(), getPath());
     }
 
     @Override

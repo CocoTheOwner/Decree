@@ -28,12 +28,20 @@ import nl.codevs.decree.decree.util.KList;
 
 import java.lang.reflect.Parameter;
 
+/**
+ * Represents a parameter in an @{@link Decree} annotated function
+ */
 @Data
 public class DecreeParameter {
     private final Parameter parameter;
     private final Param param;
     private transient final AtomicCache<DecreeParameterHandler<?>> handlerCache = new AtomicCache<>();
+    private transient final AtomicCache<KList<String>> exampleCache = new AtomicCache<>();
 
+    /**
+     * Create a parameter
+     * @param parameter Parameter that is included in a {@link Decree} (must be annotated by @{@link Param})
+     */
     public DecreeParameter(Parameter parameter) {
         if (!parameter.isAnnotationPresent(Param.class)) {
             throw new RuntimeException("Cannot instantiate DecreeParameter on " + parameter.getName() + " in method " + parameter.getDeclaringExecutable().getName() + "(...) in class " + parameter.getDeclaringExecutable().getDeclaringClass().getCanonicalName() + " not annotated by @Param");
@@ -42,13 +50,16 @@ public class DecreeParameter {
         this.param = parameter.getDeclaredAnnotation(Param.class);
     }
 
+    /**
+     * Get the handler for this parameter
+     * @return A {@link DecreeParameterHandler} for this parameter's type
+     */
     public DecreeParameterHandler<?> getHandler() {
         return handlerCache.aquire(() -> {
             try
             {
                 return DecreeSystem.getHandler(getType());
             }
-
             catch(Throwable e)
             {
                 e.printStackTrace();
@@ -58,24 +69,46 @@ public class DecreeParameter {
         });
     }
 
+    /**
+     * Get the type of this parameter
+     * @return This parameter's type
+     */
     public Class<?> getType() {
         return parameter.getType();
     }
 
-    public String getName() {
-        return param.name().isEmpty() ? parameter.getName() : param.name();
-    }
-
+    /**
+     * Get the description of this parameter
+     * @return The description of this parameter
+     */
     public String getDescription() {
         return param.description().isEmpty() ? Param.DEFAULT_DESCRIPTION : param.description();
     }
 
+    /**
+     * TODO: Pull upstream because of potentially interfering {@link DecreeContextHandler}s
+     * @return
+     */
+    @Deprecated
     public boolean isRequired() {
         return !hasDefault();
     }
 
+    /**
+     * Get the name of this parameter<br>
+     * If the attached {@link Param} has a defined name, uses that. If not, uses the {@link Parameter}'s name.
+     * @return This parameter's name
+     */
+    public String getName() {
+        return param.name().isEmpty() ? parameter.getName() : param.name();
+    }
+
+    /**
+     * Get the names that point to this parameter
+     * @return The name concatenated with aliases
+     */
     public KList<String> getNames() {
-        KList<String> d = new KList<>();
+        KList<String> d = new KList<>(getName());
 
         for (String i : param.aliases()) {
             if (i.isEmpty()) {
@@ -85,30 +118,58 @@ public class DecreeParameter {
             d.add(i);
         }
 
-        d.add(getName());
         d.removeDuplicates();
 
         return d;
     }
 
+    /**
+     * Get the default value for this parameter
+     * @return The default value
+     * @throws DecreeParsingException Thrown when default value cannot be parsed
+     * @throws DecreeWhichException Thrown when there are more than one options resulting from parsing
+     */
     public Object getDefaultValue() throws DecreeParsingException, DecreeWhichException {
-        return param.defaultValue().trim().isEmpty() ? null : getHandler().parse(param.defaultValue().trim());
+        return hasDefault() ? getHandler().parse(getDefaultRaw()) : null;
     }
 
+    /**
+     * Get the default value from the attached {@link Param}
+     * @return The default value
+     */
+    public String getDefaultRaw() {
+        return param.defaultValue().trim();
+    }
+
+    /**
+     * Retrieve whether this parameter has a default
+     * @return true if it does, false if not
+     */
     public boolean hasDefault() {
         return !param.defaultValue().trim().isEmpty();
     }
 
-    public String example() {
-        KList<?> ff = getHandler().getPossibilities();
-        ff = ff != null ? ff : new KList<>();
-        KList<String> f = ff.convert((i) -> getHandler().toStringForce(i));
-        if (f.isEmpty()) {
-            f = new KList<>();
-            f.add(getHandler().getRandomDefault());
-        }
+    /**
+     * @return A random example value from possible values in the parameter
+     */
+    public String exampleValue() {
+        KList<String> examples = exampleCache.aquire(() -> {
+            KList<String> f = getHandler().getPossibilities().convert((i) -> getHandler().toStringForce(i));
+            if (f.isEmpty()){
+                return new KList<>(getHandler().getRandomDefault());
+            } else {
+                return f;
+            }
+        });
 
-        return f.getRandom();
+        return examples.getRandom();
+    }
+
+    /**
+     * @return A random example name
+     */
+    public String exampleName() {
+        return getNames().getRandom();
     }
 
     public boolean isContextual() {

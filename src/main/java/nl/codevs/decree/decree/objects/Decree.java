@@ -19,7 +19,8 @@
 package nl.codevs.decree.decree.objects;
 
 
-import nl.codevs.decree.decree.objects.DecreeOrigin;
+import nl.codevs.decree.decree.util.KList;
+import org.bukkit.entity.Player;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -62,4 +63,10 @@ public @interface Decree {
      * If someone uses /plugin foo and you specify alias="f" here, /plugin f will do the exact same.
      */
     String[] aliases() default "";
+
+    /**
+     * The permissions class that gives the required permission for this command.<p>
+     * By default, it requires no permissions
+     */
+    String permission() default "";
 }
