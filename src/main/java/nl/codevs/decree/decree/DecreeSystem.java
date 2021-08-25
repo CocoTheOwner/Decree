@@ -22,10 +22,13 @@ package nl.codevs.decree.decree;
 
 import nl.codevs.decree.decree.exceptions.DecreeException;
 import nl.codevs.decree.decree.handlers.*;
-import nl.codevs.decree.decree.objects.*;
+import nl.codevs.decree.decree.objects.DecreeContext;
+import nl.codevs.decree.decree.objects.DecreeNodeExecutor;
+import nl.codevs.decree.decree.objects.DecreeParameterHandler;
 import nl.codevs.decree.decree.util.AtomicCache;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.KList;
+import nl.codevs.decree.decree.objects.DecreeVirtualCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.command.Command;
@@ -37,7 +40,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
-    AtomicCache<DecreeVirtualCategory> commandCache = new AtomicCache<>();
+    AtomicCache<DecreeVirtualCommand> commandCache = new AtomicCache<>();
     KList<DecreeParameterHandler<?>> handlers = new KList<>(
             new BlockVectorHandler(),
             new BooleanHandler(),
@@ -56,7 +59,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     /**
      * The root class to start command searching from
      */
-    DecreeCommandExecutor getRootClass();
+    DecreeNodeExecutor getRootClass();
 
     /**
      * Before you fill out these functions. Read the README.md file in the decree directory.
@@ -73,22 +76,21 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
         Bukkit.getConsoleSender().sendMessage();
     }
 
-    /**
-     * Should return the root class as a virtual category.<br>
-     * Uses {@link DecreeSystem}#getRootClass to retrieve the class<br>
-     * Because of caching & performance issues, do not overwrite this, but that instead.
-     * @return The {@link DecreeVirtualCategory}
-     */
-    default DecreeVirtualCategory getRoot() {
+    default DecreeVirtualCommand getRoot() {
         return commandCache.aquire(() -> {
             try {
-                return DecreeVirtualCategory.createOrigin(getRootClass(), this);
+                return DecreeVirtualCommand.createRoot(getRootClass(), this);
             } catch (Throwable e) {
                 e.printStackTrace();
             }
 
             return null;
         });
+    }
+
+    default boolean call(DecreeSender sender, String[] args) {
+        DecreeContext.touch(sender);
+        return getRoot().invoke(sender, enhanceArgs(args));
     }
 
     default List<String> decreeTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
@@ -101,37 +103,40 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     default boolean decreeCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
         Bukkit.getScheduler().scheduleAsyncDelayedTask(instance(), () -> {
-            DecreeSender decreeSender = new DecreeSender(sender, instance(), this);
-            DecreeContext.touch(decreeSender);
-            if (getRoot().invoke(decreeSender, enhanceArgs(args)).isFailed()) {
-                decreeSender.sendMessage(C.RED + "Unknown Decree Command");
+            if (!call(new DecreeSender(sender, instance(), this), args)) {
+                sender.sendMessage(C.RED + "Unknown Decree Command");
             }
         });
         return true;
     }
 
-    /**
-     * Enhance arguments into a {@link KList}
-     * @param args The arguments to enhance
-     * @return The enhanced args
-     */
     static KList<String> enhanceArgs(String[] args) {
-        KList<String> arguments = new KList<>();
+        return enhanceArgs(args, true);
+    }
+
+    static KList<String> enhanceArgs(String[] args, boolean trim) {
+        KList<String> a = new KList<>();
 
         if (args.length == 0) {
-            return arguments;
+            return a;
         }
 
         StringBuilder flat = new StringBuilder();
         for (String i : args) {
-            if (i.trim().isEmpty()) {
-                continue;
-            }
+            if (trim) {
+                if (i.trim().isEmpty()) {
+                    continue;
+                }
 
-            flat.append(" ").append(i.trim());
+                flat.append(" ").append(i.trim());
+            } else {
+                if (i.endsWith(" ")) {
+                    flat.append(" ").append(i.trim()).append(" ");
+                }
+            }
         }
 
-        flat = new StringBuilder(flat.length() > 0 ? flat.toString().trim().length() > 0 ? flat.substring(1).trim() : flat.toString().trim() : flat);
+        flat = new StringBuilder(flat.length() > 0 ? trim ? flat.toString().trim().length() > 0 ? flat.substring(1).trim() : flat.toString().trim() : flat.substring(1) : flat);
         StringBuilder arg = new StringBuilder();
         boolean quoting = false;
 
@@ -141,8 +146,8 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
             boolean hasNext = x < flat.length();
 
             if (i == ' ' && !quoting) {
-                if (!arg.toString().trim().isEmpty()) {
-                    arguments.add(arg.toString().trim());
+                if (!arg.toString().trim().isEmpty() && trim) {
+                    a.add(arg.toString().trim());
                     arg = new StringBuilder();
                 }
             } else if (i == '"') {
@@ -152,13 +157,13 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
                     quoting = false;
 
                     if (hasNext && j == ' ') {
-                        if (!arg.toString().trim().isEmpty()) {
-                            arguments.add(arg.toString().trim());
+                        if (!arg.toString().trim().isEmpty() && trim) {
+                            a.add(arg.toString().trim());
                             arg = new StringBuilder();
                         }
                     } else if (!hasNext) {
-                        if (!arg.toString().trim().isEmpty()) {
-                            arguments.add(arg.toString().trim());
+                        if (!arg.toString().trim().isEmpty() && trim) {
+                            a.add(arg.toString().trim());
                             arg = new StringBuilder();
                         }
                     }
@@ -168,11 +173,11 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
             }
         }
 
-        if (!arg.toString().trim().isEmpty()) {
-            arguments.add(arg.toString().trim());
+        if (!arg.toString().trim().isEmpty() && trim) {
+            a.add(arg.toString().trim());
         }
 
-        return arguments;
+        return a;
     }
 
     /**

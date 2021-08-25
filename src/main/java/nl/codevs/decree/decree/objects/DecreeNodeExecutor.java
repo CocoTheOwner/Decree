@@ -26,7 +26,7 @@ import org.bukkit.entity.Player;
 /**
  * Represents a decree executor, the interface all decree commands must implement
  */
-public interface DecreeCommandExecutor {
+public interface DecreeNodeExecutor {
     /**
      * @return The command sender
      */
