@@ -1,6 +1,6 @@
 package nl.codevs.decree;
 
-import nl.codevs.decree.decree.objects.DecreeNodeExecutor;
+import nl.codevs.decree.decree.objects.DecreeCommandExecutor;
 import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decrees.MainCommandClass;
 import org.bukkit.Bukkit;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class Decree extends JavaPlugin implements DecreeSystem, DecreeNodeExecutor {
+public class Decree extends JavaPlugin implements DecreeSystem, DecreeCommandExecutor {
 
     @Override
     public Plugin instance() {
@@ -21,7 +21,7 @@ public class Decree extends JavaPlugin implements DecreeSystem, DecreeNodeExecut
     }
 
     @Override
-    public DecreeNodeExecutor getRootClass() {
+    public DecreeCommandExecutor getRootClass() {
         return new MainCommandClass();
     }
 

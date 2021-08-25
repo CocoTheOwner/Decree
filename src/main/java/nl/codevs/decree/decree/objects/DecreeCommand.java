@@ -28,7 +28,7 @@ import java.lang.reflect.Parameter;
  * Represents a single command (non-category)
  */
 @Data
-public class DecreeNode {
+public class DecreeCommand {
     private final Method method;
     private final Object instance;
     private final Decree decree;
@@ -38,9 +38,9 @@ public class DecreeNode {
      * @param instance The instantiated class containing the
      * @param method Method that represents a Decree (must be annotated by @{@link Decree})
      */
-    public DecreeNode(Object instance, Method method) {
+    public DecreeCommand(Object instance, Method method) {
         if (!method.isAnnotationPresent(Decree.class)) {
-            throw new RuntimeException("Cannot instantiate DecreeNode on method " + method.getName() + " in " + method.getDeclaringClass().getCanonicalName() + " not annotated by @Decree");
+            throw new RuntimeException("Cannot instantiate DecreeCommand on method " + method.getName() + " in " + method.getDeclaringClass().getCanonicalName() + " not annotated by @Decree");
         }
         this.instance = instance;
         this.method = method;
