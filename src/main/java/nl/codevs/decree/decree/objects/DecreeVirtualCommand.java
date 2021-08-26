@@ -142,43 +142,28 @@ public class DecreeVirtualCommand implements Decreed {
     }
 
     public KList<String> tabComplete(KList<String> args, DecreeSender sender) {
-        return invokeTabComplete(args, new KList<>(), sender);
+        return invokeTabComplete(args, sender);
     }
 
-    private KList<String> invokeTabComplete(KList<String> args, KList<Integer> skip, DecreeSender sender) {
+    private KList<String> invokeTabComplete(KList<String> args, DecreeSender sender) {
 
+        if (isNode() || args.isEmpty() || args.size() <= 1 && !args.get(0).endsWith(" ")) {
+            return tab(args);
+        }
+
+        DecreeVirtualCommand match = matchNode(args.get(0), new KList<>(), sender);
+
+        if (match == null) {
+            return new KList<>();
+        }
+
+        args.remove(0);
+        return match.invokeTabComplete(args, sender);
+    }
+
+    private KList<String> tab(KList<String> args) {
         KList<String> tabs = new KList<>();
 
-        if (isNode()) {
-            tab(args, tabs);
-            skip.add(hashCode());
-            return tabs;
-        }
-
-        if (args.isEmpty()) {
-            tab(args, tabs);
-            return tabs;
-        }
-
-        String head = args.get(0);
-
-        if (args.size() > 1 || head.endsWith(" ")) {
-            DecreeVirtualCommand match = matchNode(head, skip, sender);
-
-            if (match != null) {
-                args.pop();
-                return match.invokeTabComplete(args, skip, sender);
-            }
-
-            skip.add(hashCode());
-        } else {
-            tab(args, tabs);
-        }
-
-        return tabs;
-    }
-
-    private void tab(KList<String> args, KList<String> tabs) {
         String last = null;
         KList<DecreeParameter> ignore = new KList<>();
         Runnable la = () -> {
@@ -241,6 +226,8 @@ public class DecreeVirtualCommand implements Decreed {
                 }
             }
         }
+
+        return tabs;
     }
 
     private ConcurrentHashMap<String, Object> map(DecreeSender sender, KList<String> in) {
