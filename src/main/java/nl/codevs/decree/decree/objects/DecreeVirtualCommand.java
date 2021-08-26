@@ -142,23 +142,22 @@ public class DecreeVirtualCommand implements Decreed {
     }
 
     public KList<String> tabComplete(KList<String> args, DecreeSender sender) {
-        KList<Integer> skip = new KList<>();
-        KList<String> tabs = new KList<>();
-        invokeTabComplete(args, skip, tabs, sender);
-        return tabs;
+        return invokeTabComplete(args, new KList<>(), sender);
     }
 
-    private boolean invokeTabComplete(KList<String> args, KList<Integer> skip, KList<String> tabs, DecreeSender sender) {
+    private KList<String> invokeTabComplete(KList<String> args, KList<Integer> skip, DecreeSender sender) {
+
+        KList<String> tabs = new KList<>();
 
         if (isNode()) {
             tab(args, tabs);
             skip.add(hashCode());
-            return false;
+            return tabs;
         }
 
         if (args.isEmpty()) {
             tab(args, tabs);
-            return true;
+            return tabs;
         }
 
         String head = args.get(0);
@@ -168,7 +167,7 @@ public class DecreeVirtualCommand implements Decreed {
 
             if (match != null) {
                 args.pop();
-                return match.invokeTabComplete(args, skip, tabs, sender);
+                return match.invokeTabComplete(args, skip, sender);
             }
 
             skip.add(hashCode());
@@ -176,7 +175,7 @@ public class DecreeVirtualCommand implements Decreed {
             tab(args, tabs);
         }
 
-        return false;
+        return tabs;
     }
 
     private void tab(KList<String> args, KList<String> tabs) {
