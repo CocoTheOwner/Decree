@@ -28,7 +28,6 @@ import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.KList;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -76,7 +75,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     default DecreeVirtualCommand getRoot() {
         return commandCache.aquire(() -> {
             try {
-                return DecreeVirtualCommand.createRoot(getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this);
+                return DecreeVirtualCommand.createOrigin(getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this);
             } catch (Throwable e) {
                 e.printStackTrace();
             }

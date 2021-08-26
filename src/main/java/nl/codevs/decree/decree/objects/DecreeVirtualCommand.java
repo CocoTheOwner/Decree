@@ -48,7 +48,7 @@ public class DecreeVirtualCommand implements Decreed {
         this.system = system;
     }
 
-    public static DecreeVirtualCommand createRoot(Object v, Decree decree, DecreeSystem system) throws Throwable {
+    public static DecreeVirtualCommand createOrigin(Object v, Decree decree, DecreeSystem system) throws Throwable {
         return createRoot(null, v, decree, system);
     }
 
