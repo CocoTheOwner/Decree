@@ -22,13 +22,10 @@ package nl.codevs.decree.decree;
 
 import nl.codevs.decree.decree.exceptions.DecreeException;
 import nl.codevs.decree.decree.handlers.*;
-import nl.codevs.decree.decree.objects.DecreeContext;
-import nl.codevs.decree.decree.objects.DecreeNodeExecutor;
-import nl.codevs.decree.decree.objects.DecreeParameterHandler;
+import nl.codevs.decree.decree.objects.*;
 import nl.codevs.decree.decree.util.AtomicCache;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.KList;
-import nl.codevs.decree.decree.objects.DecreeVirtualCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.command.Command;
@@ -59,7 +56,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     /**
      * The root class to start command searching from
      */
-    DecreeNodeExecutor getRootClass();
+    DecreeNodeExecutor getRootInstance();
 
     /**
      * Before you fill out these functions. Read the README.md file in the decree directory.
@@ -79,7 +76,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     default DecreeVirtualCommand getRoot() {
         return commandCache.aquire(() -> {
             try {
-                return DecreeVirtualCommand.createRoot(getRootClass(), this);
+                return DecreeVirtualCommand.createRoot(getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this);
             } catch (Throwable e) {
                 e.printStackTrace();
             }

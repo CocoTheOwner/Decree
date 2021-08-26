@@ -21,7 +21,7 @@ public class Decree extends JavaPlugin implements DecreeSystem, DecreeNodeExecut
     }
 
     @Override
-    public DecreeNodeExecutor getRootClass() {
+    public DecreeNodeExecutor getRootInstance() {
         return new MainCommandClass();
     }
 
