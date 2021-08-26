@@ -19,16 +19,19 @@
 package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
+import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.util.KList;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Comparator;
 
 /**
  * Represents a single command (non-category)
  */
 @Data
-public class DecreeNode implements Decreed {
+public class DecreeCommand implements Decreed {
+    private final KList<DecreeParameter> parameters;
     private final Method method;
     private final Object parent;
     private final Decree decree;
@@ -38,38 +41,42 @@ public class DecreeNode implements Decreed {
      * @param parent The instantiated class containing the
      * @param method Method that represents a Decree (must be annotated by @{@link Decree})
      */
-    public DecreeNode(Object parent, Method method) {
+    public DecreeCommand(Object parent, Method method) {
         if (!method.isAnnotationPresent(Decree.class)) {
-            throw new RuntimeException("Cannot instantiate DecreeNode on method " + method.getName() + " in " + method.getDeclaringClass().getCanonicalName() + " not annotated by @Decree");
+            throw new RuntimeException("Cannot instantiate DecreeCommand on method " + method.getName() + " in " + method.getDeclaringClass().getCanonicalName() + " not annotated by @Decree");
         }
         this.parent = parent;
         this.method = method;
         this.decree = method.getDeclaredAnnotation(Decree.class);
+        this.parameters = calcParameters();
     }
 
-    /**
-     * Get the parameters of this decree node
-     *
-     * @return The list of parameters if ALL are annotated by @{@link Param}, else null
-     */
-    public KList<DecreeParameter> getParameters() {
-        KList<DecreeParameter> required = new KList<>();
-        KList<DecreeParameter> optional = new KList<>();
-
-        for (Parameter i : method.getParameters()) {
-            DecreeParameter p = new DecreeParameter(i);
-            if (p.isRequired()){
-                required.add(p);
-            } else {
-                optional.add(p);
+    private KList<DecreeParameter> calcParameters() {
+        KList<DecreeParameter> parameters = new KList<>();
+        for (Parameter parameter : method.getParameters()) {
+            if (parameter.isAnnotationPresent(Param.class)){
+                parameters.add(new DecreeParameter(parameter));
             }
         }
 
-        required.addAll(optional);
+        parameters.sort((o1, o2) -> {
+            if (o1.isRequired()) {
+                return 1;
+            }
+            if (o2.isRequired()) {
+                return -1;
+            }
+            if (o1.isContextual()) {
+                return 1;
+            }
+            if (o2.isContextual()) {
+                return -1;
+            }
+            return 0;
+        });
 
-        return required;
+        return parameters;
     }
-
 
     @Override
     public String getName() {

@@ -215,6 +215,11 @@ public class KList<T> extends ArrayList<T> implements List<T> {
         return this;
     }
 
+    public KList<T> qsort(Comparator<? super T> c) {
+        sort(c);
+        return this;
+    }
+
     public KList<T> getRandoms(int amount) {
         return getRandoms(amount, true);
     }

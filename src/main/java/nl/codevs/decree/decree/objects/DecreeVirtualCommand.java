@@ -37,10 +37,10 @@ public class DecreeVirtualCommand implements Decreed {
     private final DecreeVirtualCommand parent;
     private final Decree decree;
     private final KList<DecreeVirtualCommand> nodes;
-    private final DecreeNode node;
+    private final DecreeCommand node;
     private final DecreeSystem system;
 
-    private DecreeVirtualCommand(DecreeVirtualCommand parent, Decree decree, KList<DecreeVirtualCommand> nodes, DecreeNode node, DecreeSystem system) {
+    private DecreeVirtualCommand(DecreeVirtualCommand parent, Decree decree, KList<DecreeVirtualCommand> nodes, DecreeCommand node, DecreeSystem system) {
         this.parent = parent;
         this.decree = decree;
         this.nodes = nodes;
@@ -84,7 +84,7 @@ public class DecreeVirtualCommand implements Decreed {
                 continue;
             }
 
-            c.getNodes().add(new DecreeVirtualCommand(c, decree, new KList<>(), new DecreeNode(v, i), system));
+            c.getNodes().add(new DecreeVirtualCommand(c, decree, new KList<>(), new DecreeCommand(v, i), system));
         }
 
         return c;

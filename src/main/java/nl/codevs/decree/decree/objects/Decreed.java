@@ -1,5 +1,6 @@
 package nl.codevs.decree.decree.objects;
 
+import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.util.KList;
 
 public interface Decreed {
@@ -97,6 +98,34 @@ public interface Decreed {
             }
         }
 
+        return false;
+    }
+
+    /**
+     * Shallow check whether this node matches input and is allowed for a sender<br>
+     * in == node
+     * @param sender The sender that called the node
+     * @param in The input string
+     * @return True if allowed & match, false if not
+     */
+    default boolean doesMatchAllowed(DecreeSender sender, String in) {
+        if (getOrigin().validFor(sender) && sender.hasPermission(getPermission())) {
+            return matches(in);
+        }
+        return false;
+    }
+
+    /**
+     * Deep check whether this node matches input and is allowed for a sender<br>
+     * (node in in) || (in in node)
+     * @param sender The sender that called the node
+     * @param in The input string
+     * @return True if allowed & match, false if not
+     */
+    default boolean doesDeepMatchAllowed(DecreeSender sender, String in){
+        if (getOrigin().validFor(sender) && sender.hasPermission(getPermission())) {
+            return deepMatches(in);
+        }
         return false;
     }
 }

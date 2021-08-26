@@ -53,7 +53,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     /**
      * The root class to start command searching from
      */
-    DecreeNodeExecutor getRootInstance();
+    DecreeCommandExecutor getRootInstance();
 
     /**
      * Before you fill out these functions. Read the README.md file in the decree directory.
@@ -76,6 +76,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     default DecreeVirtualCommand getRoot() {
         return commandCache.aquire(() -> {
             try {
+                //return new DecreeCategory(null, getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class));
                 return DecreeVirtualCommand.createOrigin(getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this);
             } catch (Throwable e) {
                 e.printStackTrace();
@@ -86,8 +87,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     }
 
     default List<String> decreeTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
-        KList<String> enhanced = new KList<>(args);
-        KList<String> v = getRoot().tabComplete(enhanced, new DecreeSender(sender, instance(), this));
+        KList<String> v = getRoot().tabComplete(new KList<>(args), new DecreeSender(sender, instance(), this));
         v.removeDuplicates();
         return v;
     }
