@@ -150,19 +150,32 @@ public class DecreeParameter {
     }
 
     /**
+     * @return All possible random example values from possible values in the parameter
+     */
+    public KList<String> exampleValues() {
+        return exampleCache.aquire(() -> {
+            KList<String> results = new KList<>();
+            KList<?> possibilities = getHandler().getPossibilities();
+
+            if (possibilities == null || possibilities.isEmpty()){
+                return results.qadd(getHandler().getRandomDefault());
+            }
+
+            results.addAll(possibilities.convert((i) -> getHandler().toStringForce(i)));
+
+            if (results.isEmpty()){
+                return new KList<>(getHandler().getRandomDefault());
+            }
+
+            return results;
+        });
+    }
+
+    /**
      * @return A random example value from possible values in the parameter
      */
     public String exampleValue() {
-        KList<String> examples = exampleCache.aquire(() -> {
-            KList<String> f = getHandler().getPossibilities().convert((i) -> getHandler().toStringForce(i));
-            if (f.isEmpty()){
-                return new KList<>(getHandler().getRandomDefault());
-            } else {
-                return f;
-            }
-        });
-
-        return examples.getRandom();
+        return exampleValues().getRandom();
     }
 
     /**
@@ -172,6 +185,9 @@ public class DecreeParameter {
         return getNames().getRandom();
     }
 
+    /**
+     * @return Whether this is a contextual parameter
+     */
     public boolean isContextual() {
         return param.contextual();
     }
