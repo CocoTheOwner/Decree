@@ -328,7 +328,7 @@ public class DecreeSender implements CommandSender {
     }
 
     public void sendHeader(String name) {
-        sendHeader(name, 46);
+        sendHeader(name, 40);
     }
 
     public void sendDecreeHelp(DecreeVirtualCommand v) {
@@ -445,10 +445,10 @@ public class DecreeSender implements CommandSender {
                         onClick +
                         ":" +
                         realText +
-                    "</click>" +
                     "</hover>" +
-                    " " +
-                    nodes;
+                        " " +
+                        nodes +
+                    "</click>";
 
             sendMessageRaw(wrapper);
         } else {
