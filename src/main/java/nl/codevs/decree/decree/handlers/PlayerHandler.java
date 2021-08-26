@@ -18,11 +18,14 @@
 
 package nl.codevs.decree.decree.handlers;
 
+import nl.codevs.decree.decree.objects.DecreeContext;
 import nl.codevs.decree.decree.objects.DecreeParameterHandler;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.KList;
+import nl.codevs.decree.decree.util.Maths;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,6 +46,17 @@ public class PlayerHandler implements DecreeParameterHandler<Player> {
     public Player parse(String in) throws DecreeParsingException, DecreeWhichException {
         try {
             KList<Player> options = getPossibilities(in);
+            KList<String> names = getPossibilities().convert(HumanEntity::getName);
+
+            if (!names.contains("self") && in.equals("self") && DecreeContext.get().isPlayer()){
+                return DecreeContext.get().player();
+            }
+            if (!names.contains("me") && in.equals("me") && DecreeContext.get().isPlayer()){
+                return DecreeContext.get().player();
+            }
+            if (!names.contains("random") && in.equals("random")){
+                return options.getRandom();
+            }
 
             if (options.isEmpty()) {
                 throw new DecreeParsingException("Unable to find Player \"" + in + "\"");
@@ -61,8 +75,14 @@ public class PlayerHandler implements DecreeParameterHandler<Player> {
         return type.equals(Player.class);
     }
 
+    KList<String> defaults = new KList<>(
+            "playername",
+            "self",
+            "random"
+    );
+
     @Override
     public String getRandomDefault() {
-        return "playername";
+        return defaults.getRandom();
     }
 }
