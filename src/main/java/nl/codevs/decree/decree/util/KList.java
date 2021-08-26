@@ -209,6 +209,27 @@ public class KList<T> extends ArrayList<T> implements List<T> {
         return get(Maths.irand(0, last()));
     }
 
+    public KList<T> getRandoms(int amount) {
+        return getRandoms(amount, true);
+    }
+
+    public KList<T> getRandoms(int amount, boolean noDupes) {
+        if (isEmpty()) {
+            return null;
+        }
+        KList<T> unchecked = copy();
+        KList<T> randoms = new KList<>();
+        while (unchecked.isNotEmpty()){
+            T picked = unchecked.getRandom();
+            randoms.add(picked);
+            unchecked.remove(picked);
+        }
+        if (noDupes) {
+            randoms.removeDuplicates();
+        }
+        return randoms;
+    }
+
     public KList<T> removeDuplicates() {
         HashSet<T> v = new HashSet<>();
         v.addAll(this);
