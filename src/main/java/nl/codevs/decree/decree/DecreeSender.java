@@ -302,8 +302,8 @@ public class DecreeSender implements CommandSender {
                     + command.getName() + " "
                     + command.getNode().getParameters().shuffleCopy(new Random()).convert((f)
                             -> (f.isRequired() || Maths.drand(0, 1) > 0.5
-                            ? "<#f2e15e>" + f.getNames().getRandom() + "="
-                            + "<#d665f0>" + f.example()
+                            ? "<#f2e15e>" + f.exampleName() + "="
+                            + "<#d665f0>" + f.exampleValue()
                             : ""))
                     .toString(" "));
         }
@@ -384,7 +384,7 @@ public class DecreeSender implements CommandSender {
             String suggestions = "";
             if (i.isNode() && i.getNode().getParameters().isNotEmpty()) {
                 suggestion += newline + "<#aebef2>✦ <#5ef288><font:minecraft:uniform>" + i.getParentPath() + " <#42ecf5>" + i.getName() + " "
-                        + i.getNode().getParameters().convert((f) -> "<#d665f0>" + f.example()).toString(" ");
+                        + i.getNode().getParameters().convert((f) -> "<#d665f0>" + f.exampleValue()).toString(" ");
                 suggestions += newline + "<font:minecraft:uniform>" + pickRandoms(Math.min(i.getNode().getParameters().size() + 1, 5), i);
             }
 
