@@ -18,8 +18,6 @@
 
 package nl.codevs.decree.decree;
 
-
-
 import nl.codevs.decree.decree.exceptions.DecreeException;
 import nl.codevs.decree.decree.handlers.*;
 import nl.codevs.decree.decree.objects.*;
@@ -72,6 +70,9 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
         Bukkit.getConsoleSender().sendMessage(message);
     }
 
+    /**
+     * Get the root {@link DecreeVirtualCommand}
+     */
     default DecreeVirtualCommand getRoot() {
         return commandCache.aquire(() -> {
             try {
@@ -84,11 +85,6 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
         });
     }
 
-    default boolean call(DecreeSender sender, String[] args) {
-        DecreeContext.touch(sender);
-        return getRoot().invoke(sender, enhanceArgs(args), new KList<>());
-    }
-
     default List<String> decreeTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
         KList<String> enhanced = new KList<>(args);
         KList<String> v = getRoot().tabComplete(enhanced, new DecreeSender(sender, instance(), this));
@@ -97,83 +93,15 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     }
 
     default boolean decreeCommand(@NotNull CommandSender sender, @NotNull String[] args) {
-
         Bukkit.getScheduler().scheduleAsyncDelayedTask(instance(), () -> {
-            if (!call(new DecreeSender(sender, instance(), this), args)) {
+            DecreeSender decreeSender = new DecreeSender(sender, instance(), this);
+            DecreeContext.touch(decreeSender);
+
+            if (!getRoot().invoke(decreeSender, new KList<>(args), new KList<>())) {
                 sender.sendMessage(C.RED + "Unknown Decree Command");
             }
         });
         return true;
-    }
-
-    static KList<String> enhanceArgs(String[] args) {
-        return enhanceArgs(args, true);
-    }
-
-    static KList<String> enhanceArgs(String[] args, boolean trim) {
-        KList<String> a = new KList<>();
-
-        if (args.length == 0) {
-            return a;
-        }
-
-        StringBuilder flat = new StringBuilder();
-        for (String i : args) {
-            if (trim) {
-                if (i.trim().isEmpty()) {
-                    continue;
-                }
-
-                flat.append(" ").append(i.trim());
-            } else {
-                if (i.endsWith(" ")) {
-                    flat.append(" ").append(i.trim()).append(" ");
-                }
-            }
-        }
-
-        flat = new StringBuilder(flat.length() > 0 ? trim ? flat.toString().trim().length() > 0 ? flat.substring(1).trim() : flat.toString().trim() : flat.substring(1) : flat);
-        StringBuilder arg = new StringBuilder();
-        boolean quoting = false;
-
-        for (int x = 0; x < flat.length(); x++) {
-            char i = flat.charAt(x);
-            char j = x < flat.length() - 1 ? flat.charAt(x + 1) : i;
-            boolean hasNext = x < flat.length();
-
-            if (i == ' ' && !quoting) {
-                if (!arg.toString().trim().isEmpty() && trim) {
-                    a.add(arg.toString().trim());
-                    arg = new StringBuilder();
-                }
-            } else if (i == '"') {
-                if (!quoting && (arg.length() == 0)) {
-                    quoting = true;
-                } else if (quoting) {
-                    quoting = false;
-
-                    if (hasNext && j == ' ') {
-                        if (!arg.toString().trim().isEmpty() && trim) {
-                            a.add(arg.toString().trim());
-                            arg = new StringBuilder();
-                        }
-                    } else if (!hasNext) {
-                        if (!arg.toString().trim().isEmpty() && trim) {
-                            a.add(arg.toString().trim());
-                            arg = new StringBuilder();
-                        }
-                    }
-                }
-            } else {
-                arg.append(i);
-            }
-        }
-
-        if (!arg.toString().trim().isEmpty() && trim) {
-            a.add(arg.toString().trim());
-        }
-
-        return a;
     }
 
     /**
@@ -188,6 +116,6 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
                 return i;
             }
         }
-        throw new DecreeException("Unhandled type in Decree Parameter: " + type.getName() + ". This is bad! Please remove the parameter or add a handler for it");
+        throw new DecreeException("Unhandled type in Decree Parameter: " + type.getName() + ". This is bad! Contact your admin! (Remove param or add handler)");
     }
 }

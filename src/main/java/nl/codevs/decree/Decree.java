@@ -43,6 +43,6 @@ public class Decree extends JavaPlugin implements DecreeSystem, DecreeNodeExecut
 
     @Override
     public void onDisable() {
-        Bukkit.getConsoleSender().sendMessage("Goodbeye world!");
+        Bukkit.getConsoleSender().sendMessage("Goodbye world!");
     }
 }
