@@ -19,9 +19,6 @@
 package nl.codevs.decree.decree.objects;
 
 
-import nl.codevs.decree.decree.util.KList;
-import org.bukkit.entity.Player;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -32,6 +29,8 @@ import java.lang.annotation.Target;
 public @interface Decree {
 
     String DEFAULT_DESCRIPTION = "No Description Provided";
+
+    String NO_PERMISSION = "No Permission Required";
 
     /**
      * The name of this command, which is the Method's name by default
@@ -67,6 +66,7 @@ public @interface Decree {
     /**
      * The permissions class that gives the required permission for this command.<p>
      * By default, it requires no permissions
+     * @return
      */
-    String permission() default "";
+    String permission() default NO_PERMISSION;
 }

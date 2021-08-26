@@ -26,6 +26,7 @@ import nl.codevs.decree.decree.util.*;
 import org.bukkit.Bukkit;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Objects;
@@ -114,6 +115,10 @@ public class DecreeVirtualCommand {
 
     public DecreeOrigin getOrigin(){
         return isNode() ? getNode().getOrigin() : getDecree().origin();
+    }
+
+    public String getPermission(){
+        return isNode() ? getNode().getPermission() : getDecree().permission();
     }
 
     public String getDescription() {
@@ -324,10 +329,6 @@ public class DecreeVirtualCommand {
         return data;
     }
 
-    public boolean invoke(DecreeSender sender, KList<String> realArgs) {
-        return invoke(sender, realArgs, new KList<>());
-    }
-
     public boolean invoke(DecreeSender sender, KList<String> args, KList<Integer> skip) {
 
         system.debug("@ " + getPath() + " with " + args.toString(", "));
@@ -431,12 +432,20 @@ public class DecreeVirtualCommand {
 
         Runnable rx = () -> {
             try {
-                DecreeContext.touch(sender);
-                getNode().getMethod().setAccessible(true);
-                getNode().getMethod().invoke(getNode().getInstance(), params);
+                try {
+                    DecreeContext.touch(sender);
+                    getNode().getMethod().setAccessible(true);
+                    getNode().getMethod().invoke(getNode().getInstance(), params);
+                } catch (InvocationTargetException e) {
+                    if (e.getCause().getMessage().endsWith("may only be triggered synchronously.")) {
+                        sender.sendMessage(C.RED + "The command you tried to run (" + getPath() + ") may only be run sync! Contact your admin!");
+                        return;
+                    }
+                    throw e;
+                }
             } catch (Throwable e) {
                 e.printStackTrace();
-                throw new RuntimeException("Failed to execute <INSERT REAL NODE HERE>"); // TODO:
+                throw new RuntimeException("Failed to execute " + getPath());
             }
         };
 
@@ -456,21 +465,21 @@ public class DecreeVirtualCommand {
         }
 
         for (DecreeVirtualCommand i : nodes) {
-            if (skip.contains(i.hashCode())) {
+            if (skip.contains(i.hashCode()) || !i.getOrigin().validFor(sender) || !sender.hasPermission(i.getPermission())) {
                 continue;
             }
 
-            if (i.matches(in) && i.getOrigin().validFor(sender)) {
+            if (i.matches(in)) {
                 return i;
             }
         }
 
         for (DecreeVirtualCommand i : nodes) {
-            if (skip.contains(i.hashCode())) {
+            if (skip.contains(i.hashCode()) || !i.getOrigin().validFor(sender) || !sender.hasPermission(i.getPermission())) {
                 continue;
             }
 
-            if (i.deepMatches(in) && i.getOrigin().validFor(sender)) {
+            if (i.deepMatches(in)) {
                 return i;
             }
         }

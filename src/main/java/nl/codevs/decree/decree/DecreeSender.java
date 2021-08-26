@@ -24,6 +24,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import nl.codevs.decree.decree.objects.Decree;
 import nl.codevs.decree.decree.objects.DecreeOrigin;
 import nl.codevs.decree.decree.objects.DecreeParameter;
 import nl.codevs.decree.decree.util.C;
@@ -380,6 +381,17 @@ public class DecreeSender implements CommandSender {
                 onClick = "run_command";
             }
 
+            String permission = "";
+            String granted = "";
+            if (!i.getDecree().permission().equals(Decree.NO_PERMISSION)){
+                if (isOp() || hasPermission(i.getDecree().permission())){
+                    granted = "<#a73abd>(Granted)";
+                } else {
+                    granted = "<#db4321>(Not Granted)";
+                }
+                permission += "<#2181db>⏍ <#78dcf0><font:minecraft:uniform>Permission: <#ffa500>" + i.getDecree().permission() + " " + granted + newline;
+            }
+
             String suggestion = "";
             String suggestions = "";
             if (i.isNode() && i.getNode().getParameters().isNotEmpty()) {
@@ -436,8 +448,9 @@ public class DecreeSender implements CommandSender {
                     "<hover:show_text:'" +
                         hoverTitle + newline +
                         description + newline +
-                        usage +
-                        suggestion + //Newlines for suggestions are added when they're built, to prevent blanklines.
+                        permission + // Newlines added internally
+                        usage + // Newlines added internally
+                        suggestion + // Newlines added internally
                         suggestions + newline +
                         originText +
                     "'>" +

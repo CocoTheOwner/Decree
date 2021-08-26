@@ -70,7 +70,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
      * @param message The debug message
      */
     default void debug(String message) {
-        Bukkit.getConsoleSender().sendMessage();
+        Bukkit.getConsoleSender().sendMessage(message);
     }
 
     default DecreeVirtualCommand getRoot() {
@@ -87,7 +87,7 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
 
     default boolean call(DecreeSender sender, String[] args) {
         DecreeContext.touch(sender);
-        return getRoot().invoke(sender, enhanceArgs(args));
+        return getRoot().invoke(sender, enhanceArgs(args), new KList<>());
     }
 
     default List<String> decreeTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
