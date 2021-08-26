@@ -33,41 +33,29 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Data
-public class DecreeCategory {
+public class DecreeVirtualCategory {
     private final Class<? extends DecreeCommandExecutor> realClass;
-    private final Decree decree;
-    private final DecreeCategory parent;
+    private final DecreeVirtualCategory parent;
+    private final DecreeCommand node;
     private final DecreeSystem system;
-    private final KList<DecreeCategory> nodes = new KList<>();
-    private final KList<DecreeCommand> commands = new KList<>();
+    private final KList<DecreeVirtualCategory> nodes = new KList<>();
+    private final KList<DecreeVirtualCategory> commands = new KList<>();
 
-    private DecreeCategory(DecreeCommandExecutor realClass, Decree decree, DecreeCategory parent, DecreeSystem system) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
-        this.realClass = realClass.getClass();
-        this.decree = decree;
+    private DecreeVirtualCategory(Class<? extends DecreeCommandExecutor> realClass, DecreeVirtualCategory parent, DecreeCommand node, DecreeSystem system) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
+        this.realClass = realClass;
         this.parent = parent;
+        this.node = node;
         this.system = system;
         calcSubNodes(this, realClass, system);
         calcCommands(this, realClass, system);
     }
 
-    /**
-     * Create the true origin (root) for this Decree command tree. Should be called once per origin (has no parent)
-     * @param rootClass The root class where the tree originates from
-     * @param system The {@link DecreeSystem} that manages this system
-     * @return The {@link DecreeCategory} the class represents
-     */
-    public static DecreeCategory createOrigin(DecreeCommandExecutor rootClass, DecreeSystem system) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
-        return DecreeCategory.createRoot(null, rootClass, system);
+    public static DecreeVirtualCategory createOrigin(DecreeCommandExecutor rootClass, DecreeSystem system) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
+        return new DecreeVirtualCategory(rootClass.getClass(), null, null, system);
     }
 
-    /**
-     * Create the root for this Decree command tree branch
-     * @param rootClass The branch to create a category for
-     * @param system The {@link DecreeSystem} that manages this system
-     * @return The {@link DecreeCategory} the class represents
-     */
-    public static DecreeCategory createRoot(DecreeCategory parent, DecreeCommandExecutor rootClass, DecreeSystem system) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
-        return new DecreeCategory(rootClass, rootClass.getClass().getDeclaredAnnotation(Decree.class), parent, system);
+    public static DecreeVirtualCategory createRoot(DecreeVirtualCategory parent, DecreeCommandExecutor rootClass, DecreeSystem system) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
+        return new DecreeVirtualCategory(rootClass.getClass(), parent, null, system);
     }
 
     /**
@@ -76,8 +64,8 @@ public class DecreeCategory {
      * @param fromClass The class to search for commands
      * @param system The system running this Decree instance
      */
-    private static void calcCommands(DecreeCategory forCategory, DecreeCommandExecutor fromClass, DecreeSystem system) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
-        for (Method i : fromClass.getClass().getDeclaredMethods()) {
+    private static void calcCommands(DecreeVirtualCategory forCategory, Class<? extends DecreeCommandExecutor> fromClass, DecreeSystem system) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException {
+        for (Method i : fromClass.getDeclaredMethods()) {
             if (!i.isAnnotationPresent(Decree.class) ||
                     Modifier.isStatic(i.getModifiers()) ||
                     Modifier.isFinal(i.getModifiers()) ||
@@ -86,7 +74,7 @@ public class DecreeCategory {
                 continue;
             }
 
-            forCategory.getCommands().add(new DecreeCommand(fromClass, i));
+            forCategory.getCommands().add(new DecreeVirtualCategory(fromClass, forCategory, new DecreeCommand(fromClass, i), system));
         }
     }
 
@@ -96,8 +84,8 @@ public class DecreeCategory {
      * @param fromClass The class to search for subnodes
      * @param system The system running this Decree instance
      */
-    private static void calcSubNodes(DecreeCategory forCategory, DecreeCommandExecutor fromClass, DecreeSystem system) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        for (Field i : fromClass.getClass().getDeclaredFields()) {
+    private static void calcSubNodes(DecreeVirtualCategory forCategory, Class<? extends DecreeCommandExecutor> fromClass, DecreeSystem system) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        for (Field i : fromClass.getDeclaredFields()) {
 
             if (!i.getType().isAnnotationPresent(Decree.class) ||
                     Modifier.isStatic(i.getModifiers()) ||
@@ -109,65 +97,68 @@ public class DecreeCategory {
             }
 
             i.setAccessible(true);
-            DecreeCommandExecutor childRoot = (DecreeCommandExecutor) i.get(fromClass);
+            Object childRoot = i.get(fromClass);
 
-            if (childRoot == null){
-                childRoot = (DecreeCommandExecutor) i.getType().getConstructor().newInstance();
+            if (childRoot == null) {
+                childRoot = i.getType().getConstructor().newInstance();
                 i.set(fromClass, childRoot);
             }
 
-            forCategory.getNodes().add(createRoot(forCategory, childRoot, system));
+            forCategory.getNodes().add(createRoot(forCategory, (DecreeCommandExecutor) childRoot, system));
         }
     }
 
-    /**
-     * @return The origin of this category
-     */
     public DecreeOrigin getOrigin(){
-        return getDecree().origin();
+        return isNode() ? getNode().getOrigin() : getRealClass().getDeclaredAnnotation(Decree.class).origin();
     }
 
-    /**
-     * @return The path to this category
-     */
     public String getPath() {
-        return getParentPath() + " " + getName();
-    }
+        KList<String> n = new KList<>();
+        DecreeVirtualCategory cursor = this;
 
-    /**
-     * @return The path of the parent
-     */
-    public String getParentPath(){
-        if (getParent() == null){
-            return "/";
-        } else {
-            return getParent().getPath();
+        while (cursor.getParent() != null) {
+            cursor = cursor.getParent();
+            n.add(cursor.getName());
         }
+
+        return "/" + n.reverse().qadd(getName()).toString(" ");
     }
 
-    /**
-     * @return The name of this category
-     */
+    public String getParentPath() {
+        return getParent().getPath();
+    }
+
     public String getName() {
-        return getDecree().name();
+        return isNode() ? getNode().getName() : getRealClass().getDeclaredAnnotation(Decree.class).name();
     }
 
-    /**
-     * @return The description of this category
-     */
     public String getDescription() {
-        return getDecree().description();
+        return isNode() ? getNode().getDescription() : getRealClass().getDeclaredAnnotation(Decree.class).description();
     }
 
-    /**
-     * @return The possible names for this category
-     */
     public KList<String> getNames() {
-        KList<String> names = new KList<>(getDecree().aliases());
-        names.add(getName());
-        names.removeDuplicates();
-        names.removeIf(name -> name.trim().isEmpty());
-        return names;
+        if (isNode()) {
+            return getNode().getNames();
+        }
+
+        KList<String> d = new KList<>();
+        Decree dc = getRealClass().getDeclaredAnnotation(Decree.class);
+        for (String i : dc.aliases()) {
+            if (i.isEmpty()) {
+                continue;
+            }
+
+            d.add(i);
+        }
+
+        d.add(dc.name());
+        d.removeDuplicates();
+
+        return d;
+    }
+
+    public boolean isNode() {
+        return node != null;
     }
 
     public KList<String> tabComplete(KList<String> args, String raw, DecreeSender sender) {
@@ -193,7 +184,7 @@ public class DecreeCategory {
         String head = args.get(0);
 
         if (args.size() > 1 || head.endsWith(" ")) {
-            DecreeCategory match = matchNode(head, skip, sender);
+            DecreeVirtualCategory match = matchNode(head, skip, sender);
 
             if (match != null) {
                 args.pop();
@@ -263,7 +254,7 @@ public class DecreeCategory {
                     }
                 }
             } else {
-                for (DecreeCategory i : getNodes()) {
+                for (DecreeVirtualCategory i : getNodes()) {
                     String m = i.getName();
                     if (m.equalsIgnoreCase(last) || m.toLowerCase().contains(last.toLowerCase()) || last.toLowerCase().contains(m.toLowerCase())) {
                         tabs.addAll(i.getNames());
@@ -374,7 +365,7 @@ public class DecreeCategory {
         }
 
         String head = args.get(0);
-        DecreeCategory match = matchNode(head, skip, sender);
+        DecreeVirtualCategory match = matchNode(head, skip, sender);
 
         if (match != null) {
             args.pop();
@@ -475,21 +466,21 @@ public class DecreeCategory {
         return true;
     }
 
-    public KList<DecreeCategory> matchAllNodes(String in, DecreeSender sender) {
-        KList<DecreeCategory> g = new KList<>();
+    public KList<DecreeVirtualCategory> matchAllNodes(String in, DecreeSender sender) {
+        KList<DecreeVirtualCategory> g = new KList<>();
 
         if (in.trim().isEmpty()) {
             g.addAll(nodes);
             return g;
         }
 
-        for (DecreeCategory i : nodes) {
+        for (DecreeVirtualCategory i : nodes) {
             if (i.matches(in) && i.getOrigin().validFor(sender)) {
                 g.add(i);
             }
         }
 
-        for (DecreeCategory i : nodes) {
+        for (DecreeVirtualCategory i : nodes) {
             if (i.deepMatches(in) && i.getOrigin().validFor(sender)) {
                 g.add(i);
             }
@@ -499,13 +490,13 @@ public class DecreeCategory {
         return g;
     }
 
-    public DecreeCategory matchNode(String in, KList<Integer> skip, DecreeSender sender) {
+    public DecreeVirtualCategory matchNode(String in, KList<Integer> skip, DecreeSender sender) {
 
         if (in.trim().isEmpty()) {
             return null;
         }
 
-        for (DecreeCategory i : nodes) {
+        for (DecreeVirtualCategory i : nodes) {
             if (skip.contains(i.hashCode())) {
                 continue;
             }
@@ -515,7 +506,7 @@ public class DecreeCategory {
             }
         }
 
-        for (DecreeCategory i : nodes) {
+        for (DecreeVirtualCategory i : nodes) {
             if (skip.contains(i.hashCode())) {
                 continue;
             }
@@ -528,6 +519,17 @@ public class DecreeCategory {
         return null;
     }
 
+    public boolean deepMatches(String in) {
+        KList<String> a = getNames();
+
+        for (String i : a) {
+            if (i.toLowerCase().contains(in.toLowerCase()) || in.toLowerCase().contains(i.toLowerCase())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     @Override
     public int hashCode() {
@@ -536,43 +538,17 @@ public class DecreeCategory {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof DecreeCategory)) {
+        if (!(obj instanceof DecreeVirtualCategory)) {
             return false;
         }
         return this.hashCode() == obj.hashCode();
     }
 
-    /**
-     * Check for a 1-to-1 overlap match with the input string.
-     * @param in The string to check against
-     * @return True if a shallow match was found
-     */
     public boolean matches(String in) {
         KList<String> a = getNames();
 
         for (String i : a) {
             if (i.equalsIgnoreCase(in)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Check for a deep match. This also checks for partial overlap instead of full overlap like #matches
-     * @param in The String to check against
-     * @return True if a deep match is found
-     */
-    public boolean deepMatches(String in) {
-        KList<String> a = getNames();
-
-        if (matches(in)) {
-            return true;
-        }
-
-        for (String i : a) {
-            if (i.toLowerCase().contains(in.toLowerCase()) || in.toLowerCase().contains(i.toLowerCase())) {
                 return true;
             }
         }

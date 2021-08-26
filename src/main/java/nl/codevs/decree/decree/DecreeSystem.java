@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
-    AtomicCache<DecreeCategory> commandCache = new AtomicCache<>();
+    AtomicCache<DecreeVirtualCategory> commandCache = new AtomicCache<>();
     KList<DecreeParameterHandler<?>> handlers = new KList<>(
             new BlockVectorHandler(),
             new BooleanHandler(),
@@ -77,12 +77,12 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
      * Should return the root class as a virtual category.<br>
      * Uses {@link DecreeSystem}#getRootClass to retrieve the class<br>
      * Because of caching & performance issues, do not overwrite this, but that instead.
-     * @return The {@link DecreeCategory}
+     * @return The {@link DecreeVirtualCategory}
      */
-    default DecreeCategory getRoot() {
+    default DecreeVirtualCategory getRoot() {
         return commandCache.aquire(() -> {
             try {
-                return DecreeCategory.createOrigin(getRootClass(), this);
+                return DecreeVirtualCategory.createOrigin(getRootClass(), this);
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -91,21 +91,12 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
         });
     }
 
-    /**
-     * Decree tab completion
-     * @param sender The sender that needs completion
-     * @param command The command entered thus far
-     * @param alias The alias for the command
-     * @param args Arguments passed with the command
-     * @return A List of strings representing options
-     */
     default List<String> decreeTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         KList<String> enhanced = new KList<>(args);
         KList<String> v = getRoot().tabComplete(enhanced, enhanced.toString(" "), new DecreeSender(sender, instance(), this));
         v.removeDuplicates();
         return v;
     }
-
 
     default boolean decreeCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 

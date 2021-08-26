@@ -30,7 +30,7 @@ import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.Form;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
-import nl.codevs.decree.decree.objects.DecreeCategory;
+import nl.codevs.decree.decree.objects.DecreeVirtualCategory;
 import org.bukkit.Server;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -289,7 +289,7 @@ public class DecreeSender implements CommandSender {
         return s.spigot();
     }
 
-    private String pickRandoms(int max, DecreeCategory command) {
+    private String pickRandoms(int max, DecreeVirtualCategory command) {
         KList<String> randoms = new KList<>();
         if (!command.isNode() || command.getNode().getParameters().isEmpty()) {
             return "";
@@ -331,16 +331,16 @@ public class DecreeSender implements CommandSender {
         sendHeader(name, 46);
     }
 
-    public void sendDecreeHelp(DecreeCategory v) {
+    public void sendDecreeHelp(DecreeVirtualCategory v) {
         int m = v.getNodes().size();
 
         if (v.getNodes().isNotEmpty()) {
             sendHeader(Form.capitalize(v.getName()) + " Help");
             if (isPlayer() && v.getParent() != null) {
-                sendMessageRaw("<hover:show_text:'" + "<#b54b38>Click to go back to <#3299bf>" + Form.capitalize(v.getParent().getName()) + " Help" + "'><click:run_command:" + v.getParentPath() + "><font:minecraft:uniform><#f58571>〈 Back</click></hover>");
+                sendMessageRaw("<hover:show_text:'" + "<#b54b38>Click to go back to <#3299bf>" + Form.capitalize(v.getParent().getName()) + " Help" + "'><click:run_command:" + v.getParent().getPath() + "><font:minecraft:uniform><#f58571>〈 Back</click></hover>");
             }
 
-            for (DecreeCategory i : v.getNodes()) {
+            for (DecreeVirtualCategory i : v.getNodes()) {
                 sendDecreeHelpNode(i);
             }
         } else {
@@ -348,7 +348,7 @@ public class DecreeSender implements CommandSender {
         }
     }
 
-    public void sendDecreeHelpNode(DecreeCategory i){
+    public void sendDecreeHelpNode(DecreeVirtualCategory i){
         if (isPlayer()) {
 
             String newline = "<reset>\n";
