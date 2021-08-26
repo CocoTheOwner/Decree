@@ -20,6 +20,7 @@ package nl.codevs.decree.decree.util;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @SuppressWarnings("ALL")
 public class KList<T> extends ArrayList<T> implements List<T> {
@@ -207,6 +208,11 @@ public class KList<T> extends ArrayList<T> implements List<T> {
         }
 
         return get(Maths.irand(0, last()));
+    }
+
+    public KList<T> qremoveIf(Predicate<? super T> filter) {
+        removeIf(filter);
+        return this;
     }
 
     public KList<T> getRandoms(int amount) {

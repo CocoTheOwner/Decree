@@ -298,7 +298,7 @@ public class DecreeSender implements CommandSender {
         for (int ix = 0; ix < max; ix++) {
             randoms.add(
                     "<#aebef2>✦ <#5ef288>"
-                    + command.getParentPath()
+                    + command.parent().getPath()
                     + " <#42ecf5>"
                     + command.getName() + " "
                     + command.getNode().getParameters().shuffleCopy(new Random()).convert((f)
@@ -395,7 +395,7 @@ public class DecreeSender implements CommandSender {
             String suggestion = "";
             String suggestions = "";
             if (i.isNode() && i.getNode().getParameters().isNotEmpty()) {
-                suggestion += newline + "<#aebef2>✦ <#5ef288><font:minecraft:uniform>" + i.getParentPath() + " <#42ecf5>" + i.getName() + " "
+                suggestion += newline + "<#aebef2>✦ <#5ef288><font:minecraft:uniform>" + i.parent().getPath() + " <#42ecf5>" + i.getName() + " "
                         + i.getNode().getParameters().convert((f) -> "<#d665f0>" + f.exampleValue()).toString(" ");
                 suggestions += newline + "<font:minecraft:uniform>" + pickRandoms(Math.min(i.getNode().getParameters().size() + 1, 5), i);
             }

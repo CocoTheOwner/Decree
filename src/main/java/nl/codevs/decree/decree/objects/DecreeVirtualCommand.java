@@ -33,7 +33,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Data
-public class DecreeVirtualCommand {
+public class DecreeVirtualCommand implements Decreed {
     private final Class<?> type;
     private final DecreeVirtualCommand parent;
     private final Decree decree;
@@ -92,22 +92,16 @@ public class DecreeVirtualCommand {
         return c;
     }
 
-    /**
-     * @return The path to this node
-     */
-    public String getPath() {
-        if (getParent() == null) {
-            return "/" + getName();
-        }
-        return getParentPath() + " " + getName();
+    @Override
+    public Decreed parent() {
+        return parent;
     }
 
-    /**
-     * @return The path of the parent node
-     */
-    public String getParentPath() {
-        return getParent().getPath();
+    @Override
+    public Decree decree() {
+        return decree;
     }
+
 
     public String getName() {
         return isNode() ? getNode().getName() : getDecree().name();
@@ -435,7 +429,7 @@ public class DecreeVirtualCommand {
                 try {
                     DecreeContext.touch(sender);
                     getNode().getMethod().setAccessible(true);
-                    getNode().getMethod().invoke(getNode().getInstance(), params);
+                    getNode().getMethod().invoke(getNode().getParent(), params);
                 } catch (InvocationTargetException e) {
                     if (e.getCause().getMessage().endsWith("may only be triggered synchronously.")) {
                         sender.sendMessage(C.RED + "The command you tried to run (" + getPath() + ") may only be run sync! Contact your admin!");
@@ -458,6 +452,7 @@ public class DecreeVirtualCommand {
         return true;
     }
 
+    // Category
     public DecreeVirtualCommand matchNode(String in, KList<Integer> skip, DecreeSender sender) {
 
         if (in.trim().isEmpty()) {
@@ -498,33 +493,5 @@ public class DecreeVirtualCommand {
             return false;
         }
         return this.hashCode() == obj.hashCode();
-    }
-
-    public boolean matches(String in) {
-        KList<String> a = getNames();
-
-        for (String i : a) {
-            if (i.equalsIgnoreCase(in)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean deepMatches(String in) {
-        if (matches(in)){
-            return true;
-        }
-
-        KList<String> a = getNames();
-
-        for (String i : a) {
-            if (i.toLowerCase().contains(in.toLowerCase()) || in.toLowerCase().contains(i.toLowerCase())) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
