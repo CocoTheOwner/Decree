@@ -34,16 +34,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 public class DecreeVirtualCommand implements Decreed {
-    private final Class<?> type;
     private final DecreeVirtualCommand parent;
     private final Decree decree;
     private final KList<DecreeVirtualCommand> nodes;
     private final DecreeNode node;
     private final DecreeSystem system;
 
-    private DecreeVirtualCommand(Class<?> type, DecreeVirtualCommand parent, Decree decree, KList<DecreeVirtualCommand> nodes, DecreeNode node, DecreeSystem system) {
+    private DecreeVirtualCommand(DecreeVirtualCommand parent, Decree decree, KList<DecreeVirtualCommand> nodes, DecreeNode node, DecreeSystem system) {
         this.parent = parent;
-        this.type = type;
         this.decree = decree;
         this.nodes = nodes;
         this.node = node;
@@ -55,7 +53,7 @@ public class DecreeVirtualCommand implements Decreed {
     }
 
     public static DecreeVirtualCommand createRoot(DecreeVirtualCommand parent, Object v, Decree decree, DecreeSystem system) throws Throwable {
-        DecreeVirtualCommand c = new DecreeVirtualCommand(v.getClass(), parent, decree, new KList<>(), null, system);
+        DecreeVirtualCommand c = new DecreeVirtualCommand(parent, decree, new KList<>(), null, system);
 
         for (Field i : v.getClass().getDeclaredFields()) {
             if (Modifier.isStatic(i.getModifiers()) || Modifier.isFinal(i.getModifiers()) || Modifier.isTransient(i.getModifiers()) || Modifier.isVolatile(i.getModifiers())) {
@@ -86,7 +84,7 @@ public class DecreeVirtualCommand implements Decreed {
                 continue;
             }
 
-            c.getNodes().add(new DecreeVirtualCommand(v.getClass(), c, decree, new KList<>(), new DecreeNode(v, i), system));
+            c.getNodes().add(new DecreeVirtualCommand(c, decree, new KList<>(), new DecreeNode(v, i), system));
         }
 
         return c;
@@ -143,14 +141,14 @@ public class DecreeVirtualCommand implements Decreed {
         return getNode() != null;
     }
 
-    public KList<String> tabComplete(KList<String> args, String raw, DecreeSender sender) {
+    public KList<String> tabComplete(KList<String> args, DecreeSender sender) {
         KList<Integer> skip = new KList<>();
         KList<String> tabs = new KList<>();
-        invokeTabComplete(args, skip, tabs, raw, sender);
+        invokeTabComplete(args, skip, tabs, sender);
         return tabs;
     }
 
-    private boolean invokeTabComplete(KList<String> args, KList<Integer> skip, KList<String> tabs, String raw, DecreeSender sender) {
+    private boolean invokeTabComplete(KList<String> args, KList<Integer> skip, KList<String> tabs, DecreeSender sender) {
 
         if (isNode()) {
             tab(args, tabs);
@@ -170,7 +168,7 @@ public class DecreeVirtualCommand implements Decreed {
 
             if (match != null) {
                 args.pop();
-                return match.invokeTabComplete(args, skip, tabs, raw, sender);
+                return match.invokeTabComplete(args, skip, tabs, sender);
             }
 
             skip.add(hashCode());
@@ -484,7 +482,7 @@ public class DecreeVirtualCommand implements Decreed {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getDescription(), getType(), getPath());
+        return Objects.hash(getName(), decree(), getPath());
     }
 
     @Override

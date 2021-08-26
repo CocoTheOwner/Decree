@@ -90,14 +90,14 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
         return getRoot().invoke(sender, enhanceArgs(args), new KList<>());
     }
 
-    default List<String> decreeTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+    default List<String> decreeTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
         KList<String> enhanced = new KList<>(args);
-        KList<String> v = getRoot().tabComplete(enhanced, enhanced.toString(" "), new DecreeSender(sender, instance(), this));
+        KList<String> v = getRoot().tabComplete(enhanced, new DecreeSender(sender, instance(), this));
         v.removeDuplicates();
         return v;
     }
 
-    default boolean decreeCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    default boolean decreeCommand(@NotNull CommandSender sender, @NotNull String[] args) {
 
         Bukkit.getScheduler().scheduleAsyncDelayedTask(instance(), () -> {
             if (!call(new DecreeSender(sender, instance(), this), args)) {

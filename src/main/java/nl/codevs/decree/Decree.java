@@ -27,13 +27,13 @@ public class Decree extends JavaPlugin implements DecreeSystem, DecreeNodeExecut
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return decreeCommand(sender, command, label, args);
+        return decreeCommand(sender, args);
     }
 
     @Nullable
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        return decreeTabComplete(sender, command, alias, args);
+        return decreeTabComplete(sender, args);
     }
 
     @Override
