@@ -9,7 +9,7 @@ import nl.codevs.decree.decree.objects.Param;
 public class MainCommandClass implements DecreeCommandExecutor {
 
     // This line is a category pointer
-    private SubCommandClass nameDoesNotMatterHere;
+    public SubCommandClass nameDoesNotMatterHere;
 
     @Decree(
             description = "Send hello!",
