@@ -24,12 +24,13 @@ import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.KList;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
 public class PlayerHandler implements DecreeParameterHandler<Player> {
     @Override
-    public KList<Player> getPossibilities() {
+    public @NotNull KList<Player> getPossibilities() {
         return new KList<>(new ArrayList<>(Bukkit.getOnlinePlayers()));
     }
 

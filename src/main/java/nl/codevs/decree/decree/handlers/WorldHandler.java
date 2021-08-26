@@ -24,10 +24,11 @@ import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.KList;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.jetbrains.annotations.NotNull;
 
 public class WorldHandler implements DecreeParameterHandler<World> {
     @Override
-    public KList<World> getPossibilities() {
+    public @NotNull KList<World> getPossibilities() {
         return new KList<>(Bukkit.getWorlds());
     }
 
