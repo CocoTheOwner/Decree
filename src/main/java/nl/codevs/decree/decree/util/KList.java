@@ -259,4 +259,12 @@ public class KList<T> extends ArrayList<T> implements List<T> {
         add(element);
         return this;
     }
+
+    public T popLast() {
+        if (isEmpty()) {
+            return null;
+        }
+
+        return remove(size() - 1);
+    }
 }

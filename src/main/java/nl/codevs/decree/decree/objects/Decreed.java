@@ -16,6 +16,14 @@ public interface Decreed {
     Decree decree();
 
     /**
+     * Which auto-completions to display
+     * @param args The arguments parsed with the command
+     * @param sender The sender of the command
+     * @return The auto-completions in a {@link KList}
+     */
+    KList<String> onTab(KList<String> args, DecreeSender sender);
+
+    /**
      * Get the origin of the node
      */
     default DecreeOrigin getOrigin() {

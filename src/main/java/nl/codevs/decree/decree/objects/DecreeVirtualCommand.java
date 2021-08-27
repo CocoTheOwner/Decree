@@ -100,6 +100,11 @@ public class DecreeVirtualCommand implements Decreed {
         return decree;
     }
 
+    @Override
+    public KList<String> onTab(KList<String> args, DecreeSender sender) {
+        return null;
+    }
+
 
     public String getName() {
         return isNode() ? getNode().getName() : getDecree().name();
@@ -164,65 +169,65 @@ public class DecreeVirtualCommand implements Decreed {
     private KList<String> tab(KList<String> args) {
         KList<String> tabs = new KList<>();
 
-        String last = null;
+        String last = args.isEmpty() ? null : args.popLast();
         KList<DecreeParameter> ignore = new KList<>();
-        Runnable la = () -> {
 
-        };
+        // Remove auto-completions for existing keys
         for (String a : args) {
-            la.run();
-            last = a;
-            la = () -> {
-                if (isNode()) {
-                    String sea = a.contains("=") ? a.split("\\Q=\\E")[0] : a;
-                    sea = sea.trim();
+            if (isNode()) {
+                String sea = a.contains("=") ? a.split("\\Q=\\E")[0] : a;
+                sea = sea.trim();
 
-                    searching:
-                    for (DecreeParameter i : getNode().getParameters()) {
-                        for (String m : i.getNames()) {
-                            if (m.equalsIgnoreCase(sea) || m.toLowerCase().contains(sea.toLowerCase()) || sea.toLowerCase().contains(m.toLowerCase())) {
-                                ignore.add(i);
-                                continue searching;
-                            }
+                searching:
+                for (DecreeParameter i : getNode().getParameters()) {
+                    for (String m : i.getNames()) {
+                        if (m.equalsIgnoreCase(sea) || m.toLowerCase().contains(sea.toLowerCase()) || sea.toLowerCase().contains(m.toLowerCase())) {
+                            ignore.add(i);
+                            continue searching;
                         }
                     }
                 }
-            };
+            }
         }
 
-        if (last != null) {
-            if (isNode()) {
-                for (DecreeParameter i : getNode().getParameters()) {
-                    if (ignore.contains(i)) {
-                        continue;
+        // No partial parameters present
+        if (last == null) {
+            return tabs;
+        }
+
+        // Add auto-completions
+        if (isNode()) {
+            for (DecreeParameter i : getNode().getParameters()) {
+                if (ignore.contains(i)) {
+                    continue;
+                }
+
+                int g = 0;
+
+                if (last.contains("=")) {
+                    String[] vv = last.trim().split("\\Q=\\E");
+                    String vx = vv.length == 2 ? vv[1] : "";
+                    for (String f : i.getHandler().getPossibilities(vx).convert((v) -> i.getHandler().toStringForce(v))) {
+                        g++;
+                        tabs.add(i.getName() + "=" + f);
                     }
-
-                    int g = 0;
-
-                    if (last.contains("=")) {
-                        String[] vv = last.trim().split("\\Q=\\E");
-                        String vx = vv.length == 2 ? vv[1] : "";
-                        for (String f : i.getHandler().getPossibilities(vx).convert((v) -> i.getHandler().toStringForce(v))) {
-                            g++;
-                            tabs.add(i.getName() + "=" + f);
-                        }
-                    } else {
-                        for (String f : i.getHandler().getPossibilities("").convert((v) -> i.getHandler().toStringForce(v))) {
-                            g++;
-                            tabs.add(i.getName() + "=" + f);
-                        }
-                    }
-
-                    if (g == 0) {
-                        tabs.add(i.getName() + "=");
+                } else {
+                    for (String f : i.getHandler().getPossibilities("").convert((v) -> i.getHandler().toStringForce(v))) {
+                        g++;
+                        tabs.add(i.getName() + "=" + f);
                     }
                 }
-            } else {
-                for (DecreeVirtualCommand i : getNodes()) {
-                    String m = i.getName();
-                    if (m.equalsIgnoreCase(last) || m.toLowerCase().contains(last.toLowerCase()) || last.toLowerCase().contains(m.toLowerCase())) {
-                        tabs.addAll(i.getNames());
-                    }
+
+                if (g == 0) {
+                    tabs.add(i.getName() + "=");
+                    tabs.add(i.getName() + "=" + i.getDefaultRaw());
+                }
+            }
+        } else {
+            for (DecreeVirtualCommand i : getNodes()) {
+                String m = i.getName();
+                if (m.equalsIgnoreCase(last) || m.toLowerCase().contains(last.toLowerCase()) || last.toLowerCase().contains(m.toLowerCase())) {
+                    tabs.addAll(i.getNames());
                 }
             }
         }
@@ -241,6 +246,7 @@ public class DecreeVirtualCommand implements Decreed {
                 String value = v[1];
                 DecreeParameter param = null;
 
+                // Shallow match
                 for (DecreeParameter j : getNode().getParameters()) {
                     for (String k : j.getNames()) {
                         if (k.equalsIgnoreCase(key)) {
@@ -250,6 +256,7 @@ public class DecreeVirtualCommand implements Decreed {
                     }
                 }
 
+                // Deep match
                 if (param == null) {
                     for (DecreeParameter j : getNode().getParameters()) {
                         for (String k : j.getNames()) {
@@ -261,6 +268,7 @@ public class DecreeVirtualCommand implements Decreed {
                     }
                 }
 
+                // Skip param
                 if (param == null) {
                     system.debug("Can't find parameter key for " + key + "=" + value + " in " + getPath());
                     sender.sendMessage(C.YELLOW + "Unknown Parameter: " + key);

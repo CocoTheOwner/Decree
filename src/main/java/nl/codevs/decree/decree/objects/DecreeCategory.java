@@ -1,5 +1,6 @@
 package nl.codevs.decree.decree.objects;
 
+import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.util.KList;
 
 import java.lang.reflect.Field;
@@ -66,7 +67,7 @@ public class DecreeCategory implements Decreed {
                 continue;
             }
 
-            commands.add(new DecreeCommand(parent, command));
+            commands.add(new DecreeCommand(parent(), command));
         }
 
         return commands;
@@ -80,5 +81,10 @@ public class DecreeCategory implements Decreed {
     @Override
     public Decree decree() {
         return decree;
+    }
+
+    @Override
+    public KList<String> onTab(KList<String> args, DecreeSender sender) {
+        return null;
     }
 }

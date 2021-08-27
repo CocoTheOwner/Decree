@@ -51,6 +51,11 @@ public class DecreeCommand implements Decreed {
         this.parameters = calcParameters();
     }
 
+    /**
+     * Calculate the parameters in this method<br>
+     * Sorted by required & contextuality
+     * @return {@link KList} of {@link DecreeParameter}s
+     */
     private KList<DecreeParameter> calcParameters() {
         KList<DecreeParameter> parameters = new KList<>();
         for (Parameter parameter : method.getParameters()) {
@@ -91,5 +96,10 @@ public class DecreeCommand implements Decreed {
     @Override
     public Decree decree() {
         return decree;
+    }
+
+    @Override
+    public KList<String> onTab(KList<String> args, DecreeSender sender) {
+        return null;
     }
 }
