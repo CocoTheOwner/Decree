@@ -73,6 +73,45 @@ public class DecreeCategory implements Decreed {
         return commands;
     }
 
+    /**
+     * Match a subcategory or command of this category
+     * @param in The string to use to query
+     * @param skip A {@link KList} of {@link Decreed}s to skip while searching
+     * @param sender The {@link DecreeSender} to use to search
+     * @return A {@link Decreed} or null
+     */
+    public Decreed match(String in, KList<Decreed> skip, DecreeSender sender){
+        if (in.trim().isEmpty()){
+            return null;
+        }
+
+        for (DecreeCommand command : commands) {
+            if (!skip.contains(command) && command.doesMatchAllowed(sender, in)){
+                return command;
+            }
+        }
+
+        for (DecreeCategory subCat : subCats) {
+            if (!skip.contains(subCat) && subCat.doesMatchAllowed(sender, in)){
+                return subCat;
+            }
+        }
+
+        for (DecreeCommand command : commands) {
+            if (!skip.contains(command) && command.doesDeepMatchAllowed(sender, in)){
+                return command;
+            }
+        }
+
+        for (DecreeCategory subCat : subCats) {
+            if (!skip.contains(subCat) && subCat.doesDeepMatchAllowed(sender, in)){
+                return subCat;
+            }
+        }
+
+        return null;
+    }
+
     @Override
     public Decreed parent() {
         return parent;
