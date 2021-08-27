@@ -21,7 +21,9 @@ public interface Decreed {
      * @param sender The sender of the command
      * @return The auto-completions in a {@link KList}
      */
-    KList<String> onTab(KList<String> args, DecreeSender sender);
+    KList<String> tab(KList<String> args, DecreeSender sender);
+
+    boolean invoke(KList<String> args, DecreeSender sender);
 
     /**
      * Get the origin of the node

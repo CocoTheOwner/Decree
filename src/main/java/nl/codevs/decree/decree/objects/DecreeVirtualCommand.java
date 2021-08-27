@@ -101,8 +101,13 @@ public class DecreeVirtualCommand implements Decreed {
     }
 
     @Override
-    public KList<String> onTab(KList<String> args, DecreeSender sender) {
+    public KList<String> tab(KList<String> args, DecreeSender sender) {
         return null;
+    }
+
+    @Override
+    public boolean invoke(KList<String> args, DecreeSender sender) {
+        return false;
     }
 
 
@@ -146,11 +151,7 @@ public class DecreeVirtualCommand implements Decreed {
         return getNode() != null;
     }
 
-    public KList<String> tabComplete(KList<String> args, DecreeSender sender) {
-        return invokeTabComplete(args, sender);
-    }
-
-    private KList<String> invokeTabComplete(KList<String> args, DecreeSender sender) {
+    public KList<String> invokeTabComplete(KList<String> args, DecreeSender sender) {
 
         if (isNode() || args.isEmpty() || args.size() <= 1 && !args.get(0).endsWith(" ")) {
             return tab(args);

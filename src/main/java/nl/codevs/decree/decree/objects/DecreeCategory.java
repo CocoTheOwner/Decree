@@ -123,7 +123,12 @@ public class DecreeCategory implements Decreed {
     }
 
     @Override
-    public KList<String> onTab(KList<String> args, DecreeSender sender) {
+    public KList<String> tab(KList<String> args, DecreeSender sender) {
         return null;
+    }
+
+    @Override
+    public boolean invoke(KList<String> args, DecreeSender sender) {
+        return false;
     }
 }
