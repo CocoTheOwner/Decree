@@ -65,19 +65,20 @@ public class DecreeCommand implements Decreed {
         }
 
         parameters.sort((o1, o2) -> {
+            int i = 0;
             if (o1.isRequired()) {
-                return 1;
+                i += 5;
             }
             if (o2.isRequired()) {
-                return -1;
+                i -= 3;
             }
             if (o1.isContextual()) {
-                return 1;
+                i += 2;
             }
             if (o2.isContextual()) {
-                return -1;
-            }
-            return 0;
+                i -= 1;
+            }   
+            return i;
         });
 
         return parameters;
