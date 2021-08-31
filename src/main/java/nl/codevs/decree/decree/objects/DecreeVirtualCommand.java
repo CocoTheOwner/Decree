@@ -298,6 +298,7 @@ public class DecreeVirtualCommand implements Decreed {
                     KList<?> validOptions = param.getHandler().getPossibilities(value);
                     system.debug("Found multiple results for " + key + "=" + value + " in " + getPath() + " using the handler " + param.getHandler().getClass().getSimpleName() + " with potential matches [" + validOptions.toString(",") + "]. Asking client to define one");
                     String update = pickValidOption(sender, validOptions, param.getHandler(), param.getName(), param.getType().getSimpleName());
+                    if (update == null) { return null; }
                     system.debug("Client chose " + update + " for " + key + "=" + value + " (old) in " + getPath());
                     in.set(ix--, update);
                 }
@@ -315,6 +316,7 @@ public class DecreeVirtualCommand implements Decreed {
                         system.debug("Can't parse parameter value for " + param.getName() + "=" + i + " in " + getPath() + " using handler " + param.getHandler().getClass().getSimpleName());
                         KList<?> validOptions = param.getHandler().getPossibilities(i);
                         String update = pickValidOption(sender, validOptions, param.getHandler(), param.getName(), param.getType().getSimpleName());
+                        if (update == null) { return null; }
                         system.debug("Client chose " + update + " for " + param.getName() + "=" + i + " (old) in " + getPath());
                         skip.add(ix);
                         in.set(ix--, update);
@@ -421,6 +423,7 @@ public class DecreeVirtualCommand implements Decreed {
                 system.debug("Can't parse parameter value for " + i.getName() + "=" + i + " in " + getPath() + " using handler " + i.getHandler().getClass().getSimpleName());
                 KList<?> validOptions = i.getHandler().getPossibilities(i.getParam().defaultValue());
                 String update = pickValidOption(sender, validOptions, i.getHandler(), i.getName(), i.getType().getSimpleName());
+                if (update == null) { return false; }
                 system.debug("Client chose " + update + " for " + i.getName() + "=" + i + " (old) in " + getPath());
                 value = update;
             }
