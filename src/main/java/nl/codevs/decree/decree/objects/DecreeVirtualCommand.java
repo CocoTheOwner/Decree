@@ -241,6 +241,13 @@ public class DecreeVirtualCommand implements Decreed {
 
         for (int ix = 0; ix < in.size(); ix++) {
             String i = in.get(ix);
+
+            if (i == null)
+            {
+                system.debug("Param " + ix + " is null? (\"" + in.toString(",") + "\")");
+            }
+
+
             if (i.contains("=")) {
                 String[] v = i.split("\\Q=\\E");
                 String key = v[0];

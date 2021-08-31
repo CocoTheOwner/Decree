@@ -97,7 +97,7 @@ public class KList<T> extends ArrayList<T> implements List<T> {
         StringBuilder b = new StringBuilder();
 
         for (String i : convert((t) -> t.toString())) {
-            b.append(split).append(i);
+            b.append(split).append(i == null ? "null" : i);
         }
 
         return b.substring(split.length());

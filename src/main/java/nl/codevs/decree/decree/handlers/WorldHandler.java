@@ -38,16 +38,18 @@ public class WorldHandler implements DecreeParameterHandler<World> {
     }
 
     @Override
-    public World parse(String in) throws DecreeParsingException, DecreeWhichException {
+    public World parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
         try {
             KList<World> options = getPossibilities(in);
 
             if (options.isEmpty()) {
                 throw new DecreeParsingException("Unable to find World \"" + in + "\"");
             } else if (options.size() > 1) {
-                throw new DecreeWhichException();
+                if (force) {
+                    return options.getRandom();
+                }
+                throw new DecreeWhichException(World.class, in);
             }
-
             return options.get(0);
         } catch (DecreeParsingException e) {
             throw e;

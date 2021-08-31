@@ -43,7 +43,7 @@ public class PlayerHandler implements DecreeParameterHandler<Player> {
     }
 
     @Override
-    public Player parse(String in) throws DecreeParsingException, DecreeWhichException {
+    public Player parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
         try {
             KList<Player> options = getPossibilities(in);
             KList<String> names = getPossibilities().convert(HumanEntity::getName);
@@ -61,7 +61,10 @@ public class PlayerHandler implements DecreeParameterHandler<Player> {
             if (options.isEmpty()) {
                 throw new DecreeParsingException("Unable to find Player \"" + in + "\"");
             } else if (options.size() > 1) {
-                throw new DecreeWhichException();
+                if (force) {
+                    return options.getRandom();
+                }
+                throw new DecreeWhichException(Player.class, in);
             }
 
             return options.get(0);

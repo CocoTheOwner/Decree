@@ -38,7 +38,7 @@ public class StringHandler implements DecreeParameterHandler<String> {
     }
 
     @Override
-    public String parse(String in) throws DecreeParsingException {
+    public String parse(String in, boolean force) throws DecreeParsingException {
         return in;
     }
 

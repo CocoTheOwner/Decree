@@ -52,15 +52,19 @@ public interface DecreeParameterHandler<T> {
         return toString((T) t);
     }
 
+    default T parse(String in) throws DecreeParsingException, DecreeWhichException {
+        return parse(in, false);
+    }
+
     /**
      * Should parse a String into the designated type
-     *
      * @param in The string to parse
+     * @param force Force an option instead of throwing a {@link DecreeWhichException} if possible (can allow it throwing!)
      * @return The value extracted from the string, of the designated type
      * @throws DecreeParsingException Thrown when the parsing fails (ex: "oop" translated to an integer throws this)
      * @throws DecreeWhichException   Thrown when multiple results are possible
      */
-    T parse(String in) throws DecreeParsingException, DecreeWhichException;
+    T parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException;
 
     /**
      * Returns whether a certain type is supported by this handler<br>

@@ -23,7 +23,7 @@ package nl.codevs.decree.decree.exceptions;
  * Like having a hashmap where one input maps to two outputs.
  */
 public class DecreeWhichException extends Exception {
-    public DecreeWhichException() {
-        super();
+    public DecreeWhichException(Class<?> type, String input) {
+        super("Cannot parse \"" + input + "\" into type " + type.getSimpleName() + " because of multiple options");
     }
 }

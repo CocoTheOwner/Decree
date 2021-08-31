@@ -63,6 +63,11 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     Plugin instance();
 
     /**
+     * Whether the command system should send sounds
+     */
+    boolean doCommandSound();
+
+    /**
      * What to do with debug messages
      * @param message The debug message
      */

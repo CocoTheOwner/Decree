@@ -58,7 +58,7 @@ public class VectorHandler implements DecreeParameterHandler<Vector> {
     }
 
     @Override
-    public Vector parse(String in) throws DecreeParsingException, DecreeWhichException {
+    public Vector parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
         try {
             if (in.contains(",")) {
                 String[] comp = in.split("\\Q,\\E");

@@ -130,7 +130,7 @@ public class DecreeParameter {
      * @throws DecreeWhichException Thrown when there are more than one options resulting from parsing
      */
     public Object getDefaultValue() throws DecreeParsingException, DecreeWhichException {
-        return hasDefault() ? getHandler().parse(getDefaultRaw()) : null;
+        return hasDefault() ? getHandler().parse(getDefaultRaw(), true) : null;
     }
 
     /**

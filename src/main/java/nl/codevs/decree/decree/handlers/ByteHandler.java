@@ -28,17 +28,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class ByteHandler implements DecreeParameterHandler<Byte> {
 
-    private static final KList<Byte> options = new KList<>();
-
-    static {
-        for (int i = -128; i < 127; i++) {
-            options.add((byte) i);
-        }
-    }
-
     @Override
-    public @NotNull KList<Byte> getPossibilities() {
-        return options;
+    public KList<Byte> getPossibilities() {
+        return null;
     }
 
     @Override
@@ -47,7 +39,7 @@ public class ByteHandler implements DecreeParameterHandler<Byte> {
     }
 
     @Override
-    public Byte parse(String in) throws DecreeParsingException {
+    public Byte parse(String in, boolean force) throws DecreeParsingException {
         try {
             return Byte.parseByte(in);
         } catch (Throwable e) {
