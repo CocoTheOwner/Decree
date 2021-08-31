@@ -21,6 +21,11 @@ public class Decree extends JavaPlugin implements DecreeSystem, DecreeCommandExe
     }
 
     @Override
+    public boolean doCommandSound() {
+        return true;
+    }
+
+    @Override
     public DecreeCommandExecutor getRootInstance() {
         return new MainCommandClass();
     }
