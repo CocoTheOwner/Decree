@@ -19,22 +19,29 @@
 package nl.codevs.decree.decree;
 
 import nl.codevs.decree.decree.exceptions.DecreeException;
+import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.handlers.*;
 import nl.codevs.decree.decree.objects.*;
 import nl.codevs.decree.decree.util.AtomicCache;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.KList;
 import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 
+import java.security.KeyManagementException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
     AtomicCache<DecreeVirtualCommand> commandCache = new AtomicCache<>();
+    ConcurrentHashMap<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
     KList<DecreeParameterHandler<?>> handlers = new KList<>(
             new BlockVectorHandler(),
             new BooleanHandler(),
@@ -66,6 +73,33 @@ public interface DecreeSystem extends CommandExecutor, TabCompleter, Plugin {
      * Whether the command system should send sounds
      */
     boolean doCommandSound();
+
+    @EventHandler
+    default void on(PlayerCommandPreprocessEvent e)
+    {
+        String msg = e.getMessage().startsWith("/") ? e.getMessage().substring(1) : e.getMessage();
+
+        if(msg.startsWith("decreefuture "))
+        {
+            String[] args = msg.split("\\Q \\E");
+            CompletableFuture<String> future = futures.get(args[1]);
+
+            if(future != null)
+            {
+                future.complete(args[2]);
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    /**
+     * Post a future which assists in figuring out {@link DecreeWhichException}s
+     * @param password The password to access this future (appended to the onclick)
+     * @param future The future to fulfill
+     */
+    default void postFuture(String password, CompletableFuture<String> future) {
+        futures.put(password, future);
+    }
 
     /**
      * What to do with debug messages

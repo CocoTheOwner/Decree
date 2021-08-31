@@ -24,13 +24,15 @@ import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.*;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
+import java.util.concurrent.*;
 
 @Data
 public class DecreeVirtualCommand implements Decreed {
@@ -238,6 +240,7 @@ public class DecreeVirtualCommand implements Decreed {
 
     private ConcurrentHashMap<String, Object> map(DecreeSender sender, KList<String> in) {
         ConcurrentHashMap<String, Object> data = new ConcurrentHashMap<>();
+        KList<Integer> skip = new KList<>();
 
         for (int ix = 0; ix < in.size(); ix++) {
             String i = in.get(ix);
@@ -245,8 +248,8 @@ public class DecreeVirtualCommand implements Decreed {
             if (i == null)
             {
                 system.debug("Param " + ix + " is null? (\"" + in.toString(",") + "\")");
+                continue;
             }
-
 
             if (i.contains("=")) {
                 String[] v = i.split("\\Q=\\E");
@@ -286,7 +289,7 @@ public class DecreeVirtualCommand implements Decreed {
                 key = param.getName();
 
                 try {
-                    data.put(key, param.getHandler().parse(value));
+                    data.put(key, param.getHandler().parse(value, skip.contains(ix)));
                 } catch (DecreeParsingException e) {
                     system.debug("Can't parse parameter value for " + key + "=" + value + " in " + getPath() + " using handler " + param.getHandler().getClass().getSimpleName());
                     sender.sendMessage(C.RED + "Cannot convert \"" + value + "\" into a " + param.getType().getSimpleName());
@@ -294,24 +297,26 @@ public class DecreeVirtualCommand implements Decreed {
                 } catch (DecreeWhichException e) {
                     KList<?> validOptions = param.getHandler().getPossibilities(value);
                     system.debug("Found multiple results for " + key + "=" + value + " in " + getPath() + " using the handler " + param.getHandler().getClass().getSimpleName() + " with potential matches [" + validOptions.toString(",") + "]. Asking client to define one");
-                    String update = null; // TODO: PICK ONE
+                    String update = pickValidOption(sender, validOptions, param.getHandler(), param.getName(), param.getType().getSimpleName());
                     system.debug("Client chose " + update + " for " + key + "=" + value + " (old) in " + getPath());
                     in.set(ix--, update);
                 }
             } else {
                 try {
-                    DecreeParameter par = getNode().getParameters().get(ix);
+                    DecreeParameter param = getNode().getParameters().get(ix);
                     try {
-                        data.put(par.getName(), par.getHandler().parse(i));
+                        data.put(param.getName(), param.getHandler().parse(i, skip.contains(ix)));
                     } catch (DecreeParsingException e) {
-                        system.debug("Can't parse parameter value for " + par.getName() + "=" + i + " in " + getPath() + " using handler " + par.getHandler().getClass().getSimpleName());
-                        sender.sendMessage(C.RED + "Cannot convert \"" + i + "\" into a " + par.getType().getSimpleName());
+                        system.debug("Can't parse parameter value for " + param.getName() + "=" + i + " in " + getPath() + " using handler " + param.getHandler().getClass().getSimpleName());
+                        sender.sendMessage(C.RED + "Cannot convert \"" + i + "\" into a " + param.getType().getSimpleName());
+                        e.printStackTrace();
                         return null;
                     } catch (DecreeWhichException e) {
-                        system.debug("Can't parse parameter value for " + par.getName() + "=" + i + " in " + getPath() + " using handler " + par.getHandler().getClass().getSimpleName());
-                        KList<?> validOptions = par.getHandler().getPossibilities(i);
-                        String update = null; // TODO: PICK ONE
-                        system.debug("Client chose " + update + " for " + par.getName() + "=" + i + " (old) in " + getPath());
+                        system.debug("Can't parse parameter value for " + param.getName() + "=" + i + " in " + getPath() + " using handler " + param.getHandler().getClass().getSimpleName());
+                        KList<?> validOptions = param.getHandler().getPossibilities(i);
+                        String update = pickValidOption(sender, validOptions, param.getHandler(), param.getName(), param.getType().getSimpleName());
+                        system.debug("Client chose " + update + " for " + param.getName() + "=" + i + " (old) in " + getPath());
+                        skip.add(ix);
                         in.set(ix--, update);
                     }
                 } catch (IndexOutOfBoundsException e) {
@@ -321,6 +326,45 @@ public class DecreeVirtualCommand implements Decreed {
         }
 
         return data;
+    }
+
+    String[] gradients = new String[]{
+            "<gradient:#f5bc42:#45b32d>",
+            "<gradient:#1ed43f:#1ecbd4>",
+            "<gradient:#1e2ad4:#821ed4>",
+            "<gradient:#d41ea7:#611ed4>",
+            "<gradient:#1ed473:#1e55d4>",
+            "<gradient:#6ad41e:#9a1ed4>"
+    };
+
+    private String pickValidOption(DecreeSender sender, KList<?> validOptions, DecreeParameterHandler<?> handler, String name, String type) {
+        sender.sendHeader("Pick a " + name + " (" + type + ")");
+        sender.sendMessageRaw("<gradient:#1ed497:#b39427>This query will expire in 15 seconds.</gradient>");
+        String password = UUID.randomUUID().toString().replaceAll("\\Q-\\E", "");
+        int m = 0;
+
+        for(String i : validOptions.convert(handler::toStringForce))
+        {
+            sender.sendMessage( "<hover:show_text:'" + gradients[m%gradients.length] + i+"</gradient>'><click:run_command:/decreefuture "+ password + " " + i+">"+"- " + gradients[m%gradients.length] +   i         + "</gradient></click></hover>");
+            m++;
+        }
+
+        CompletableFuture<String> future = new CompletableFuture<>();
+        system.postFuture(password, future);
+
+        if(system.doCommandSound() && sender.isPlayer())
+        {
+            (sender.player()).playSound((sender.player()).getLocation(), Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 0.65f);
+            (sender.player()).playSound((sender.player()).getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.125f, 1.99f);
+        }
+
+        try {
+            return future.get(15, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+
+        }
+
+        return null;
     }
 
     public boolean invoke(DecreeSender sender, KList<String> args, KList<Integer> skip) {
@@ -376,18 +420,9 @@ public class DecreeVirtualCommand implements Decreed {
             } catch (DecreeWhichException e) {
                 system.debug("Can't parse parameter value for " + i.getName() + "=" + i + " in " + getPath() + " using handler " + i.getHandler().getClass().getSimpleName());
                 KList<?> validOptions = i.getHandler().getPossibilities(i.getParam().defaultValue());
-                String update = null; // TODO: PICK ONE
+                String update = pickValidOption(sender, validOptions, i.getHandler(), i.getName(), i.getType().getSimpleName());
                 system.debug("Client chose " + update + " for " + i.getName() + "=" + i + " (old) in " + getPath());
-                try {
-                    value = i.getDefaultValue();
-                } catch (DecreeParsingException x) {
-                    x.printStackTrace();
-                    system.debug("Can't parse parameter value for " + i.getName() + "=" + i + " in " + getPath() + " using handler " + i.getHandler().getClass().getSimpleName());
-                    sender.sendMessage(C.RED + "Cannot convert \"" + i + "\" into a " + i.getType().getSimpleName());
-                    return false;
-                } catch (DecreeWhichException x) {
-                    x.printStackTrace();
-                }
+                value = update;
             }
 
             if (i.isContextual() && value == null) {
