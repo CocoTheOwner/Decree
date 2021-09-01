@@ -347,14 +347,14 @@ public class DecreeVirtualCommand implements Decreed {
 
         for(String i : validOptions.convert(handler::toStringForce))
         {
-            sender.sendMessage( "<hover:show_text:'" + gradients[m%gradients.length] + i+"</gradient>'><click:run_command:/decreefuture "+ password + " " + i+">"+"- " + gradients[m%gradients.length] +   i         + "</gradient></click></hover>");
+            sender.sendMessage( "<hover:show_text:'" + gradients[m%gradients.length] + i+"</gradient>'><click:run_command:decreefuture "+ password + " " + i+">"+"- " + gradients[m%gradients.length] +   i         + "</gradient></click></hover>");
             m++;
         }
 
         CompletableFuture<String> future = new CompletableFuture<>();
         system.postFuture(password, future);
 
-        if(system.doCommandSound() && sender.isPlayer())
+        if(system.isCommandSound() && sender.isPlayer())
         {
             (sender.player()).playSound((sender.player()).getLocation(), Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 0.65f);
             (sender.player()).playSound((sender.player()).getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.125f, 1.99f);
@@ -362,7 +362,7 @@ public class DecreeVirtualCommand implements Decreed {
 
         try {
             return future.get(15, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (InterruptedException | ExecutionException | TimeoutException ignored) {
 
         }
 
@@ -482,7 +482,7 @@ public class DecreeVirtualCommand implements Decreed {
         };
 
         if (getNode().isSync()) {
-            Bukkit.getScheduler().scheduleSyncDelayedTask(system.instance(), rx);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(system.getInstance(), rx);
         } else {
             rx.run();
         }

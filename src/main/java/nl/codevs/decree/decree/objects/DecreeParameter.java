@@ -19,7 +19,6 @@
 package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
-import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
@@ -86,10 +85,9 @@ public class DecreeParameter {
     }
 
     /**
-     * TODO: Pull upstream because of potentially interfering {@link DecreeContextHandler}s
-     * @return
+     * TODO: Pull upwards because of potentially interfering {@link DecreeContextHandler}s
+     * @return Whether this parameter is required or not
      */
-    @Deprecated
     public boolean isRequired() {
         return !hasDefault();
     }
