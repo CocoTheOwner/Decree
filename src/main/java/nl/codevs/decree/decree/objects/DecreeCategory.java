@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+@Deprecated // because we're just going to be using DecreeVirtualCommand
 public class DecreeCategory implements Decreed {
     public final DecreeCategory parent;
     public final KList<DecreeCommand> commands;
