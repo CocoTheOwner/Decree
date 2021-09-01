@@ -113,6 +113,10 @@ public class DecreeVirtualCommand implements Decreed {
     }
 
 
+    public boolean isNode() {
+        return getNode() != null;
+    }
+
     public String getName() {
         return isNode() ? getNode().getName() : getDecree().name();
     }
@@ -148,11 +152,6 @@ public class DecreeVirtualCommand implements Decreed {
 
         return d;
     }
-
-    public boolean isNode() {
-        return getNode() != null;
-    }
-
     public KList<String> invokeTabComplete(KList<String> args, DecreeSender sender) {
 
         if (isNode() || args.isEmpty() || args.size() <= 1 && !args.get(0).endsWith(" ")) {

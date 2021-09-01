@@ -80,7 +80,6 @@ public class DecreeSystem implements Listener {
     public DecreeSystem(DecreeCommandExecutor rootInstance, Plugin instance) {
         this.rootInstance = rootInstance;
         this.instance = instance;
-        Bukkit.getPluginManager().registerEvents(this, instance);
     }
 
     /**
