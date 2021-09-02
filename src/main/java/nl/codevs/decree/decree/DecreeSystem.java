@@ -143,7 +143,7 @@ public class DecreeSystem implements Listener {
         KList<String> v = getRoot().invokeTabComplete(new KList<>(args), new DecreeSender(sender, getInstance(), this));
         v.removeDuplicates();
         if (sender instanceof Player && isCommandSound()) {
-            ((DecreeSender) sender).playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
+            new DecreeSender(sender, instance, this).playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
         }
         return v;
     }
