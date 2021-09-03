@@ -86,7 +86,7 @@ public class DecreeVirtualCommand implements Decreed {
                 continue;
             }
 
-            c.getNodes().add(new DecreeVirtualCommand(c, decree, new KList<>(), new DecreeCommand(v, i), system));
+            c.getNodes().add(new DecreeVirtualCommand(c, decree, new KList<>(), new DecreeCommand(v, i, system), system));
         }
 
         return c;
@@ -141,6 +141,7 @@ public class DecreeVirtualCommand implements Decreed {
 
         return d;
     }
+
     public KList<String> invokeTabComplete(KList<String> args, DecreeSender sender) {
 
         if (isNode() || args.isEmpty() || args.size() <= 1 && !args.get(0).endsWith(" ")) {
@@ -158,9 +159,13 @@ public class DecreeVirtualCommand implements Decreed {
     }
 
     private KList<String> tab(KList<String> args) {
-        KList<String> tabs = new KList<>();
 
-        String last = args.isEmpty() ? null : args.popLast();
+        if (args.isEmpty()) {
+            return new KList<>();
+        }
+
+        KList<String> tabs = new KList<>();
+        String last = args.popLast();
         KList<DecreeParameter> ignore = new KList<>();
 
         // Remove auto-completions for existing keys
@@ -179,11 +184,6 @@ public class DecreeVirtualCommand implements Decreed {
                     }
                 }
             }
-        }
-
-        // No partial parameters present
-        if (last == null) {
-            return tabs;
         }
 
         // Add auto-completions

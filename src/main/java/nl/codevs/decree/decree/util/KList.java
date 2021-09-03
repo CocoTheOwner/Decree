@@ -267,4 +267,8 @@ public class KList<T> extends ArrayList<T> implements List<T> {
 
         return remove(size() - 1);
     }
+
+    public T getLast() {
+        return this.get(this.last());
+    }
 }

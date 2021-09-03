@@ -15,6 +15,10 @@ public interface Decreed {
      */
     Decree decree();
 
+    KList<String> tab(KList<String> args, DecreeSender sender);
+
+    boolean invoke(KList<String> args, DecreeSender sender);
+
     /**
      * Get the origin of the node
      */
@@ -87,6 +91,10 @@ public interface Decreed {
      * @param in The string to check with
      */
     default boolean deepMatches(String in) {
+
+        if (in.isEmpty()) {
+            return true;
+        }
 
         if (matches(in)){
             return true;

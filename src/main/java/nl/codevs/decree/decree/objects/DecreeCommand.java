@@ -20,6 +20,7 @@ package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
 import nl.codevs.decree.decree.DecreeSender;
+import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.util.KList;
 
 import java.lang.reflect.Method;
@@ -35,18 +36,20 @@ public class DecreeCommand implements Decreed {
     private final Method method;
     private final Object parent;
     private final Decree decree;
+    private final DecreeSystem system;
 
     /**
      * Create a node
      * @param parent The instantiated class containing the
      * @param method Method that represents a Decree (must be annotated by @{@link Decree})
      */
-    public DecreeCommand(Object parent, Method method) {
+    public DecreeCommand(Object parent, Method method, DecreeSystem system) {
         if (!method.isAnnotationPresent(Decree.class)) {
             throw new RuntimeException("Cannot instantiate DecreeCommand on method " + method.getName() + " in " + method.getDeclaringClass().getCanonicalName() + " not annotated by @Decree");
         }
         this.parent = parent;
         this.method = method;
+        this.system = system;
         this.decree = method.getDeclaredAnnotation(Decree.class);
         this.parameters = calcParameters();
     }
@@ -92,5 +95,64 @@ public class DecreeCommand implements Decreed {
     @Override
     public Decree decree() {
         return getDecree();
+    }
+
+    @Override
+    public KList<String> tab(KList<String> args, DecreeSender sender) {
+        if (args.isEmpty()) {
+            return new KList<>();
+        }
+
+        KList<String> tabs = new KList<>();
+        String last = args.popLast();
+        KList<DecreeParameter> left = getParameters();
+
+        // Remove auto-completions for existing keys
+        for (String a : args) {
+            String sea = a.contains("=") ? a.split("\\Q=\\E")[0] : a;
+            sea = sea.trim();
+
+            searching:
+            for (DecreeParameter i : left) {
+                for (String m : i.getNames()) {
+                    if (m.equalsIgnoreCase(sea) || m.toLowerCase().contains(sea.toLowerCase()) || sea.toLowerCase().contains(m.toLowerCase())) {
+                        left.remove(i);
+                        continue searching;
+                    }
+                }
+            }
+        }
+
+        // Add auto-completions
+        for (DecreeParameter i : left) {
+
+            int g = 0;
+
+            if (last.contains("=")) {
+                String[] vv = last.trim().split("\\Q=\\E");
+                String vx = vv.length == 2 ? vv[1] : "";
+                for (String f : i.getHandler().getPossibilities(vx).convert((v) -> i.getHandler().toStringForce(v))) {
+                    g++;
+                    tabs.add(i.getName() + "=" + f);
+                }
+            } else {
+                for (String f : i.getHandler().getPossibilities("").convert((v) -> i.getHandler().toStringForce(v))) {
+                    g++;
+                    tabs.add(i.getName() + "=" + f);
+                }
+            }
+
+            if (g == 0) {
+                tabs.add(i.getName() + "=");
+                tabs.add(i.getName() + "=" + i.getDefaultRaw());
+            }
+        }
+
+        return tabs;
+    }
+
+    @Override
+    public boolean invoke(KList<String> args, DecreeSender sender) {
+        return false;
     }
 }
