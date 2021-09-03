@@ -102,17 +102,6 @@ public class DecreeVirtualCommand implements Decreed {
         return decree;
     }
 
-    @Override
-    public KList<String> tab(KList<String> args, DecreeSender sender) {
-        return null;
-    }
-
-    @Override
-    public boolean invoke(KList<String> args, DecreeSender sender) {
-        return false;
-    }
-
-
     public boolean isNode() {
         return getNode() != null;
     }
@@ -339,6 +328,11 @@ public class DecreeVirtualCommand implements Decreed {
     };
 
     private String pickValidOption(DecreeSender sender, KList<?> validOptions, DecreeParameterHandler<?> handler, String name, String type) {
+        if (!sender.isPlayer()) {
+            String picked = handler.toStringForce(validOptions.getRandom());
+            sender.sendMessage(C.RED + "We went ahead and picked " + picked + " (" + name + " of " + type + ")");
+            return picked;
+        }
         sender.sendHeader("Pick a " + name + " (" + type + ")");
         sender.sendMessageRaw("<gradient:#1ed497:#b39427>This query will expire in 15 seconds.</gradient>");
         String password = UUID.randomUUID().toString().replaceAll("\\Q-\\E", "");

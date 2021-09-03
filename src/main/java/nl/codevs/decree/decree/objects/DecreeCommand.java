@@ -30,7 +30,6 @@ import java.util.Comparator;
  * Represents a single command (non-category)
  */
 @Data
-@Deprecated // because we're just going to be using DecreeVirtualCommand
 public class DecreeCommand implements Decreed {
     private final KList<DecreeParameter> parameters;
     private final Method method;
@@ -86,27 +85,12 @@ public class DecreeCommand implements Decreed {
     }
 
     @Override
-    public String getName() {
-        return decree.name().isEmpty() ? method.getName() : decree.name();
-    }
-
-    @Override
     public Decreed parent() {
-        return (Decreed) parent;
+        return (Decreed) getParent();
     }
 
     @Override
     public Decree decree() {
-        return decree;
-    }
-
-    @Override
-    public KList<String> tab(KList<String> args, DecreeSender sender) {
-        return null;
-    }
-
-    @Override
-    public boolean invoke(KList<String> args, DecreeSender sender) {
-        return false;
+        return getDecree();
     }
 }
