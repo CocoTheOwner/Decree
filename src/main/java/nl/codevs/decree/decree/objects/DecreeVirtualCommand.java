@@ -421,7 +421,7 @@ public class DecreeVirtualCommand implements Decreed {
                 value = update;
             }
 
-            if (i.isContextual() && value == null) {
+            if (sender.isPlayer() && i.isContextual() && value == null) {
                 DecreeContextHandler<?> ch = DecreeContextHandler.contextHandlers.get(i.getType());
 
                 if (ch != null) {
