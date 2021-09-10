@@ -136,11 +136,13 @@ public class DecreeSystem implements Listener {
 
     @Nullable
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
+        debug("Tab!");
         KList<String> v = getRoot().tab(new KList<>(args), new DecreeSender(sender, getInstance(), this));
         v.removeDuplicates();
         if (sender instanceof Player && isCommandSound()) {
             new DecreeSender(sender, instance, this).playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
         }
+        debug("Tabs: " + v.toString(", "));
         return v;
     }
 

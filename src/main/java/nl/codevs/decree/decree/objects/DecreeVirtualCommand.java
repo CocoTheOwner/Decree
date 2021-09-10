@@ -103,6 +103,11 @@ public class DecreeVirtualCommand implements Decreed {
     }
 
     @Override
+    public String help() {
+        return null;
+    }
+
+    @Override
     public KList<String> tab(KList<String> args, DecreeSender sender) {
         return null;
     }

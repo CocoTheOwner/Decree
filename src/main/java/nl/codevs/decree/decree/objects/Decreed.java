@@ -16,6 +16,11 @@ public interface Decreed {
      */
     Decree decree();
 
+    /**
+     * The help information for this Decreed
+     */
+    String help();
+
     KList<String> tab(KList<String> args, DecreeSender sender);
 
     /**

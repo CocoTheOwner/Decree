@@ -183,6 +183,11 @@ public class DecreeCategory implements Decreed {
     }
 
     @Override
+    public String help() {
+        return getName() + " cat";
+    }
+
+    @Override
     public KList<String> tab(KList<String> args, DecreeSender sender) {
         if (args.isEmpty()) {
             return new KList<>();
@@ -200,6 +205,10 @@ public class DecreeCategory implements Decreed {
     @Override
     public boolean invoke(KList<String> args, DecreeSender sender) {
         String head = args.pop();
+        if (head == null) {
+            sender.sendMessageRaw(help());
+        }
+
         system.debug("Invoked \"" + getName() + "\"" + " from path " + getPath() + " and now attempting invoke on " + head);
         Decreed match = matchOne(head, sender);
         if (match == null){

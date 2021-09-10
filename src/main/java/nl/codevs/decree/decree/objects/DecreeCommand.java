@@ -96,6 +96,11 @@ public class DecreeCommand implements Decreed {
     }
 
     @Override
+    public String help() {
+        return getName() + " cmd";
+    }
+
+    @Override
     public KList<String> tab(KList<String> args, DecreeSender sender) {
         if (args.isEmpty()) {
             return new KList<>();
@@ -151,6 +156,7 @@ public class DecreeCommand implements Decreed {
 
     @Override
     public boolean invoke(KList<String> args, DecreeSender sender) {
-        return false;
+        system.debug("Wow! Reached a command (" + getName() + ")! " + getPath());
+        return true;
     }
 }
