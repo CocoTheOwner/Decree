@@ -3,6 +3,8 @@ package nl.codevs.decree.decree.objects;
 import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.util.KList;
 
+import java.util.Arrays;
+
 public interface Decreed {
 
     /**
@@ -44,7 +46,9 @@ public interface Decreed {
      * Get the primary and alias names of the node<br>
      */
     default KList<String> getNames() {
-        return new KList<>(decree().aliases()).removeDuplicates().qremoveIf(String::isEmpty).qadd(getName());
+        KList<String> names = new KList<>(getName());
+        names.addAll(Arrays.asList(decree().aliases()));
+        return names.removeDuplicates().qremoveIf(String::isEmpty);
     }
 
     /**

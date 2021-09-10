@@ -26,6 +26,7 @@ import nl.codevs.decree.decree.util.AtomicCache;
 import nl.codevs.decree.decree.util.KList;
 
 import java.lang.reflect.Parameter;
+import java.util.Arrays;
 
 /**
  * Represents a parameter in an @{@link Decree} annotated function
@@ -107,18 +108,8 @@ public class DecreeParameter {
      */
     public KList<String> getNames() {
         KList<String> d = new KList<>(getName());
-
-        for (String i : param.aliases()) {
-            if (i.isEmpty()) {
-                continue;
-            }
-
-            d.add(i);
-        }
-
-        d.removeDuplicates();
-
-        return d;
+        d.addAll(Arrays.asList(param.aliases()));
+        return d.removeDuplicates().qremoveIf(String::isEmpty);
     }
 
     /**
