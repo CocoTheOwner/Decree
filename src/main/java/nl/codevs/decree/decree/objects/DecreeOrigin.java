@@ -19,8 +19,6 @@
 package nl.codevs.decree.decree.objects;
 
 
-import nl.codevs.decree.decree.DecreeSender;
-
 /**
  * The origin from which the {@link Decree} command must come
  */

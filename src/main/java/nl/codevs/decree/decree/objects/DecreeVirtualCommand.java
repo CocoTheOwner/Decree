@@ -102,6 +102,16 @@ public class DecreeVirtualCommand implements Decreed {
         return decree;
     }
 
+    @Override
+    public KList<String> tab(KList<String> args, DecreeSender sender) {
+        return null;
+    }
+
+    @Override
+    public boolean invoke(KList<String> args, DecreeSender sender) {
+        return false;
+    }
+
     public boolean isNode() {
         return getNode() != null;
     }

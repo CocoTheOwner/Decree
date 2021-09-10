@@ -18,7 +18,6 @@
 
 package nl.codevs.decree.decree.objects;
 
-import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.util.C;
 import org.bukkit.World;
 import org.bukkit.entity.Player;

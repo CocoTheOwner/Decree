@@ -31,7 +31,7 @@ def main = 'nl.codevs.decree.Decree'
 
 // ADD YOURSELF AS A NEW LINE IF YOU WANT YOUR OWN BUILD TASK GENERATED
 // ==============================================================
-registerCustomOutputTask('Coco', 'C:/Users/sjoer/Documents/Development/MCServer/plugins', name)
+registerCustomOutputTask('Coco', 'C://Users/sjoer/Desktop/MCSM/plugins', name)
 // ==============================================================
 
 
@@ -110,6 +110,7 @@ shadowJar {
     minimize()
     append("plugin.yml")
     relocate 'io.papermc.lib', 'nl.codevs.decree.util.paper'
+    relocate 'net.kyori', 'com.volmit.iris.util.kyori'
     dependencies {
         include(dependency('io.papermc:paperlib'))
         include(dependency('net.kyori:'))

@@ -23,8 +23,6 @@ import nl.codevs.decree.decree.objects.DecreeParameterHandler;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
-import org.checkerframework.checker.units.qual.K;
-import org.jetbrains.annotations.NotNull;
 
 public class ByteHandler implements DecreeParameterHandler<Byte> {
 

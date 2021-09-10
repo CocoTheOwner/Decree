@@ -1,6 +1,5 @@
 package nl.codevs.decree.decree.objects;
 
-import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.util.KList;
 
@@ -200,6 +199,14 @@ public class DecreeCategory implements Decreed {
 
     @Override
     public boolean invoke(KList<String> args, DecreeSender sender) {
-        return false;
+        String head = args.pop();
+        system.debug("Invoked \"" + getName() + "\"" + " from path " + getPath() + " and now attempting invoke on " + head);
+        Decreed match = matchOne(head, sender);
+        if (match == null){
+            system.debug("Failed to match from \"" + getName() + "\" to \"" + head + "\"");
+            return false;
+        } else {
+            return invoke(args, sender);
+        }
     }
 }

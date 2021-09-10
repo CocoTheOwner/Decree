@@ -20,7 +20,7 @@ package nl.codevs.decree.decree.util;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
-import nl.codevs.decree.decree.DecreeSender;
+import nl.codevs.decree.decree.objects.DecreeSender;
 import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;

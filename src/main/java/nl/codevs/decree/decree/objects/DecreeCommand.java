@@ -19,13 +19,11 @@
 package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
-import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.util.KList;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Comparator;
 
 /**
  * Represents a single command (non-category)

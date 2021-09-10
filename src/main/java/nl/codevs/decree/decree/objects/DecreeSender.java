@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package nl.codevs.decree.decree;
+package nl.codevs.decree.decree.objects;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -24,6 +24,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.objects.Decree;
 import nl.codevs.decree.decree.objects.DecreeOrigin;
 import nl.codevs.decree.decree.objects.DecreeParameter;

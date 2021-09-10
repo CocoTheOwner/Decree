@@ -1,6 +1,5 @@
 package nl.codevs.decree.decree.objects;
 
-import nl.codevs.decree.decree.DecreeSender;
 import nl.codevs.decree.decree.util.KList;
 
 import java.util.Arrays;
@@ -19,6 +18,12 @@ public interface Decreed {
 
     KList<String> tab(KList<String> args, DecreeSender sender);
 
+    /**
+     * Invocation on command run
+     * @param args The arguments left to parse
+     * @param sender The sender that sent the command
+     * @return True if successfully matched
+     */
     boolean invoke(KList<String> args, DecreeSender sender);
 
     /**
