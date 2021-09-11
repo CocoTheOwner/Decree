@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.Getter;
 import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.util.C;
+import nl.codevs.decree.decree.util.Form;
 import nl.codevs.decree.decree.util.KList;
 
 import java.lang.reflect.Field;
@@ -166,6 +167,7 @@ public class DecreeCategory implements Decreed {
 
     @Override
     public void sendHelpTo(DecreeSender sender) {
+        sender.sendHeader(Form.capitalize(getName()) + " Category");
         sender.sendMessage(C.GREEN + "Categories (" + getSubCats().size() + ")");
         getSubCats().convert(Decreed::getPath).forEach(sender::sendMessageRaw);
         sender.sendMessage(C.GREEN + "Commands (" + getCommands().size() + ")");
