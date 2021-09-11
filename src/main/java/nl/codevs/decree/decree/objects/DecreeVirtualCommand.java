@@ -419,21 +419,23 @@ public class DecreeVirtualCommand implements Decreed {
         for (DecreeParameter i : getNode().getParameters()) {
             Object value = map.get(i.getName());
 
-            try {
-                if (value == null && i.hasDefault()) {
+            if (value == null && i.hasDefault()) {
+                try {
                     value = i.getDefaultValue();
+                } catch (DecreeParsingException e) {
+                    system.debug("Can't parse parameter value for " + i.getName() + "=" + i.getParam().defaultValue() + " in " + getPath() + " using handler " + i.getHandler().getClass().getSimpleName());
+                    sender.sendMessage(C.RED + "Cannot convert \"" + i.getParam().defaultValue() + "\" into a " + i.getType().getSimpleName());
+                    return false;
+                } catch (DecreeWhichException e) {
+                    system.debug("Can't parse parameter value for " + i.getName() + "=" + i.getParam().defaultValue() + " in " + getPath() + " using handler " + i.getHandler().getClass().getSimpleName());
+                    KList<?> validOptions = i.getHandler().getPossibilities(i.getParam().defaultValue());
+                    String update = pickValidOption(sender, validOptions, i.getHandler(), i.getName(), i.getType().getSimpleName());
+                    if (update == null) {
+                        return false;
+                    }
+                    system.debug("Client chose " + update + " for " + i.getName() + "=" + i.getParam().defaultValue() + " (old) in " + getPath());
+                    value = update;
                 }
-            } catch (DecreeParsingException e) {
-                system.debug("Can't parse parameter value for " + i.getName() + "=" + i + " in " + getPath() + " using handler " + i.getHandler().getClass().getSimpleName());
-                sender.sendMessage(C.RED + "Cannot convert \"" + i + "\" into a " + i.getType().getSimpleName());
-                return false;
-            } catch (DecreeWhichException e) {
-                system.debug("Can't parse parameter value for " + i.getName() + "=" + i + " in " + getPath() + " using handler " + i.getHandler().getClass().getSimpleName());
-                KList<?> validOptions = i.getHandler().getPossibilities(i.getParam().defaultValue());
-                String update = pickValidOption(sender, validOptions, i.getHandler(), i.getName(), i.getType().getSimpleName());
-                if (update == null) { return false; }
-                system.debug("Client chose " + update + " for " + i.getName() + "=" + i + " (old) in " + getPath());
-                value = update;
             }
 
             if (sender.isPlayer() && i.isContextual() && value == null) {
