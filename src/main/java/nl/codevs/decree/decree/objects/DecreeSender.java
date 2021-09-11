@@ -25,14 +25,10 @@ import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import nl.codevs.decree.decree.DecreeSystem;
-import nl.codevs.decree.decree.objects.Decree;
-import nl.codevs.decree.decree.objects.DecreeOrigin;
-import nl.codevs.decree.decree.objects.DecreeParameter;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.Form;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
-import nl.codevs.decree.decree.objects.DecreeVirtualCommand;
 import org.bukkit.Server;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -56,10 +52,10 @@ public class DecreeSender implements CommandSender {
     private final CommandSender s;
     private final Audience audience;
     private final DecreeSystem system;
-    private String tag;
+    private final String tag;
     int spinh = -20;
-    int spins = 7;
-    int spinb = 8;
+    int spins = 10;
+    int spinb = 20;
 
     @Getter
     @Setter
@@ -79,15 +75,6 @@ public class DecreeSender implements CommandSender {
         this.system = system;
         this.tag = tag;
         this.s = s;
-    }
-
-    /**
-     * Set a command tag (prefix for sendMessage)
-     *
-     * @param tag the tag
-     */
-    public void setTag(String tag) {
-        this.tag = tag;
     }
 
     /**
@@ -334,7 +321,6 @@ public class DecreeSender implements CommandSender {
     }
 
     public void sendDecreeHelp(DecreeVirtualCommand v) {
-        int m = v.getNodes().size();
 
         if (v.getNodes().isNotEmpty()) {
             sendHeader(Form.capitalize(v.getName()) + " Help");
@@ -383,7 +369,7 @@ public class DecreeSender implements CommandSender {
             }
 
             String permission = "";
-            String granted = "";
+            String granted;
             if (!i.getDecree().permission().equals(Decree.NO_PERMISSION)){
                 if (isOp() || hasPermission(i.getDecree().permission())){
                     granted = "<#a73abd>(Granted)";

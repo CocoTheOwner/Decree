@@ -18,12 +18,12 @@ public class Decree extends JavaPlugin implements TabCompleter, CommandExecutor 
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        return decreeSystem.onTabComplete(sender, args);
+        return decreeSystem.onTabComplete(sender, args, command);
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return decreeSystem.onCommand(sender, args);
+        return decreeSystem.onCommand(sender, args, command);
     }
 
     @Override

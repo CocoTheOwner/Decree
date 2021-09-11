@@ -9,20 +9,8 @@ import org.bukkit.entity.Player;
 @Decree(name = "sub", description = "Sub commands", permission = "subs")
 public class SubCommandClass implements DecreeCommandExecutor {
 
-    @Decree(
-            description = "Kill a player",
-            origin = DecreeOrigin.PLAYER,
-            aliases = "ded",
-            permission = "kill",
-            sync = true
-    )
-    public void hello(
-            @Param(
-                    defaultValue = "self",
-                    description = "The player to kill"
-            )
-                    Player player
-    ){
-        player.setHealth(0.0d);
+    @Decree
+    public void dead(){
+        sender().sendMessage("Haha, got em!");
     }
 }

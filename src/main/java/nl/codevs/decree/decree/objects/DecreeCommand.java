@@ -96,8 +96,13 @@ public class DecreeCommand implements Decreed {
     }
 
     @Override
-    public String help() {
-        return getName() + " cmd";
+    public void sendHelpTo(DecreeSender sender) {
+        sender.sendMessageRaw("YEet!" + getPath());
+    }
+
+    @Override
+    public String getName() {
+        return decree().name().isEmpty() ? getMethod().getName() : decree().name();
     }
 
     @Override

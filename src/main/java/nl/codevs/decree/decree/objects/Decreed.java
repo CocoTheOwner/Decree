@@ -17,9 +17,15 @@ public interface Decreed {
     Decree decree();
 
     /**
-     * The help information for this Decreed
+     * Send the help information for this Decreed to
+     * @param sender the sender
      */
-    String help();
+    void sendHelpTo(DecreeSender sender);
+
+    /**
+     * Get the primary name of the node
+     */
+    String getName();
 
     KList<String> tab(KList<String> args, DecreeSender sender);
 
@@ -45,12 +51,6 @@ public interface Decreed {
         return decree().permission();
     }
 
-    /**
-     * Get the primary name of the node
-     */
-    default String getName() {
-        return decree().name();
-    }
 
     /**
      * Get the primary and alias names of the node<br>

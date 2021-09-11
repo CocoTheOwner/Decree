@@ -38,10 +38,11 @@ public @interface Decree {
     String name() default "";
 
     /**
-     * If the node's functions MUST be run in sync, set this to true.<br>
-     * Defaults to false
+     * The aliases of this parameter (instead of just the {@link #name() name} (if specified) or Method Name (name of method))<br>
+     * Can be initialized as just a string (ex. "alias") or as an array (ex. {"alias1", "alias2"})<br>
+     * If someone uses /plugin foo and you specify alias="f" here, /plugin f will do the exact same.
      */
-    boolean sync() default false;
+    String[] aliases() default "";
 
     /**
      * The description of this command.<br>
@@ -57,16 +58,15 @@ public @interface Decree {
     DecreeOrigin origin() default DecreeOrigin.BOTH;
 
     /**
-     * The aliases of this parameter (instead of just the {@link #name() name} (if specified) or Method Name (name of method))<br>
-     * Can be initialized as just a string (ex. "alias") or as an array (ex. {"alias1", "alias2"})<br>
-     * If someone uses /plugin foo and you specify alias="f" here, /plugin f will do the exact same.
-     */
-    String[] aliases() default "";
-
-    /**
      * The permissions class that gives the required permission for this command.<p>
      * By default, it requires no permissions
      * @return
      */
     String permission() default NO_PERMISSION;
+
+    /**
+     * If the node's functions MUST be run in sync, set this to true.<br>
+     * Defaults to false
+     */
+    boolean sync() default false;
 }

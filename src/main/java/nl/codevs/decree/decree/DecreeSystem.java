@@ -18,7 +18,8 @@
 
 package nl.codevs.decree.decree;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import nl.codevs.decree.decree.exceptions.DecreeException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.handlers.*;
@@ -29,6 +30,7 @@ import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -38,11 +40,12 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Data
+@Getter
 public class DecreeSystem implements Listener {
     private final AtomicCache<DecreeCategory> commandCache = new AtomicCache<>();
     private final ConcurrentHashMap<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
@@ -74,7 +77,14 @@ public class DecreeSystem implements Listener {
     /**
      * Whether to use command sounds or not
      */
+    @Setter
     private boolean commandSound = true;
+
+    /**
+     * Command prefix
+     */
+    @Setter
+    private String tag = C.RED + "[" + C.GREEN + "Decree" + C.RED + "]";
 
     public DecreeSystem(DecreeCommandExecutor rootInstance, Plugin instance) {
         this.rootInstance = rootInstance;
@@ -117,16 +127,17 @@ public class DecreeSystem implements Listener {
      * @param message The debug message
      */
     public void debug(String message) {
-        Bukkit.getConsoleSender().sendMessage(message);
+        new DecreeSender(Bukkit.getConsoleSender(), getInstance(), this).sendMessage(tag.trim() + C.RESET + " " + message);
     }
 
     /**
      * Get the root {@link DecreeVirtualCommand}
+     * @param name
      */
-    public DecreeCategory getRoot() {
+    public DecreeCategory getRoot(String name) {
         return commandCache.aquire(() -> {
             try {
-                return new DecreeCategory(null, getInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this);
+                return new DecreeCategory(null, getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this);
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -135,9 +146,9 @@ public class DecreeSystem implements Listener {
     }
 
     @Nullable
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
         debug("Tab!");
-        KList<String> v = getRoot().tab(new KList<>(args), new DecreeSender(sender, getInstance(), this));
+        KList<String> v = getRoot(command.getName()).tab(new KList<>(args), new DecreeSender(sender, getInstance(), this));
         v.removeDuplicates();
         if (sender instanceof Player && isCommandSound()) {
             new DecreeSender(sender, instance, this).playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
@@ -147,23 +158,29 @@ public class DecreeSystem implements Listener {
     }
 
     @SuppressWarnings("deprecation")
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
         Bukkit.getScheduler().scheduleAsyncDelayedTask(getInstance(), () -> {
             DecreeSender decreeSender = new DecreeSender(sender, getInstance(), this);
             DecreeContext.touch(decreeSender);
 
-            if (getRoot().invoke(new KList<>(args), decreeSender)) {
-                if (decreeSender.isPlayer()) {
-                    decreeSender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
-                    decreeSender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.125f, 2.99f);
+            try {
+                DecreeCategory root = getRoot(command.getName());
+                KList<String> noEmptyArgs = new KList<>(args).qremoveIf(String::isEmpty);
+                if (root.invoke(noEmptyArgs, decreeSender)) {
+                    if (decreeSender.isPlayer()) {
+                        decreeSender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
+                        decreeSender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.125f, 2.99f);
+                    }
+                } else {
+                    debug(C.RED + "Unknown Decree Command");
+                    if (decreeSender.isPlayer()) {
+                        decreeSender.playSound(Sound.BLOCK_ANCIENT_DEBRIS_BREAK, 1f, 0.25f);
+                        decreeSender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.2f, 1.95f);
+                    }
                 }
-            } else {
-                debug(C.RED + "Unknown Decree Command");
-                if(decreeSender.isPlayer())
-                {
-                    decreeSender.playSound(Sound.BLOCK_ANCIENT_DEBRIS_BREAK, 1f, 0.25f);
-                    decreeSender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.2f, 1.95f);
-                }
+            } catch (Throwable e) {
+                decreeSender.sendMessage("Exception: " + e.getClass().getSimpleName() + " thrown while executing command. Check console for details.");
+                e.printStackTrace();
             }
         });
         return true;

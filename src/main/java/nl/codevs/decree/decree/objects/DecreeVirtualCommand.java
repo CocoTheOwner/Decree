@@ -103,8 +103,8 @@ public class DecreeVirtualCommand implements Decreed {
     }
 
     @Override
-    public String help() {
-        return null;
+    public void sendHelpTo(DecreeSender sender) {
+        sender.sendMessageRaw("Yeete!" + getPath());
     }
 
     @Override
