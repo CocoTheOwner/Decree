@@ -21,19 +21,20 @@ public class DecreeCategory implements Decreed {
     private final Object instance;
     private final DecreeSystem system;
 
-    public DecreeCategory(DecreeCategory parent, Object instance, Decree decree, DecreeSystem system) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
+    public DecreeCategory(DecreeCategory parent, Object instance, Decree decree, DecreeSystem system) {
         this.parent = parent;
         this.decree = decree;
         this.instance = instance;
         this.system = system;
         this.commands = calcCommands();
-        this.subCats = calcSubCats();
+        this.subCats = calcSubCats(system);
     }
 
     /**
      * Calculate {@link DecreeCategory}s in this category
+     * @param system
      */
-    private KList<DecreeCategory> calcSubCats() throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+    private KList<DecreeCategory> calcSubCats(DecreeSystem system) {
         KList<DecreeCategory> subCats = new KList<>();
 
         for (Field subCat : getInstance().getClass().getDeclaredFields()) {
@@ -46,11 +47,36 @@ public class DecreeCategory implements Decreed {
             }
 
             subCat.setAccessible(true);
-            Object childRoot = subCat.get(getInstance());
+            Object childRoot;
+            try {
+                childRoot = subCat.get(getInstance());
+            } catch (IllegalAccessException e) {
+                system.debug("Could not get child \"" + subCat.getName() + "\" from instance: \"" + getInstance() + "\"");
+                system.debug("Because of: " + e.getMessage());
+                continue;
+            }
+            try {
+                if (childRoot == null) {
+                    childRoot = subCat.getType().getConstructor().newInstance();
+                    subCat.set(getInstance(), childRoot);
+                }
+            } catch (NoSuchMethodException e) {
+                system.debug("Method \"" + subCat.getName() + "\" does not exist in instance: \"" + getInstance() + "\"");
+                system.debug("Because of: " + e.getMessage());
+            } catch (IllegalAccessException e) {
+                system.debug("Could get, but not access child \"" + subCat.getName() + "\" from instance: \"" + getInstance() + "\"");
+                system.debug("Because of: " + e.getMessage());
+            } catch (InstantiationException e) {
+                system.debug("Could instantiate \"" + subCat.getName() + "\" from instance: \"" + getInstance() + "\"");
+                system.debug("Because of: " + e.getMessage());
+            } catch (InvocationTargetException e) {
+                system.debug("Invocation exception on \"" + subCat.getName() + "\" from instance: \"" + getInstance() + "\"");
+                system.debug("Because of: " + e.getMessage());
+                system.debug("Underlying exception: " + e.getTargetException().getMessage());
+            }
 
             if (childRoot == null) {
-                childRoot = subCat.getType().getConstructor().newInstance();
-                subCat.set(getInstance(), childRoot);
+                continue;
             }
 
             subCats.add(new DecreeCategory(this, childRoot, childRoot.getClass().getDeclaredAnnotation(Decree.class), getSystem()));
@@ -62,7 +88,7 @@ public class DecreeCategory implements Decreed {
     /**
      * Calculate {@link DecreeCommand}s in this category
      */
-    private KList<DecreeCommand> calcCommands(){
+    private KList<DecreeCommand> calcCommands() {
         KList<DecreeCommand> commands = new KList<>();
 
         for (Method command : getInstance().getClass().getDeclaredMethods()) {
@@ -124,7 +150,18 @@ public class DecreeCategory implements Decreed {
      * @param sender The {@link DecreeSender} to use to search
      * @return A list of {@link Decreed} or null
      */
-    public KList<Decreed> matchAll(String in, DecreeSender sender){
+    public KList<Decreed> matchAll(String in, DecreeSender sender) {
+        return matchAll(in, sender, true);
+    }
+
+    /**
+     * Match a subcategory or command of this category
+     * @param in The string to use to query
+     * @param sender The {@link DecreeSender} to use to search
+     * @param deepSearch Whether to also search for overlap, instead of 1:1 matches
+     * @return A list of {@link Decreed} or null
+     */
+    public KList<Decreed> matchAll(String in, DecreeSender sender, boolean deepSearch){
 
         KList<Decreed> matches = new KList<>();
 
@@ -140,15 +177,17 @@ public class DecreeCategory implements Decreed {
             }
         }
 
-        for (DecreeCategory subCat : getSubCats()) {
-            if (!matches.contains(subCat)  && subCat.doesDeepMatchAllowed(sender, in)){
-                matches.add(subCat);
+        if (deepSearch) {
+            for (DecreeCategory subCat : getSubCats()) {
+                if (!matches.contains(subCat) && subCat.doesDeepMatchAllowed(sender, in)) {
+                    matches.add(subCat);
+                }
             }
-        }
 
-        for (DecreeCommand command : getCommands()) {
-            if (!matches.contains(command)  && command.doesDeepMatchAllowed(sender, in)){
-                matches.add(command);
+            for (DecreeCommand command : getCommands()) {
+                if (!matches.contains(command) && command.doesDeepMatchAllowed(sender, in)) {
+                    matches.add(command);
+                }
             }
         }
 
@@ -167,6 +206,7 @@ public class DecreeCategory implements Decreed {
 
     @Override
     public void sendHelpTo(DecreeSender sender) {
+        // TODO: Clickable and stuff
         sender.sendHeader(Form.capitalize(getName()) + " Category");
         sender.sendMessage(C.GREEN + "Categories (" + getSubCats().size() + ")");
         getSubCats().convert(Decreed::getPath).forEach(sender::sendMessageRaw);
@@ -182,15 +222,26 @@ public class DecreeCategory implements Decreed {
     @Override
     public KList<String> tab(KList<String> args, DecreeSender sender) {
         if (args.isEmpty()) {
+            // This node is reached but there are no more (partial) arguments
             return new KList<>();
+
         } else if (args.size() == 1) {
+            // This is the final node, send all options from here
             return matchAll(args.get(0), sender).convert(Decreed::getName);
+
         } else {
-            Decreed match = matchOne(args.remove(0), sender);
-            if (match == null) {
-                return new KList<>();
+            // This is not the final node, so follow all possible branches downwards
+            String head = args.pop();
+
+            KList<Decreed> matches = matchAll(head, sender, false);
+            if (matches.isEmpty()) {
+                matches = matchAll(head, sender, true);
             }
-            return match.tab(args, sender);
+
+            KList<String> tabs = new KList<>();
+            matches.forEach(match -> tabs.addAll(match.tab(args.copy(), sender)));
+
+            return tabs;
         }
     }
 
@@ -200,13 +251,15 @@ public class DecreeCategory implements Decreed {
 
             getSystem().debug("Category: \"" + getName() + "\" - Processed: \"" + getPath() + "\" - Remaining: [" + args.toString(", ") + "]");
 
-            KList<Decreed> matches = matchAll(args.pop(), sender);
+            String head = args.pop();
+            KList<Decreed> matches = matchAll(head, sender);
             for (Decreed match : matches) {
                 if (match.invoke(args, sender)){
                     return true;
                 }
             }
             getSystem().debug(C.RED + "FAILED: \"" + getName() + "\"" + " from path \"" + getPath() + "\". Remaining: " + (args.isEmpty() ? "NONE" : "\"" + args.toString(", ") + "\""));
+            sender.sendMessage(C.RED + "The " + getName() + " category could not find a match for " + head + ". If you believe this is an error, contact an admin.");
             return false;
         }
 

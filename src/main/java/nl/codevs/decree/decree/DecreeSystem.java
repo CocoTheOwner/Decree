@@ -135,37 +135,42 @@ public class DecreeSystem implements Listener {
      * @param name
      */
     public DecreeCategory getRoot(String name) {
-        return commandCache.aquire(() -> {
-            try {
-                return new DecreeCategory(null, getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this);
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-            return null;
-        });
+        return commandCache.aquire(() -> new DecreeCategory(null, getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this));
     }
 
-    @Nullable
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
-        debug("Tab!");
-        KList<String> v = getRoot(command.getName()).tab(new KList<>(args), new DecreeSender(sender, getInstance(), this));
+
+        KList<String> v;
+
+        try {
+             v = getRoot(command.getName()).tab(new KList<>(args), new DecreeSender(sender, getInstance(), this));
+        } catch (Throwable e) {
+            new DecreeSender(sender, getInstance(), this).sendMessage("Exception: " + e.getClass().getSimpleName() + " thrown while executing tab completion. Check console for details.");
+            e.printStackTrace();
+            return new KList<>("ERROR");
+        }
+
         v.removeDuplicates();
+
         if (sender instanceof Player && isCommandSound()) {
             new DecreeSender(sender, instance, this).playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
         }
-        debug("Tabs: " + v.toString(", "));
+
         return v;
     }
 
     @SuppressWarnings("deprecation")
     public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
         Bukkit.getScheduler().scheduleAsyncDelayedTask(getInstance(), () -> {
+
             DecreeSender decreeSender = new DecreeSender(sender, getInstance(), this);
             DecreeContext.touch(decreeSender);
 
             try {
+
                 DecreeCategory root = getRoot(command.getName());
                 KList<String> noEmptyArgs = new KList<>(args).qremoveIf(String::isEmpty);
+
                 if (root.invoke(noEmptyArgs, decreeSender)) {
                     if (decreeSender.isPlayer()) {
                         decreeSender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
@@ -178,6 +183,7 @@ public class DecreeSystem implements Listener {
                         decreeSender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.2f, 1.95f);
                     }
                 }
+
             } catch (Throwable e) {
                 decreeSender.sendMessage("Exception: " + e.getClass().getSimpleName() + " thrown while executing command. Check console for details.");
                 e.printStackTrace();
