@@ -58,12 +58,6 @@ public class KList<T> extends ArrayList<T> implements List<T> {
         return new KList<T>().add(this);
     }
 
-
-    public KList<T> shuffle(Random rng) {
-        Collections.shuffle(this, rng);
-        return this;
-    }
-
     /**
      * Reverse this list
      *
@@ -72,30 +66,6 @@ public class KList<T> extends ArrayList<T> implements List<T> {
     public KList<T> reverse() {
         Collections.reverse(this);
         return this;
-    }
-
-    /**
-     * Tostring with a seperator for each item in the list
-     *
-     * @param split the seperator
-     * @return the string representing this object
-     */
-    public String toString(String split) {
-        if (isEmpty()) {
-            return "";
-        }
-
-        if (size() == 1) {
-            return get(0).toString();
-        }
-
-        StringBuilder b = new StringBuilder();
-
-        for (String i : convert((t) -> t.toString())) {
-            b.append(split).append(i == null ? "null" : i);
-        }
-
-        return b.substring(split.length());
     }
 
     /**
@@ -149,6 +119,16 @@ public class KList<T> extends ArrayList<T> implements List<T> {
             super.add(i);
         }
 
+        return this;
+    }
+
+    /**
+     * Add and return
+     * @param element - The element to add
+     * @return This
+     */
+    public KList<T> qadd(T element) {
+        add(element);
         return this;
     }
 
@@ -244,17 +224,6 @@ public class KList<T> extends ArrayList<T> implements List<T> {
         return m;
     }
 
-    public KList<T> shuffleCopy(Random rng) {
-        KList<T> t = copy();
-        t.shuffle(rng);
-        return t;
-    }
-
-    public KList<T> qadd(T element) {
-        add(element);
-        return this;
-    }
-
     public T popLast() {
         if (isEmpty()) {
             return null;
@@ -269,6 +238,41 @@ public class KList<T> extends ArrayList<T> implements List<T> {
 
     public KList<T> shuffle() {
         return shuffle(new Random());
+    }
+
+    public KList<T> shuffle(Random rng) {
+        Collections.shuffle(this, rng);
+        return this;
+    }
+
+    public KList<T> shuffleCopy(Random rng) {
+        KList<T> t = copy();
+        t.shuffle(rng);
+        return t;
+    }
+
+    /**
+     * Tostring with a seperator for each item in the list
+     *
+     * @param split the seperator
+     * @return the string representing this object
+     */
+    public String toString(String split) {
+        if (isEmpty()) {
+            return "";
+        }
+
+        if (size() == 1) {
+            return get(0).toString();
+        }
+
+        StringBuilder b = new StringBuilder();
+
+        for (String i : convert((t) -> t.toString())) {
+            b.append(split).append(i == null ? "null" : i);
+        }
+
+        return b.substring(split.length());
     }
 
     @Override
