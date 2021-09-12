@@ -19,24 +19,24 @@
 package nl.codevs.decree.decree;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.Setter;
 import nl.codevs.decree.decree.exceptions.DecreeException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.handlers.*;
 import nl.codevs.decree.decree.objects.*;
-import nl.codevs.decree.decree.util.AtomicCache;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -47,7 +47,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @AllArgsConstructor
 public class DecreeSystem implements Listener {
-    private final AtomicCache<DecreeCategory> commandCache = new AtomicCache<>();
     private final ConcurrentHashMap<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
     private static final KList<DecreeParameterHandler<?>> handlers = new KList<>(
             new BlockVectorHandler(),
@@ -72,12 +71,15 @@ public class DecreeSystem implements Listener {
     /**
      * The instance of the plugin
      */
+    @Getter
     private final Plugin instance;
+
 
     /**
      * Whether to use command sounds or not
      */
     @Setter
+    @Getter
     private boolean commandSound = true;
 
     /**
@@ -105,6 +107,7 @@ public class DecreeSystem implements Listener {
             names.addAll(Arrays.asList(decree.aliases()));
 
             DecreeCategory root = new DecreeCategory(null, i, decree, this);
+            System.out.println("Roots: " + names.toString(", "));
             names.forEach(n -> roots.put(n, root));
         });
         return roots;
@@ -154,14 +157,10 @@ public class DecreeSystem implements Listener {
      * @param name The name of the root command (first argument) to start from. This allows for multi-root support.
      */
     public DecreeCategory getRoot(String name) {
-        if (!roots.containsKey(name)) {
-            return commandCache.acquire(() -> new DecreeCategory(
-                    null,
-                    roots.get(name),
-                    roots.get(name).getClass().getDeclaredAnnotation(Decree.class),
-                    this
-            ));
+        if (roots.containsKey(name)) {
+            return roots.get(name);
         }
+        debug(C.RED + "Failed to get command belonging to root: " + name);
         return null;
     }
 
