@@ -49,6 +49,25 @@ public interface DecreeParameterHandler<T> {
     String getRandomDefault();
 
     /**
+     * Should parse a String into the designated type
+     * @param in The string to parse
+     * @param force Force an option instead of throwing a {@link DecreeWhichException} if possible (can allow it throwing!)
+     * @return The value extracted from the string, of the designated type
+     * @throws DecreeParsingException Thrown when the parsing fails (ex: "oop" translated to an integer throws this)
+     * @throws DecreeWhichException   Thrown when multiple results are possible
+     */
+    @SuppressWarnings("RedundantThrows")
+    T parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException;
+
+    /**
+     * Returns whether a certain type is supported by this handler<br>
+     *
+     * @param type The type to check
+     * @return True if supported, false if not
+     */
+    boolean supports(Class<?> type);
+
+    /**
      * Forces conversion to the designated type before converting to a string using {@link #toString(T t)}
      *
      * @param t The object to convert to string (that should be of this type)
@@ -69,26 +88,6 @@ public interface DecreeParameterHandler<T> {
     default T parse(String in) throws DecreeParsingException, DecreeWhichException {
         return parse(in, false);
     }
-
-
-    /**
-     * Should parse a String into the designated type
-     * @param in The string to parse
-     * @param force Force an option instead of throwing a {@link DecreeWhichException} if possible (can allow it throwing!)
-     * @return The value extracted from the string, of the designated type
-     * @throws DecreeParsingException Thrown when the parsing fails (ex: "oop" translated to an integer throws this)
-     * @throws DecreeWhichException   Thrown when multiple results are possible
-     */
-    @SuppressWarnings("RedundantThrows")
-    T parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException;
-
-    /**
-     * Returns whether a certain type is supported by this handler<br>
-     *
-     * @param type The type to check
-     * @return True if supported, false if not
-     */
-    boolean supports(Class<?> type);
 
     /**
      * The possible entries for the inputted string (support for autocomplete on partial entries)
