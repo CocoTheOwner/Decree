@@ -238,13 +238,19 @@ public class DecreeCategory implements Decreed {
             return getPath();
         }
 
-        String hoverTitle = getNames().copy().convert((f) -> "<#42ecf5>" + f).toString(", ");
-        String hoverUsage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform> This is a command category. Click to run.";
+        StringBuilder hoverTitle = new StringBuilder("<#42ecf5>" + getName());
+        String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
+        String hoverUsage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform>This is a command category. Click to run.";
         String hoverPermission;
         String hoverOrigin = "<#dbe61c>⌘ <#d61aba><#ff33cc><font:minecraft:uniform>" + Form.capitalize(getOrigin().toString().toLowerCase());
 
         String runOnClick = getPath();
         String realText = "<#46826a>⇀<gradient:#42ecf5:#428df5> " + getName() + "<gradient:#afe3d3:#a2dae0> - Category of Commands";
+
+        // Title
+        for (String alias : getAliases()) {
+            hoverTitle.append(", ").append(alias);
+        }
 
         // Permission
         if (!getDecree().permission().equals(Decree.NO_PERMISSION)){
@@ -254,7 +260,7 @@ public class DecreeCategory implements Decreed {
             } else {
                 granted = "<#db4321>(Not Granted)";
             }
-            hoverPermission = "<#2181db>⏍ <#78dcf0><font:minecraft:uniform>Permission: <#ffa500>" + getDecree().permission() + " " + granted + newline;
+            hoverPermission = "<#2181db>⏍ <#78dcf0><font:minecraft:uniform>Permission: <#ffa500>" + getDecree().permission() + " " + granted;
         } else {
             hoverPermission = "";
         }
@@ -269,10 +275,11 @@ public class DecreeCategory implements Decreed {
         }
 
         return "<hover:show_text:'" +
-                    hoverTitle + newline +
-                    hoverUsage + newline +
-                    hoverPermission + (hoverPermission.isEmpty() ? "" : newline) +
-                    hoverOrigin + "'>" +
+                    hoverTitle +
+                    newline + hoverDescription +
+                    newline + hoverUsage +
+                    (hoverPermission.isEmpty() ? "" : newline) + hoverPermission +
+                    (hoverOrigin.isEmpty() ? "" : newline) + hoverOrigin + "fat penis'>" +
                     "<click:run_command:" + runOnClick + ">" + realText + "</click>" +
                 "</hover>";
     }
