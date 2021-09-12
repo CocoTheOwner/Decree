@@ -77,8 +77,7 @@ public class BlockVectorHandler implements DecreeParameterHandler<BlockVector> {
                 }
 
                 return DecreeContext.get().player().getLocation().toVector().toBlockVector();
-            } else //noinspection SpellCheckingInspection
-                if (in.equalsIgnoreCase("look") || in.equalsIgnoreCase("cursor") || in.equalsIgnoreCase("crosshair")) {
+            } else if (in.equalsIgnoreCase("look") || in.equalsIgnoreCase("cursor") || in.equalsIgnoreCase("crosshair")) {
                 if (!DecreeContext.get().isPlayer()) {
                     throw new DecreeParsingException("You cannot specify look, cursor, crosshair as a console.");
                 }
