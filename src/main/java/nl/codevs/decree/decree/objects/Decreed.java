@@ -36,16 +36,6 @@ public interface Decreed {
     KList<String> tab(KList<String> args, DecreeSender sender);
 
     /**
-     * Get aliases of this Decreed
-     * @return aliases, all non-empty strings.
-     */
-    default KList<String> getAliases() {
-        KList<String> aliases = new KList<>();
-        new KList<>(decree().aliases()).stream().filter(a -> !a.isEmpty()).forEach(aliases::add);
-        return aliases;
-    }
-
-    /**
      * Invocation on command run
      * @param args The arguments left to parse
      * @param sender The sender that sent the command

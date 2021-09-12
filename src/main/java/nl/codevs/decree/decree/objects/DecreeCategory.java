@@ -238,7 +238,7 @@ public class DecreeCategory implements Decreed {
             return getPath();
         }
 
-        StringBuilder hoverTitle = new StringBuilder("<#42ecf5>" + getName());
+        String hoverTitle = "<#42ecf5>" + getNames().toString(", ");
         String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
         String hoverUsage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform>This is a command category. Click to run.";
         String hoverPermission;
@@ -246,11 +246,6 @@ public class DecreeCategory implements Decreed {
 
         String runOnClick = getPath();
         String realText = "<#46826a>⇀<gradient:#42ecf5:#428df5> " + getName() + "<gradient:#afe3d3:#a2dae0> - Category of Commands";
-
-        // Title
-        for (String alias : getAliases()) {
-            hoverTitle.append(", ").append(alias);
-        }
 
         // Permission
         if (!getDecree().permission().equals(Decree.NO_PERMISSION)){

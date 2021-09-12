@@ -137,7 +137,7 @@ public class DecreeCommand implements Decreed {
             return getPath() + " " + getParameters().convert(p -> p.getName() + "=" + p.getHandler().getRandomDefault()).toString(" ");
         }
 
-        StringBuilder hoverTitle = new StringBuilder("<#42ecf5>" + getName());
+        String hoverTitle = "<#42ecf5>" + getNames().toString(", ");
         String hoverUsage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform>";
         String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
         String hoverPermission;
@@ -149,11 +149,6 @@ public class DecreeCommand implements Decreed {
         String realText = "<#46826a>⇀<gradient:#42ecf5:#428df5> " + getName();
 
         String appendedParameters;
-
-        // Title
-        for (String alias : getAliases()) {
-            hoverTitle.append(", ").append(alias);
-        }
 
         // Usage and clicking
         if (getParameters().isEmpty()){
@@ -197,7 +192,7 @@ public class DecreeCommand implements Decreed {
         if (getParameters().isEmpty()) {
             appendedParameters = "";
         } else {
-            appendedParameters = getParameters().convert(DecreeParameter::getHelp).toString(" ");
+            appendedParameters = getParameters().convert(p -> p.getHelp(sender)).toString(" ");
         }
 
         return "<hover:show_text:'" +
