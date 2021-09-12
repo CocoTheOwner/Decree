@@ -35,18 +35,25 @@ public interface DecreeParameterHandler<T> {
     KList<T> getPossibilities();
 
     /**
+     * Return a random value that may be entered
+     * @return A random default value
+     */
+    String getRandomDefault();
+    /**
+     * Returns whether a certain type is supported by this handler<br>
+     *
+     * @param type The type to check
+     * @return True if supported, false if not
+     */
+    boolean supports(Class<?> type);
+
+    /**
      * Converting the type back to a string (inverse of the {@link #parse(String) parse} method)
      *
      * @param t The input of the designated type to convert to a String
      * @return The resulting string
      */
     String toString(T t);
-
-    /**
-     * Return a random value that may be entered
-     * @return A random default value
-     */
-    String getRandomDefault();
 
     /**
      * Should parse a String into the designated type
@@ -60,12 +67,15 @@ public interface DecreeParameterHandler<T> {
     T parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException;
 
     /**
-     * Returns whether a certain type is supported by this handler<br>
-     *
-     * @param type The type to check
-     * @return True if supported, false if not
+     * Parse an input string to an output of the assigned type
+     * @param in The input string
+     * @return The output type
+     * @throws DecreeParsingException When the input cannot be parsed into the output
+     * @throws DecreeWhichException Multiple outputs would be possible for the same input
      */
-    boolean supports(Class<?> type);
+    default T parse(String in) throws DecreeParsingException, DecreeWhichException {
+        return parse(in, false);
+    }
 
     /**
      * Forces conversion to the designated type before converting to a string using {@link #toString(T t)}
@@ -78,16 +88,6 @@ public interface DecreeParameterHandler<T> {
         return toString((T) t);
     }
 
-    /**
-     * Parse an input string to an output of the assigned type
-     * @param in The input string
-     * @return The output type
-     * @throws DecreeParsingException When the input cannot be parsed into the output
-     * @throws DecreeWhichException Multiple outputs would be possible for the same input
-     */
-    default T parse(String in) throws DecreeParsingException, DecreeWhichException {
-        return parse(in, false);
-    }
 
     /**
      * The possible entries for the inputted string (support for autocomplete on partial entries)

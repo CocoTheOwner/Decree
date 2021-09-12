@@ -49,52 +49,6 @@ public class KList<T> extends ArrayList<T> implements List<T> {
         addAll(values);
         return this;
     }
-    /**
-     * Return a copy of this list
-     *
-     * @return the copy
-     */
-    public KList<T> copy() {
-        return new KList<T>().add(this);
-    }
-
-    /**
-     * Reverse this list
-     *
-     * @return the same list
-     */
-    public KList<T> reverse() {
-        Collections.reverse(this);
-        return this;
-    }
-
-    /**
-     * Convert this list into another list type. Such as GList<Integer> to
-     * GList<String>. list.convert((i) -> "" + i);
-     *
-     * @param <V>
-     * @param converter
-     * @return
-     */
-    public <V> KList<V> convert(Function<T, V> converter) {
-        KList<V> v = new KList<V>();
-        forEach((t) -> v.addNonNull(converter.apply(t)));
-        return v;
-    }
-
-    /**
-     * Adds T to the list, ignores if null
-     *
-     * @param t the value to add
-     * @return the same list
-     */
-    public KList<T> addNonNull(T t) {
-        if (t != null) {
-            super.add(t);
-        }
-
-        return this;
-    }
 
     /**
      * Add another glist's contents to this one (addall builder)
@@ -130,6 +84,53 @@ public class KList<T> extends ArrayList<T> implements List<T> {
     public KList<T> qadd(T element) {
         add(element);
         return this;
+    }
+
+    /**
+     * Adds T to the list, ignores if null
+     *
+     * @param t the value to add
+     * @return the same list
+     */
+    public KList<T> addNonNull(T t) {
+        if (t != null) {
+            super.add(t);
+        }
+
+        return this;
+    }
+
+    /**
+     * Return a copy of this list
+     *
+     * @return the copy
+     */
+    public KList<T> copy() {
+        return new KList<T>().add(this);
+    }
+
+    /**
+     * Reverse this list
+     *
+     * @return the same list
+     */
+    public KList<T> reverse() {
+        Collections.reverse(this);
+        return this;
+    }
+
+    /**
+     * Convert this list into another list type. Such as GList<Integer> to
+     * GList<String>. list.convert((i) -> "" + i);
+     *
+     * @param <V>
+     * @param converter
+     * @return
+     */
+    public <V> KList<V> convert(Function<T, V> converter) {
+        KList<V> v = new KList<V>();
+        forEach((t) -> v.addNonNull(converter.apply(t)));
+        return v;
     }
 
     /**
