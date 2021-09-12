@@ -137,19 +137,32 @@ public class DecreeCommand implements Decreed {
             return getPath() + " " + getParameters().convert(p -> p.getName() + "=" + p.getHandler().getRandomDefault()).toString(" ");
         }
 
-        String hoverTitle = getNames().copy().convert((f) -> "<#42ecf5>" + f).toString(", ");
+        StringBuilder hoverTitle = new StringBuilder("<#42ecf5>" + getName());
+        String hoverUsage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform>";
         String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
         String hoverPermission;
         String hoverSuggestions;
         String hoverOrigin = "<#dbe61c>⌘ <#d61aba><#ff33cc><font:minecraft:uniform>" + Form.capitalize(getOrigin().toString().toLowerCase());
-        String hoverUsage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform>";
 
         String doOnClick;
         String runOnClick = getPath();
         String realText = "<#46826a>⇀<gradient:#42ecf5:#428df5> " + getName();
 
-        String realParameters;
+        String appendedParameters;
 
+        // Title
+        for (String alias : getAliases()) {
+            hoverTitle.append(", ").append(alias);
+        }
+
+        // Usage and clicking
+        if (getParameters().isEmpty()){
+            hoverUsage += "There are no parameters. Click to run.";
+            doOnClick = "run_command";
+        } else {
+            hoverUsage += "Hover over parameters. Click to suggest.";
+            doOnClick = "suggest_command";
+        }
 
         // Permission
         if (!getDecree().permission().equals(Decree.NO_PERMISSION)){
@@ -159,16 +172,9 @@ public class DecreeCommand implements Decreed {
             } else {
                 granted = "<#db4321>(Not Granted)";
             }
-            hoverPermission = "<#2181db>⏍ <#78dcf0><font:minecraft:uniform>Permission: <#ffa500>" + getDecree().permission() + " " + granted + newline;
+            hoverPermission = "<#2181db>⏍ <#78dcf0><font:minecraft:uniform>Permission: <#ffa500>" + getDecree().permission() + " " + granted;
         } else {
             hoverPermission = "";
-        }
-
-        // Suggestions
-        if (getParameters().isNotEmpty()) {
-            hoverSuggestions = "<font:minecraft:uniform>" + getRandomSuggestions(Math.min(parameters.size() + 1, 5)).toString(newline);
-        } else {
-            hoverSuggestions = "";
         }
 
         // Origin
@@ -180,72 +186,34 @@ public class DecreeCommand implements Decreed {
             hoverOrigin += "<#c4082e> origin, so you cannot run it.";
         }
 
-        // Usage and clicking
-        if (getParameters().isEmpty()){
-            hoverUsage += "There are no parameters. Click to run.";
-            doOnClick = "run_command";
+        // Suggestions
+        if (getParameters().isNotEmpty()) {
+            hoverSuggestions = "<font:minecraft:uniform>" + getRandomSuggestions(Math.min(parameters.size() + 1, 5)).toString(newline);
         } else {
-            hoverUsage += "Hover over parameters to learn more. Click to put in chat.";
-            doOnClick = "suggest_command";
+            hoverSuggestions = "";
         }
 
         // Parameters
         if (getParameters().isEmpty()) {
-            realParameters = " ";
+            appendedParameters = "";
         } else {
-            realParameters = getParameters().convert(DecreeParameter::getHelp).toString(" ");
+            appendedParameters = getParameters().convert(DecreeParameter::getHelp).toString(" ");
         }
 
         return "<hover:show_text:'" +
-                    hoverTitle + newline +
-                    hoverDescription + newline +
-                    hoverPermission + (hoverPermission.isEmpty() ? "" : newline) +
-                    hoverSuggestions + (hoverSuggestions.isEmpty() ? "" : newline) +
-                    hoverOrigin + (hoverOrigin.isEmpty() ? "" : newline) +
-                    hoverUsage +
+                    hoverTitle +
+                    newline + hoverDescription +
+                    newline + hoverUsage +
+                    (hoverPermission.isEmpty() ? "" : newline) + hoverPermission +
+                    (hoverOrigin.isEmpty() ? "" : newline) + hoverOrigin +
+                    (hoverSuggestions.isEmpty() ? "" : newline) + hoverSuggestions +
                 "'>" +
                     "<click:" + doOnClick + ":" + runOnClick + ">" +
                         realText +
                     "</click>" +
                 "</hover>" +
                 " " +
-                realParameters; // TODO: Make parameters be clickable
-        /*
-        /// Params
-        StringBuilder nodes = new StringBuilder();
-        for (DecreeParameter p : getParameters()) {
-
-            String nTitle = "<gradient:#d665f0:#a37feb>" + p.getName();
-            String nHoverTitle = p.getNames().convert((ff) -> "<#d665f0>" + ff).toString(", ");
-            String nDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + p.getDescription();
-            String nUsage;
-            String fullTitle;
-            if (p.isContextual() && sender.isPlayer()) {
-                fullTitle = "<#ffcc00>[" + nTitle + "<#ffcc00>] ";
-                nUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>The value may be derived from environment context.";
-            } else if (p.isRequired()) {
-                fullTitle = "<red>[" + nTitle + "<red>] ";
-                nUsage = "<#db4321>⚠ <#faa796><font:minecraft:uniform>This parameter is required.";
-            } else if (p.hasDefault()) {
-                fullTitle = "<#4f4f4f>⊰" + nTitle + "<#4f4f4f>⊱";
-                nUsage = "<#2181db>✔ <#78dcf0><font:minecraft:uniform>Defaults to \"" + p.getParam().defaultValue() + "\" if undefined.";
-            } else {
-                fullTitle = "<#4f4f4f>⊰" + nTitle + "<#4f4f4f>⊱";
-                nUsage = "<#a73abd>✔ <#78dcf0><font:minecraft:uniform>This parameter is optional.";
-            }
-            String type = "<#cc00ff>✢ <#ff33cc><font:minecraft:uniform>This parameter is of type " + p.getType().getSimpleName() + ".";
-
-            nodes
-                    .append("<hover:show_text:'")
-                    .append(nHoverTitle).append(newline)
-                    .append(nDescription).append(newline)
-                    .append(nUsage).append(newline)
-                    .append(type)
-                    .append("'>")
-                    .append(fullTitle)
-                    .append("</hover>");
-        }
-        */
+                appendedParameters; // TODO: Make parameters be clickable
     }
 
     @Override
