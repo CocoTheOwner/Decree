@@ -18,7 +18,7 @@
 
 package nl.codevs.decree.decree;
 
-import lombok.Getter;
+import lombok.AllArgsConstructor;
 import lombok.Setter;
 import nl.codevs.decree.decree.exceptions.DecreeException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
@@ -39,12 +39,13 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Getter
+@AllArgsConstructor
 public class DecreeSystem implements Listener {
     private final AtomicCache<DecreeCategory> commandCache = new AtomicCache<>();
     private final ConcurrentHashMap<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
@@ -66,7 +67,7 @@ public class DecreeSystem implements Listener {
     /**
      * The root of the command tree as an instantiated object
      */
-    private final DecreeCommandExecutor rootInstance;
+    private final ConcurrentHashMap<String, DecreeCategory> roots;
 
     /**
      * The instance of the plugin
@@ -85,9 +86,28 @@ public class DecreeSystem implements Listener {
     @Setter
     private String tag = C.RED + "[" + C.GREEN + "Decree" + C.RED + "]";
 
-    public DecreeSystem(DecreeCommandExecutor rootInstance, Plugin instance) {
-        this.rootInstance = rootInstance;
+    public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin instance) {
+        this.roots = buildRoots(rootInstances);
         this.instance = instance;
+    }
+
+    /**
+     * Build roots for instances
+     * @param rootInstances The instances to build roots for
+     * @return The built roots in a {@link ConcurrentHashMap}
+     */
+    private ConcurrentHashMap<String, DecreeCategory> buildRoots(KList<DecreeCommandExecutor> rootInstances) {
+        ConcurrentHashMap<String, DecreeCategory> roots = new ConcurrentHashMap<>();
+        rootInstances.stream().filter(i -> i.getClass().isAnnotationPresent(Decree.class)).forEach(i -> {
+            Decree decree = i.getClass().getDeclaredAnnotation(Decree.class);
+
+            KList<String> names = new KList<>(decree.name());
+            names.addAll(Arrays.asList(decree.aliases()));
+
+            DecreeCategory root = new DecreeCategory(null, i, decree, this);
+            names.forEach(n -> roots.put(n, root));
+        });
+        return roots;
     }
 
     /**
@@ -126,7 +146,7 @@ public class DecreeSystem implements Listener {
      * @param message The debug message
      */
     public void debug(String message) {
-        new DecreeSender(Bukkit.getConsoleSender(), getInstance(), this).sendMessage(tag.trim() + C.RESET + " " + message);
+        new DecreeSender(Bukkit.getConsoleSender(), instance, this).sendMessage(tag.trim() + C.RESET + " " + message);
     }
 
     /**
@@ -134,8 +154,15 @@ public class DecreeSystem implements Listener {
      * @param name The name of the root command (first argument) to start from. This allows for multi-root support.
      */
     public DecreeCategory getRoot(String name) {
-        // TODO: Add multi-root support
-        return commandCache.acquire(() -> new DecreeCategory(null, getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this));
+        if (!roots.containsKey(name)) {
+            return commandCache.acquire(() -> new DecreeCategory(
+                    null,
+                    roots.get(name),
+                    roots.get(name).getClass().getDeclaredAnnotation(Decree.class),
+                    this
+            ));
+        }
+        return null;
     }
 
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
@@ -143,10 +170,10 @@ public class DecreeSystem implements Listener {
         KList<String> v = null;
 
         try {
-            v = getRoot(command.getName()).tab(new KList<>(args), new DecreeSender(sender, getInstance(), this));
+            v = getRoot(command.getName()).tab(new KList<>(args), new DecreeSender(sender, instance, this));
         } catch (ConcurrentModificationException ignored) {
         } catch (Throwable e) {
-            new DecreeSender(sender, getInstance(), this).sendMessage(C.RED + "Exception: " + e.getClass().getSimpleName() + " thrown while executing tab completion. Check console for details.");
+            new DecreeSender(sender, instance, this).sendMessage(C.RED + "Exception: " + e.getClass().getSimpleName() + " thrown while executing tab completion. Check console for details.");
             e.printStackTrace();
         }
 
@@ -156,7 +183,7 @@ public class DecreeSystem implements Listener {
 
         v.removeDuplicates();
 
-        if (sender instanceof Player && isCommandSound()) {
+        if (sender instanceof Player && commandSound) {
             new DecreeSender(sender, instance, this).playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
         }
 
@@ -165,17 +192,16 @@ public class DecreeSystem implements Listener {
 
     @SuppressWarnings({"deprecation", "SameReturnValue"})
     public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
-        Bukkit.getScheduler().scheduleAsyncDelayedTask(getInstance(), () -> {
+        Bukkit.getScheduler().scheduleAsyncDelayedTask(instance, () -> {
 
-            DecreeSender decreeSender = new DecreeSender(sender, getInstance(), this);
+            DecreeSender decreeSender = new DecreeSender(sender, instance, this);
             DecreeContext.touch(decreeSender);
 
             try {
 
-                DecreeCategory root = getRoot(command.getName());
                 KList<String> noEmptyArgs = new KList<>(args).qremoveIf(String::isEmpty);
 
-                if (root.invoke(noEmptyArgs, decreeSender)) {
+                if (getRoot(command.getName()).invoke(noEmptyArgs, decreeSender)) {
                     if (decreeSender.isPlayer()) {
                         decreeSender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
                         decreeSender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.125f, 2.99f);
