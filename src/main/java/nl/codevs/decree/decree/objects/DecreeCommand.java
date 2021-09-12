@@ -26,6 +26,7 @@ import nl.codevs.decree.decree.util.Maths;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Arrays;
 
 /**
  * Represents a single command (non-category)
@@ -62,34 +63,31 @@ public class DecreeCommand implements Decreed {
      */
     private KList<DecreeParameter> calcParameters() {
         KList<DecreeParameter> parameters = new KList<>();
-        for (Parameter parameter : method.getParameters()) {
-            if (parameter.isAnnotationPresent(Param.class)){
-                parameters.add(new DecreeParameter(parameter));
-            }
-        }
-
-        parameters.sort((o1, o2) -> {
-            int i = 0;
-            if (o1.isRequired()) {
-                i += 5;
-            }
-            if (o2.isRequired()) {
-                i -= 3;
-            }
-            if (o1.isContextual()) {
-                i += 2;
-            }
-            if (o2.isContextual()) {
-                i -= 1;
-            }   
-            return i;
-        });
-
+        Arrays.stream(method.getParameters()).filter(p -> p.isAnnotationPresent(Param.class)).forEach(p -> parameters.add(new DecreeParameter(p)));
         return parameters;
     }
 
+    /**
+     * Get sorted parameters
+     * @return Sorted parameters
+     */
     public KList<DecreeParameter> getParameters() {
-        return parameters.copy();
+        return parameters.copy().qsort((o1, o2) -> {
+                int i = 0;
+                if (o1.isRequired()) {
+                    i -= 5;
+                }
+                if (o2.isRequired()) {
+                    i += 3;
+                }
+                if (o1.isContextual()) {
+                    i -= 2;
+                }
+                if (o2.isContextual()) {
+                    i += 1;
+                }
+                return i;
+        });
     }
 
     /**
@@ -147,7 +145,7 @@ public class DecreeCommand implements Decreed {
         String runOnClick = getPath();
         String realText = "<#46826a>⇀<gradient:#42ecf5:#428df5> " + getName();
 
-        String appendedParameters;
+        StringBuilder appendedParameters = new StringBuilder(" ");
 
         // Usage and clicking
         if (getParameters().isEmpty()){
@@ -182,16 +180,44 @@ public class DecreeCommand implements Decreed {
 
         // Suggestions
         if (getParameters().isNotEmpty()) {
-            hoverSuggestions = "<font:minecraft:uniform>" + getRandomSuggestions(Math.min(parameters.size() + 1, 5)).toString(newline);
+            hoverSuggestions = "<font:minecraft:uniform>" + getRandomSuggestions(Math.min(parameters.size() + 1, 5)).toString("\n") + "<reset>";
         } else {
             hoverSuggestions = "";
         }
 
         // Parameters
         if (getParameters().isEmpty()) {
-            appendedParameters = "";
+            appendedParameters = new StringBuilder();
         } else {
-            appendedParameters = getParameters().convert(p -> p.getHelp(sender)).toString(" ");
+            StringBuilder requiredFirst = new StringBuilder();
+            for (DecreeParameter parameter : getParameters()) {
+
+                String shortestName = parameter.getName();
+                for (String name : parameter.getNames()) {
+                    if (name.length() < shortestName.length()) {
+                        shortestName = name;
+                    }
+                }
+
+                String value;
+                if (parameter.hasDefault()) {
+                    value = parameter.getDefaultRaw();
+                } else {
+                    value = parameter.getHandler().getRandomDefault();
+                }
+
+                String onClick = getPath() + " " + requiredFirst + " " + shortestName + "=" + value;
+
+                while(onClick.contains("  ")){
+                    onClick = onClick.replaceAll("\\Q  \\E", " ");
+                }
+
+                if (parameter.isRequired() && !(parameter.isContextual() && sender.isPlayer())) {
+                    requiredFirst.append(shortestName).append("=").append(value).append(" ");
+                }
+
+                appendedParameters.append(parameter.getHelp(sender, onClick));
+            }
         }
 
         return "<hover:show_text:'" +
@@ -206,8 +232,7 @@ public class DecreeCommand implements Decreed {
                         realText +
                     "</click>" +
                 "</hover>" +
-                " " +
-                appendedParameters; // TODO: Make parameters be clickable
+                appendedParameters;
     }
 
     @Override
