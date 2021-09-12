@@ -111,6 +111,77 @@ public class DecreeSender implements CommandSender {
         return s;
     }
 
+
+
+    public static long getTick() {
+        return System.currentTimeMillis() / 16;
+    }
+
+    public static String pulse(String colorA, String colorB, double speed) {
+        return "<gradient:" + colorA + ":" + colorB + ":" + pulse(speed) + ">";
+    }
+
+    public static String pulse(double speed) {
+        return Form.f(invertSpread((((getTick() * 15D * speed) % 1000D) / 1000D)), 3).replaceAll("\\Q,\\E", ".").replaceAll("\\Q?\\E", "-");
+    }
+
+    public static double invertSpread(double v) {
+        return ((1D - v) * 2D) - 1D;
+    }
+
+    private Component createComponent(String message) {
+        String t = C.translateAlternateColorCodes('&', getTag() + message);
+        String a = C.aura(t, spinh, spins, spinb);
+        return MiniMessage.get().parse(a);
+    }
+
+    private Component createComponentRaw(String message) {
+        String t = C.translateAlternateColorCodes('&', getTag() + message);
+        return MiniMessage.get().parse(t);
+    }
+
+    public void sendMessageRaw(String message) {
+        if (message.contains("<NOMINI>")) {
+            s.sendMessage(message.replaceAll("\\Q<NOMINI>\\E", ""));
+            return;
+        }
+
+        try {
+            audience.sendMessage(createComponentRaw(message));
+        } catch (Throwable e) {
+            String t = C.translateAlternateColorCodes('&', getTag() + message);
+            String a = C.aura(t, spinh, spins, spinb);
+
+            system.debug("<NOMINI>Failure to parse " + a);
+            s.sendMessage(C.translateAlternateColorCodes('&', getTag() + message));
+        }
+    }
+
+    public void sendHeader(String name, int overrideLength) {
+        int h = name.length() + 2;
+        String s = Form.repeat(" ", overrideLength - h - 4);
+        String si = "(((";
+        String so = ")))";
+        String sf = "[";
+        String se = "]";
+
+        if (name.trim().isEmpty()) {
+            sendMessageRaw("<font:minecraft:uniform><strikethrough><gradient:#34eb6b:#32bfad>" + sf + s + "<reset><font:minecraft:uniform><strikethrough><gradient:#32bfad:#34eb6b>" + s + se);
+        } else {
+            sendMessageRaw("<font:minecraft:uniform><strikethrough><gradient:#34eb6b:#32bfad>" + sf + s + si + "<reset> <gradient:#3299bf:#323bbf>" + name + "<reset> <font:minecraft:uniform><strikethrough><gradient:#32bfad:#34eb6b>" + so + s + se);
+        }
+    }
+
+    public void sendHeader(String name) {
+        sendHeader(name, 40);
+    }
+
+    public void playSound(Sound sound, float volume, float pitch) {
+        if (isPlayer()) {
+            player().playSound(player().getLocation(), sound, volume, pitch);
+        }
+    }
+
     @Override
     public boolean isPermissionSet(@NotNull String name) {
         return s.isPermissionSet(name);
@@ -179,33 +250,6 @@ public class DecreeSender implements CommandSender {
         s.setOp(value);
     }
 
-    public static long getTick() {
-        return System.currentTimeMillis() / 16;
-    }
-
-    public static String pulse(String colorA, String colorB, double speed) {
-        return "<gradient:" + colorA + ":" + colorB + ":" + pulse(speed) + ">";
-    }
-
-    public static String pulse(double speed) {
-        return Form.f(invertSpread((((getTick() * 15D * speed) % 1000D) / 1000D)), 3).replaceAll("\\Q,\\E", ".").replaceAll("\\Q?\\E", "-");
-    }
-
-    public static double invertSpread(double v) {
-        return ((1D - v) * 2D) - 1D;
-    }
-
-    private Component createComponent(String message) {
-        String t = C.translateAlternateColorCodes('&', getTag() + message);
-        String a = C.aura(t, spinh, spins, spinb);
-        return MiniMessage.get().parse(a);
-    }
-
-    private Component createComponentRaw(String message) {
-        String t = C.translateAlternateColorCodes('&', getTag() + message);
-        return MiniMessage.get().parse(t);
-    }
-
     @Override
     public void sendMessage(String message) {
         if (message.contains("<NOMINI>")) {
@@ -215,24 +259,6 @@ public class DecreeSender implements CommandSender {
 
         try {
             audience.sendMessage(createComponent(message));
-        } catch (Throwable e) {
-            String t = C.translateAlternateColorCodes('&', getTag() + message);
-            String a = C.aura(t, spinh, spins, spinb);
-
-            system.debug("<NOMINI>Failure to parse " + a);
-            s.sendMessage(C.translateAlternateColorCodes('&', getTag() + message));
-        }
-    }
-
-
-    public void sendMessageRaw(String message) {
-        if (message.contains("<NOMINI>")) {
-            s.sendMessage(message.replaceAll("\\Q<NOMINI>\\E", ""));
-            return;
-        }
-
-        try {
-            audience.sendMessage(createComponentRaw(message));
         } catch (Throwable e) {
             String t = C.translateAlternateColorCodes('&', getTag() + message);
             String a = C.aura(t, spinh, spins, spinb);
@@ -274,30 +300,5 @@ public class DecreeSender implements CommandSender {
     @Override
     public @NotNull Spigot spigot() {
         return s.spigot();
-    }
-
-    public void sendHeader(String name, int overrideLength) {
-        int h = name.length() + 2;
-        String s = Form.repeat(" ", overrideLength - h - 4);
-        String si = "(((";
-        String so = ")))";
-        String sf = "[";
-        String se = "]";
-
-        if (name.trim().isEmpty()) {
-            sendMessageRaw("<font:minecraft:uniform><strikethrough><gradient:#34eb6b:#32bfad>" + sf + s + "<reset><font:minecraft:uniform><strikethrough><gradient:#32bfad:#34eb6b>" + s + se);
-        } else {
-            sendMessageRaw("<font:minecraft:uniform><strikethrough><gradient:#34eb6b:#32bfad>" + sf + s + si + "<reset> <gradient:#3299bf:#323bbf>" + name + "<reset> <font:minecraft:uniform><strikethrough><gradient:#32bfad:#34eb6b>" + so + s + se);
-        }
-    }
-
-    public void sendHeader(String name) {
-        sendHeader(name, 40);
-    }
-
-    public void playSound(Sound sound, float volume, float pitch) {
-        if (isPlayer()) {
-            player().playSound(player().getLocation(), sound, volume, pitch);
-        }
     }
 }
