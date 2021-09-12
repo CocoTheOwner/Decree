@@ -295,6 +295,7 @@ public class DecreeCategory implements Decreed {
 
     @Override
     public KList<String> tab(KList<String> args, DecreeSender sender) {
+        // TODO: Fix that elements without a 1:1 match with default cause further auto-completions to fail
         if (args.isEmpty()) {
             // This node is reached but there are no more (partial) arguments
             return new KList<>();

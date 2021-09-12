@@ -72,21 +72,21 @@ public class DecreeCommand implements Decreed {
      * @return Sorted parameters
      */
     public KList<DecreeParameter> getParameters() {
+        // TODO: Solve command order; contextual is ending up before required
         return parameters.copy().qsort((o1, o2) -> {
-                int i = 0;
                 if (o1.isRequired()) {
-                    i -= 5;
+                    return 0;
                 }
                 if (o2.isRequired()) {
-                    i += 3;
+                    return 1;
                 }
                 if (o1.isContextual()) {
-                    i -= 2;
+                    return 0;
                 }
                 if (o2.isContextual()) {
-                    i += 1;
+                    return 1;
                 }
-                return i;
+                return 0;
         });
     }
 
@@ -192,6 +192,7 @@ public class DecreeCommand implements Decreed {
             StringBuilder requiredFirst = new StringBuilder();
             for (DecreeParameter parameter : getParameters()) {
 
+                // Name
                 String shortestName = parameter.getName();
                 for (String name : parameter.getNames()) {
                     if (name.length() < shortestName.length()) {
@@ -199,6 +200,7 @@ public class DecreeCommand implements Decreed {
                     }
                 }
 
+                // Value
                 String value;
                 if (parameter.hasDefault()) {
                     value = parameter.getDefaultRaw();
@@ -206,16 +208,20 @@ public class DecreeCommand implements Decreed {
                     value = parameter.getHandler().getRandomDefault();
                 }
 
+                // Full onclick
                 String onClick = getPath() + " " + requiredFirst + " " + shortestName + "=" + value;
 
+                // Cleanup
                 while(onClick.contains("  ")){
                     onClick = onClick.replaceAll("\\Q  \\E", " ");
                 }
 
+                // If required && not contextual & player added to requirements
                 if (parameter.isRequired() && !(parameter.isContextual() && sender.isPlayer())) {
                     requiredFirst.append(shortestName).append("=").append(value).append(" ");
                 }
 
+                // Add this parameter
                 appendedParameters.append(parameter.getHelp(sender, onClick));
             }
         }
@@ -252,6 +258,7 @@ public class DecreeCommand implements Decreed {
 
     @Override
     public KList<String> tab(KList<String> args, DecreeSender sender) {
+        // TODO: Fix the other TODO in tab
         if (args.isEmpty()) {
             return new KList<>();
         }
