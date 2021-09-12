@@ -111,14 +111,14 @@ public class DecreeCommand implements Decreed {
                 // Unordered list with '=' signs & name prefix
                 getParameters().shuffle().forEach(p -> {
                     if (p.isRequired() || Maths.r()) {
-                        params.add("<#f2e15e>" + p.exampleName() + "=<#d665f0>" + p.exampleValue());
+                        params.add("<#f2e15e>" + p.getNames().getRandom() + "=<#d665f0>" + p.exampleValues().getRandom());
                     }
                 });
             } else {
                 // Ordered list without '=' signs & name prefix
                 for (DecreeParameter parameter : getParameters()) {
                     if (parameter.isRequired() || Maths.r()) {
-                        params.add("<#d665f0>" + parameter.exampleValue());
+                        params.add("<#d665f0>" + parameter.exampleValues().getRandom());
                     }
                 }
             }

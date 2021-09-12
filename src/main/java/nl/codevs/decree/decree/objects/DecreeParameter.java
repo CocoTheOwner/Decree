@@ -33,6 +33,7 @@ import java.util.Arrays;
  */
 @Data
 public class DecreeParameter {
+    private static final String newline = "<reset>\n";
     private final Parameter parameter;
     private final Param param;
     private transient final AtomicCache<DecreeParameterHandler<?>> handlerCache = new AtomicCache<>();
@@ -160,20 +161,6 @@ public class DecreeParameter {
     }
 
     /**
-     * @return A random example value from possible values in the parameter
-     */
-    public String exampleValue() {
-        return exampleValues().getRandom();
-    }
-
-    /**
-     * @return A random example name
-     */
-    public String exampleName() {
-        return getNames().getRandom();
-    }
-
-    /**
      * @return Whether this is a contextual parameter
      */
     public boolean isContextual() {
@@ -183,43 +170,33 @@ public class DecreeParameter {
     /**
      * @return Command help for this parameter
      */
-    public String getHelp() {
-        return getName();
-        /*
-        /// Params
-        StringBuilder nodes = new StringBuilder();
-        for (DecreeParameter p : getParameters()) {
+    public String getHelp(DecreeSender sender) {
+        String hoverTitle = "<gradient:#d665f0:#a37feb>" + getNames().toString(", ");
+        String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
+        String hoverUsage;
+        String hoverType = "<#cc00ff>✢ <#ff33cc><font:minecraft:uniform>This parameter is of type " + getType().getSimpleName() + ".";
 
-            String nTitle = "<gradient:#d665f0:#a37feb>" + p.getName();
-            String nHoverTitle = p.getNames().convert((ff) -> "<#d665f0>" + ff).toString(", ");
-            String nDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + p.getDescription();
-            String nUsage;
-            String fullTitle;
-            if (p.isContextual() && sender.isPlayer()) {
-                fullTitle = "<#ffcc00>[" + nTitle + "<#ffcc00>] ";
-                nUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>The value may be derived from environment context.";
-            } else if (p.isRequired()) {
-                fullTitle = "<red>[" + nTitle + "<red>] ";
-                nUsage = "<#db4321>⚠ <#faa796><font:minecraft:uniform>This parameter is required.";
-            } else if (p.hasDefault()) {
-                fullTitle = "<#4f4f4f>⊰" + nTitle + "<#4f4f4f>⊱";
-                nUsage = "<#2181db>✔ <#78dcf0><font:minecraft:uniform>Defaults to \"" + p.getParam().defaultValue() + "\" if undefined.";
-            } else {
-                fullTitle = "<#4f4f4f>⊰" + nTitle + "<#4f4f4f>⊱";
-                nUsage = "<#a73abd>✔ <#78dcf0><font:minecraft:uniform>This parameter is optional.";
-            }
-            String type = "<#cc00ff>✢ <#ff33cc><font:minecraft:uniform>This parameter is of type " + p.getType().getSimpleName() + ".";
+        String realText;
 
-            nodes
-                    .append("<hover:show_text:'")
-                    .append(nHoverTitle).append(newline)
-                    .append(nDescription).append(newline)
-                    .append(nUsage).append(newline)
-                    .append(type)
-                    .append("'>")
-                    .append(fullTitle)
-                    .append("</hover>");
+        String realTitle = "<gradient:#d665f0:#a37feb>" + getName();
+        if (isContextual() && sender.isPlayer()) {
+            hoverUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>May be derived from environment context.";
+            realText = "<#ffcc00>[" + realTitle + "<#ffcc00>] ";
+        } else if (isRequired()) {
+            hoverUsage = "<#db4321>⚠ <#faa796><font:minecraft:uniform>This parameter is required.";
+            realText = "<red>[" + realTitle + "<red>] ";
+        } else if (hasDefault()) {
+            hoverUsage = "<#2181db>✔ <#78dcf0><font:minecraft:uniform>Defaults to \"" + getParam().defaultValue() + "\" if undefined.";
+            realText = "<#4f4f4f>⊰" + realTitle + "<#4f4f4f>⊱";
+        } else {
+            hoverUsage = "<#a73abd>✔ <#78dcf0><font:minecraft:uniform>This parameter is optional.";
+            realText = "<#4f4f4f>⊰" + realTitle + "<#4f4f4f>⊱";
         }
-        */
+        return "<hover:show_text:'" +
+                    hoverTitle + newline +
+                    hoverDescription + newline +
+                    hoverUsage + newline +
+                    hoverType +
+                "'>" + realText + "</hover>"; // TODO: Click logic
     }
 }
