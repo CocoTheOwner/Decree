@@ -273,7 +273,7 @@ public class DecreeCategory implements Decreed {
                     newline + hoverDescription +
                     newline + hoverUsage +
                     (hoverPermission.isEmpty() ? "" : newline) + hoverPermission +
-                    (hoverOrigin.isEmpty() ? "" : newline) + hoverOrigin + "fat penis'>" +
+                    (hoverOrigin.isEmpty() ? "" : newline) + hoverOrigin + "'>" +
                     "<click:run_command:" + runOnClick + ">" + realText + "</click>" +
                 "</hover>";
     }
