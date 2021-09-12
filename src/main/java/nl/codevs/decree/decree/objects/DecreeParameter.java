@@ -24,6 +24,7 @@ import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.AtomicCache;
 import nl.codevs.decree.decree.util.KList;
+import nl.codevs.decree.decree.util.Maths;
 
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
@@ -170,14 +171,16 @@ public class DecreeParameter {
     /**
      * @return Command help for this parameter
      */
-    public String getHelp(DecreeSender sender) {
+    public String getHelp(DecreeSender sender, String runOnClick) {
         String hoverTitle = "<gradient:#d665f0:#a37feb>" + getNames().toString(", ");
         String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
         String hoverUsage;
         String hoverType = "<#cc00ff>✢ <#ff33cc><font:minecraft:uniform>This parameter is of type " + getType().getSimpleName() + ".";
+        String hoverRun = "<#2e8bdf>⎆ <#24dfdb><font:minecraft:uniform>" + runOnClick;
 
         String realText;
 
+        // Hover usage & real text
         String realTitle = "<gradient:#d665f0:#a37feb>" + getName();
         if (isContextual() && sender.isPlayer()) {
             hoverUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>May be derived from environment context.";
@@ -192,11 +195,17 @@ public class DecreeParameter {
             hoverUsage = "<#a73abd>✔ <#78dcf0><font:minecraft:uniform>This parameter is optional.";
             realText = "<#4f4f4f>⊰" + realTitle + "<#4f4f4f>⊱";
         }
+
         return "<hover:show_text:'" +
                     hoverTitle + newline +
                     hoverDescription + newline +
                     hoverUsage + newline +
-                    hoverType +
-                "'>" + realText + "</hover>"; // TODO: Click logic
+                    hoverType + newline +
+                    hoverRun +
+                "'>" +
+                    "<click:suggest_command:" + runOnClick + ">" +
+                        realText +
+                    "</click>" +
+                "</hover>";
     }
 }
