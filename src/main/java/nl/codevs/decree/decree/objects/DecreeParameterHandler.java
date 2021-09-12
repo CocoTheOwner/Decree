@@ -59,6 +59,13 @@ public interface DecreeParameterHandler<T> {
         return toString((T) t);
     }
 
+    /**
+     * Parse an input string to an output of the assigned type
+     * @param in The input string
+     * @return The output type
+     * @throws DecreeParsingException When the input cannot be parsed into the output
+     * @throws DecreeWhichException Multiple outputs would be possible for the same input
+     */
     default T parse(String in) throws DecreeParsingException, DecreeWhichException {
         return parse(in, false);
     }

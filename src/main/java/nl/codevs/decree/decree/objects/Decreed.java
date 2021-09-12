@@ -17,12 +17,6 @@ public interface Decreed {
     Decree decree();
 
     /**
-     * Send the help information for this Decreed to
-     * @param sender the sender
-     */
-    String getHelp(DecreeSender sender);
-
-    /**
      * Get the primary name of the node
      */
     String getName();

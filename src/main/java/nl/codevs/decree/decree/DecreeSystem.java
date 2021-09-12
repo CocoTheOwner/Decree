@@ -95,7 +95,7 @@ public class DecreeSystem implements Listener {
 
     /**
      * Build roots for instances
-     * @param rootInstances The instances to build roots for
+     * @param rootInstances The instances to build new roots for
      * @return The built roots in a {@link ConcurrentHashMap}
      */
     private ConcurrentHashMap<String, DecreeCategory> buildRoots(KList<DecreeCommandExecutor> rootInstances) {
@@ -153,7 +153,7 @@ public class DecreeSystem implements Listener {
     }
 
     /**
-     * Get the root {@link DecreeVirtualCommand}
+     * Get the root {@link DecreeCategory}
      * @param name The name of the root command (first argument) to start from. This allows for multi-root support.
      */
     public DecreeCategory getRoot(String name) {

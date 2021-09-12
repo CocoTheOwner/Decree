@@ -231,8 +231,7 @@ public class DecreeCategory implements Decreed {
 
     }
 
-    @Override
-    public String getHelp(DecreeSender sender) {
+    private String getHelp(DecreeSender sender) {
 
         if (!sender.isPlayer()) {
             return getPath();

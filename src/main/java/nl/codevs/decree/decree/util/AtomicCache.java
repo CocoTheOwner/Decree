@@ -44,17 +44,6 @@ public class AtomicCache<T> {
         t = null;
     }
 
-    public void reset() {
-        check.lock();
-        write.lock();
-        time.lock();
-        a = -1;
-        t = null;
-        time.unlock();
-        write.unlock();
-        check.unlock();
-    }
-
     public T acquire(Supplier<T> t) {
         if (nullSupport) {
             return acquireNull(t);

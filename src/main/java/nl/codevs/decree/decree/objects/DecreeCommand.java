@@ -130,7 +130,6 @@ public class DecreeCommand implements Decreed {
         return new KList<>(suggestions.subList(0, Math.min(max, suggestions.size()) - 1));
     }
 
-    @Override
     public String getHelp(DecreeSender sender) {
 
         if (!sender.isPlayer()) {
@@ -280,9 +279,9 @@ public class DecreeCommand implements Decreed {
         return tabs;
     }
 
+    // TODO: Write invocation
     @Override
     public boolean invoke(KList<String> args, DecreeSender sender) {
-        // TODO: Write invocation
         system.debug("Wow! Reached a command (" + getName() + ")! " + getPath());
         return true;
     }

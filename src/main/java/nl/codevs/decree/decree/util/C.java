@@ -252,7 +252,7 @@ public enum C {
      * The special character which prefixes all chat colour codes. Use this if you
      * need to dynamically convert colour codes from your custom format.
      */
-    public static final char COLOR_CHAR = '\u00A7';
+    public static final char COLOR_CHAR = '§';
     private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)" + COLOR_CHAR + "[0-9A-FK-OR]");
     public final static C[] COLORCYCLE = new C[]{C.GOLD, C.YELLOW, C.GREEN, C.AQUA, C.LIGHT_PURPLE, C.AQUA, C.GREEN, C.YELLOW, C.GOLD, C.RED};
     private final static C[] COLORS = new C[]{C.BLACK, C.DARK_BLUE, C.DARK_GREEN, C.DARK_AQUA, C.DARK_RED, C.DARK_PURPLE, C.GOLD, C.GRAY, C.DARK_GRAY, C.BLUE, C.GREEN, C.AQUA, C.RED, C.LIGHT_PURPLE, C.YELLOW, C.WHITE};
@@ -353,15 +353,15 @@ public enum C {
         return g < 0 ? 1f - g : g;
     }
 
-    public static float spinc(float c, int shift) {
-        float g = ((((int) Math.floor(c * 255)) + shift)) / 255F;
-        return Math.max(0f, Math.min(g, 1f));
-    }
-
     public static java.awt.Color spin(java.awt.Color c, int h, int s, int b) {
         float[] hsb = java.awt.Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), null);
         hsb = spin(hsb, h, s, b);
         return java.awt.Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
+    }
+
+    public static float spinc(float c, int shift) {
+        float g = ((((int) Math.floor(c * 255)) + shift)) / 255F;
+        return Math.max(0f, Math.min(g, 1f));
     }
 
     public static String spinToHex(C color, int h, int s, int b) {

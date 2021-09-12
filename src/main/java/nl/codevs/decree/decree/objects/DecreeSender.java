@@ -27,8 +27,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.Form;
-import nl.codevs.decree.decree.util.KList;
-import nl.codevs.decree.decree.util.Maths;
 import org.bukkit.Server;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -39,7 +37,6 @@ import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 

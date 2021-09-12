@@ -26,6 +26,7 @@ public class Form {
     private static NumberFormat NF;
     private static DecimalFormat DF;
 
+    @SuppressWarnings("unused")
     public static String getNumberSuffixThStRd(int day) {
         if (day >= 11 && day <= 13) {
             return Form.f(day) + "th";

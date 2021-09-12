@@ -16,13 +16,7 @@ public class SubCommandClass implements DecreeCommandExecutor {
             permission = "kill",
             sync = true
     )
-    public void hello(
-            @Param(
-                    defaultValue = "self",
-                    description = "The player to kill"
-            )
-                    Player player
-    ){
+    public void hello(){
         sender().sendMessageRaw("yeet");
     }
 }
