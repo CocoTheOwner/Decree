@@ -27,12 +27,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public interface DecreeParameterHandler<T> {
-    /**
-     * Should return the possible values for this type
-     *
-     * @return Possibilities for this type.
-     */
-    KList<T> getPossibilities();
 
     /**
      * Return a random value that may be entered
@@ -78,16 +72,11 @@ public interface DecreeParameterHandler<T> {
     }
 
     /**
-     * Forces conversion to the designated type before converting to a string using {@link #toString(T t)}
+     * Should return the possible values for this type
      *
-     * @param t The object to convert to string (that should be of this type)
-     * @return The resulting string.
+     * @return Possibilities for this type.
      */
-    @SuppressWarnings("unchecked")
-    default String toStringForce(Object t) {
-        return toString((T) t);
-    }
-
+    KList<T> getPossibilities();
 
     /**
      * The possible entries for the inputted string (support for autocomplete on partial entries)
@@ -127,6 +116,17 @@ public interface DecreeParameterHandler<T> {
         }
 
         return matches;
+    }
+
+    /**
+     * Forces conversion to the designated type before converting to a string using {@link #toString(T t)}
+     *
+     * @param t The object to convert to string (that should be of this type)
+     * @return The resulting string.
+     */
+    @SuppressWarnings("unchecked")
+    default String toStringForce(Object t) {
+        return toString((T) t);
     }
 
     /**
