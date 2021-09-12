@@ -18,8 +18,6 @@
 
 package nl.codevs.decree.decree.handlers;
 
-import nl.codevs.decree.Decree;
-import nl.codevs.decree.decree.exceptions.DecreeException;
 import nl.codevs.decree.decree.objects.DecreeContext;
 import nl.codevs.decree.decree.objects.DecreeParameterHandler;
 import nl.codevs.decree.decree.DecreeSystem;
@@ -30,6 +28,7 @@ import nl.codevs.decree.decree.util.Form;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
 import org.bukkit.FluidCollisionMode;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BlockVector;
 import org.jetbrains.annotations.NotNull;
@@ -56,6 +55,7 @@ public class BlockVectorHandler implements DecreeParameterHandler<BlockVector> {
         return Form.f(v.getBlockX(), 2) + "," + Form.f(v.getBlockY(), 2) + "," + Form.f(v.getBlockZ(), 2);
     }
 
+    @SuppressWarnings({"RedundantThrows", "SpellCheckingInspection"})
     @Override
     public BlockVector parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
         try {
@@ -77,12 +77,16 @@ public class BlockVectorHandler implements DecreeParameterHandler<BlockVector> {
                 }
 
                 return DecreeContext.get().player().getLocation().toVector().toBlockVector();
-            } else if (in.equalsIgnoreCase("look") || in.equalsIgnoreCase("cursor") || in.equalsIgnoreCase("crosshair")) {
+            } else //noinspection SpellCheckingInspection
+                if (in.equalsIgnoreCase("look") || in.equalsIgnoreCase("cursor") || in.equalsIgnoreCase("crosshair")) {
                 if (!DecreeContext.get().isPlayer()) {
-                    throw new DecreeParsingException("You cannot specify look,cursor,crosshair as a console.");
+                    throw new DecreeParsingException("You cannot specify look, cursor, crosshair as a console.");
                 }
-
-                return DecreeContext.get().player().getTargetBlockExact(256, FluidCollisionMode.NEVER).getLocation().toVector().toBlockVector();
+                Block target = DecreeContext.get().player().getTargetBlockExact(256, FluidCollisionMode.NEVER);
+                if (target == null) {
+                    return null;
+                }
+                return target.getLocation().toVector().toBlockVector();
             } else if (in.trim().toLowerCase().startsWith("player:")) {
                 String v = in.trim().split("\\Q:\\E")[1];
 

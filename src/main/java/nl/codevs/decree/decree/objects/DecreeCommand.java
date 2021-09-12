@@ -85,6 +85,10 @@ public class DecreeCommand implements Decreed {
         return parameters;
     }
 
+    public KList<DecreeParameter> getParameters() {
+        return parameters.copy();
+    }
+
     @Override
     public Decreed parent() {
         return (Decreed) getParent();
@@ -113,7 +117,7 @@ public class DecreeCommand implements Decreed {
 
         KList<String> tabs = new KList<>();
         String last = args.popLast();
-        KList<DecreeParameter> left = getParameters();
+        KList<DecreeParameter> left = getParameters().copy();
 
         // Remove auto-completions for existing keys
         for (String a : args) {
@@ -134,23 +138,23 @@ public class DecreeCommand implements Decreed {
         // Add auto-completions
         for (DecreeParameter i : left) {
 
-            int g = 0;
+            int quantity = 0;
 
             if (last.contains("=")) {
                 String[] vv = last.trim().split("\\Q=\\E");
                 String vx = vv.length == 2 ? vv[1] : "";
-                for (String f : i.getHandler().getPossibilities(vx).convert((v) -> i.getHandler().toStringForce(v))) {
-                    g++;
-                    tabs.add(i.getName() + "=" + f);
+                for (String possibility : i.getHandler().getPossibilities(vx).convert((v) -> i.getHandler().toStringForce(v))) {
+                    quantity++;
+                    tabs.add(i.getName() + "=" + possibility);
                 }
             } else {
-                for (String f : i.getHandler().getPossibilities("").convert((v) -> i.getHandler().toStringForce(v))) {
-                    g++;
-                    tabs.add(i.getName() + "=" + f);
+                for (String possibility : i.getHandler().getPossibilities("").convert((v) -> i.getHandler().toStringForce(v))) {
+                    quantity++;
+                    tabs.add(i.getName() + "=" + possibility);
                 }
             }
 
-            if (g == 0) {
+            if (quantity == 0) {
                 tabs.add(i.getName() + "=");
                 tabs.add(i.getName() + "=" + i.getDefaultRaw());
             }

@@ -48,14 +48,15 @@ import java.util.UUID;
  *
  * @author cyberpwn
  */
+@SuppressWarnings("SpellCheckingInspection")
 public class DecreeSender implements CommandSender {
     private final CommandSender s;
     private final Audience audience;
     private final DecreeSystem system;
     private final String tag;
-    int spinh = -20;
-    int spins = 10;
-    int spinb = 20;
+    private final int spinh = -20;
+    private final int spins = 10;
+    private final int spinb = 20;
 
     @Getter
     @Setter
@@ -98,7 +99,7 @@ public class DecreeSender implements CommandSender {
     /**
      * Force cast to player (be sure to check first)
      *
-     * @return a casted player
+     * @return the cast player
      */
     public Player player() {
         return (Player) getS();

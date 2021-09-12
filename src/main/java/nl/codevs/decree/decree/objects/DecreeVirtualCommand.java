@@ -104,7 +104,7 @@ public class DecreeVirtualCommand implements Decreed {
 
     @Override
     public void sendHelpTo(DecreeSender sender) {
-        sender.sendMessageRaw("Yeete!" + getPath());
+        sender.sendMessageRaw(getPath());
     }
 
     @Override
@@ -333,6 +333,7 @@ public class DecreeVirtualCommand implements Decreed {
         return data;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     String[] gradients = new String[]{
             "<gradient:#f5bc42:#45b32d>",
             "<gradient:#1ed43f:#1ecbd4>",
@@ -355,7 +356,7 @@ public class DecreeVirtualCommand implements Decreed {
 
         for(String i : validOptions.convert(handler::toStringForce))
         {
-            sender.sendMessage( "<hover:show_text:'" + gradients[m%gradients.length] + i+"</gradient>'><click:run_command:decreefuture "+ password + " " + i+">"+"- " + gradients[m%gradients.length] +   i         + "</gradient></click></hover>");
+            sender.sendMessage( "<hover:show_text:'" + gradients[m%gradients.length] + i+"</gradient>'><click:run_command:decree-future "+ password + " " + i+">"+"- " + gradients[m%gradients.length] +   i         + "</gradient></click></hover>");
             m++;
         }
 

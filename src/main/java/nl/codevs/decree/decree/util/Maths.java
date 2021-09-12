@@ -23,6 +23,7 @@ package nl.codevs.decree.decree.util;
  *
  * @author cyberpwn
  */
+@SuppressWarnings("SpellCheckingInspection")
 public class Maths {
 
     /**
@@ -43,8 +44,8 @@ public class Maths {
     /**
      * Get a random int from to (inclusive)
      *
-     * @param f the from
-     * @param t the to
+     * @param f the lower bound
+     * @param t the upper bound
      * @return the value
      */
     public static int irand(int f, int t) {
@@ -54,8 +55,8 @@ public class Maths {
     /**
      * Get a random float from to (inclusive)
      *
-     * @param f the from
-     * @param t the to
+     * @param f the lower bound
+     * @param t the upper bound
      * @return the value
      */
     public static float frand(float f, float t) {
@@ -65,8 +66,8 @@ public class Maths {
     /**
      * Get a random double from to (inclusive)
      *
-     * @param f the from
-     * @param t the to
+     * @param f the lower bound
+     * @param t the upper bound
      * @return the value
      */
     public static double drand(double f, double t) {

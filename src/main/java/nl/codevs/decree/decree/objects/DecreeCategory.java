@@ -1,6 +1,5 @@
 package nl.codevs.decree.decree.objects;
 
-import lombok.Data;
 import lombok.Getter;
 import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.util.C;
@@ -14,10 +13,10 @@ import java.lang.reflect.Modifier;
 
 @Getter
 public class DecreeCategory implements Decreed {
-    public final DecreeCategory parent;
-    public final KList<DecreeCommand> commands;
-    public final KList<DecreeCategory> subCats;
-    public final Decree decree;
+    private final DecreeCategory parent;
+    private final KList<DecreeCommand> commands;
+    private final KList<DecreeCategory> subCats;
+    private final Decree decree;
     private final Object instance;
     private final DecreeSystem system;
 
@@ -32,7 +31,7 @@ public class DecreeCategory implements Decreed {
 
     /**
      * Calculate {@link DecreeCategory}s in this category
-     * @param system
+     * @param system The system to send debug messages upon failure
      */
     private KList<DecreeCategory> calcSubCats(DecreeSystem system) {
         KList<DecreeCategory> subCats = new KList<>();
@@ -194,6 +193,14 @@ public class DecreeCategory implements Decreed {
         return matches;
     }
 
+    public KList<DecreeCommand> getCommands() {
+        return commands.copy();
+    }
+
+    public KList<DecreeCategory> getSubCats() {
+        return subCats.copy();
+    }
+
     @Override
     public Decreed parent() {
         return getParent();
@@ -237,9 +244,12 @@ public class DecreeCategory implements Decreed {
             if (matches.isEmpty()) {
                 matches = matchAll(head, sender, true);
             }
+            matches.removeDuplicates();
 
             KList<String> tabs = new KList<>();
-            matches.forEach(match -> tabs.addAll(match.tab(args.copy(), sender)));
+            for (Decreed match : matches) {
+                tabs.addAll(match.tab(args.copy(), sender));
+            }
 
             return tabs;
         }

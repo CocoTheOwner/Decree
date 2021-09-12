@@ -37,6 +37,7 @@ public class StringHandler implements DecreeParameterHandler<String> {
         return s;
     }
 
+    @SuppressWarnings("RedundantThrows")
     @Override
     public String parse(String in, boolean force) throws DecreeParsingException {
         return in;
@@ -47,9 +48,17 @@ public class StringHandler implements DecreeParameterHandler<String> {
         return type.equals(String.class);
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
+    private final KList<String> defaults = new KList<>(
+            "text",
+            "string",
+            "blah",
+            "derp",
+            "yolo"
+    );
+
     @Override
     public String getRandomDefault() {
-        return new KList<String>().qadd("text").qadd("string")
-                .qadd("blah").qadd("derp").qadd("yolo").getRandom();
+        return defaults.getRandom();
     }
 }

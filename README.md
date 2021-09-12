@@ -20,7 +20,7 @@ class YourPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        Bukkit.getConsoleSender().sendMessage("Goodbeye world!");
+        Bukkit.getConsoleSender().sendMessage("Goodbye world!");
     }
 }
 ```
@@ -64,13 +64,13 @@ public class YourPlugin extends JavaPlugin implements DecreeSystem, DecreeExecut
 
     @Override
     public void onDisable() {
-        Bukkit.getConsoleSender().sendMessage("Goodbeye world!");
+        Bukkit.getConsoleSender().sendMessage("Goodbye world!");
     }
 }
 ```
 We use `MainCommandClass` as the main command. This class looks like this:
 ```java
-@Decree(name = "command", aliases = {"cmmd", "cmd", "cd"}, description = "Main commands")
+@Decree(name = "command", aliases = {"cmd", "cd"}, description = "Main commands")
 public class MainCommandClass implements DecreeExecutor {
 
     @Decree(
@@ -121,7 +121,7 @@ Decrees take at most 5 parameters, `name`, `description`, `aliases`, `origin`, a
 - `name`
     - Name is the name of the category / command as used in the console or in-game command prompt.
     - **Note** This argument is required on classes (categories)
-        - On methods it is derived from the method name (`hello` in the example), but can be overwritten.
+        - On methods, it is derived from the method name (`hello` in the example), but can be overwritten.
 - `description`
     - The text description for the command or category. Shown in green in the example.
 - `aliases`
@@ -166,7 +166,7 @@ Param has a number of sub-parameters, `name`, `description`, `aliases`, `default
 - The help menu for the root command:
   ![Command help hover](images/mainCommandHelpHover.png)<br>
   Also shows some examples of command usages.
-  If you do not like the suggestions, they may be modified in the respecive type's handler. `decree.handlers`
+  If you do not like the suggestions, they may be modified in the respective type's handler. `decree.handlers`
 - The help menu for parameters:
   ![](images/mainParamHelpHover.png)<br>
   Also shows the type of variable it is supposed to parse into.
@@ -174,7 +174,7 @@ Param has a number of sub-parameters, `name`, `description`, `aliases`, `default
 - You may not specify `contextual = true` on a parameter that does not have a context handler (anything apart from World, in the default case).
 - You may specify sub-categories by means of a variable in the root class (or a sub-class in there) as follows:
 ```java
-@Decree(name = "command", aliases = {"cmmd", "cmd", "cd"}, description = "Main commands")
+@Decree(name = "command", aliases = {"cmd", "cd"}, description = "Main commands")
 public class MainCommandClass implements DecreeExecutor {
     
     // This line here

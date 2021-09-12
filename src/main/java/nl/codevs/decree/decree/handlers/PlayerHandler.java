@@ -23,7 +23,6 @@ import nl.codevs.decree.decree.objects.DecreeParameterHandler;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.KList;
-import nl.codevs.decree.decree.util.Maths;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -42,6 +41,7 @@ public class PlayerHandler implements DecreeParameterHandler<Player> {
         return player.getName();
     }
 
+    @SuppressWarnings("RedundantThrows")
     @Override
     public Player parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
         try {
@@ -78,7 +78,8 @@ public class PlayerHandler implements DecreeParameterHandler<Player> {
         return type.equals(Player.class);
     }
 
-    KList<String> defaults = new KList<>(
+    @SuppressWarnings("SpellCheckingInspection")
+    private final KList<String> defaults = new KList<>(
             "playername",
             "self",
             "random"

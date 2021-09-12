@@ -101,7 +101,7 @@ public interface Decreed {
     }
 
     /**
-     * Get whether a string matches this node on a deep match (a in b or b in a)
+     * Get whether a string matches this node on a deep match (ABBA in AB or AB in ABBA)
      * @param in The string to check with
      */
     default boolean deepMatches(String in) {
@@ -139,7 +139,7 @@ public interface Decreed {
 
     /**
      * Deep check whether this node matches input and is allowed for a sender<br>
-     * (node in in) || (in in node)
+     * (node element-of in) || (in element-of node)
      * @param sender The sender that called the node
      * @param in The input string
      * @return True if allowed & match, false if not

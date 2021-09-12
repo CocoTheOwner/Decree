@@ -55,7 +55,7 @@ public class DecreeParameter {
      * @return A {@link DecreeParameterHandler} for this parameter's type
      */
     public DecreeParameterHandler<?> getHandler() {
-        return handlerCache.aquire(() -> {
+        return handlerCache.acquire(() -> {
             try
             {
                 return DecreeSystem.getHandler(getType());
@@ -142,7 +142,7 @@ public class DecreeParameter {
      * @return All possible random example values from possible values in the parameter
      */
     public KList<String> exampleValues() {
-        return exampleCache.aquire(() -> {
+        return exampleCache.acquire(() -> {
             KList<String> results = new KList<>();
             KList<?> possibilities = getHandler().getPossibilities();
 

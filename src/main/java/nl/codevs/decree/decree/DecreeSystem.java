@@ -38,9 +38,8 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -100,7 +99,7 @@ public class DecreeSystem implements Listener {
     {
         String msg = e.getMessage().startsWith("/") ? e.getMessage().substring(1) : e.getMessage();
 
-        if(msg.startsWith("decreefuture "))
+        if(msg.startsWith("decree-future "))
         {
             String[] args = msg.split("\\Q \\E");
             CompletableFuture<String> future = futures.get(args[1]);
@@ -132,22 +131,27 @@ public class DecreeSystem implements Listener {
 
     /**
      * Get the root {@link DecreeVirtualCommand}
-     * @param name
+     * @param name The name of the root command (first argument) to start from. This allows for multi-root support.
      */
     public DecreeCategory getRoot(String name) {
-        return commandCache.aquire(() -> new DecreeCategory(null, getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this));
+        // TODO: Add multi-root support
+        return commandCache.acquire(() -> new DecreeCategory(null, getRootInstance(), getRootInstance().getClass().getDeclaredAnnotation(Decree.class), this));
     }
 
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
 
-        KList<String> v;
+        KList<String> v = null;
 
         try {
-             v = getRoot(command.getName()).tab(new KList<>(args), new DecreeSender(sender, getInstance(), this));
+            v = getRoot(command.getName()).tab(new KList<>(args), new DecreeSender(sender, getInstance(), this));
+        } catch (ConcurrentModificationException ignored) {
         } catch (Throwable e) {
-            new DecreeSender(sender, getInstance(), this).sendMessage("Exception: " + e.getClass().getSimpleName() + " thrown while executing tab completion. Check console for details.");
+            new DecreeSender(sender, getInstance(), this).sendMessage(C.RED + "Exception: " + e.getClass().getSimpleName() + " thrown while executing tab completion. Check console for details.");
             e.printStackTrace();
-            return new KList<>("ERROR");
+        }
+
+        if (v == null) {
+            return new KList<>();
         }
 
         v.removeDuplicates();
@@ -159,7 +163,7 @@ public class DecreeSystem implements Listener {
         return v;
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"deprecation", "SameReturnValue"})
     public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
         Bukkit.getScheduler().scheduleAsyncDelayedTask(getInstance(), () -> {
 
@@ -185,7 +189,7 @@ public class DecreeSystem implements Listener {
                 }
 
             } catch (Throwable e) {
-                decreeSender.sendMessage("Exception: " + e.getClass().getSimpleName() + " thrown while executing command. Check console for details.");
+                decreeSender.sendMessage(C.RED + "Exception: " + e.getClass().getSimpleName() + " thrown while executing command. Check console for details.");
                 e.printStackTrace();
             }
         });

@@ -27,6 +27,7 @@ import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.Form;
 import nl.codevs.decree.decree.util.KList;
 import org.bukkit.FluidCollisionMode;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
@@ -55,6 +56,7 @@ public class VectorHandler implements DecreeParameterHandler<Vector> {
         return Form.f(v.getX(), 2) + "," + Form.f(v.getY(), 2) + "," + Form.f(v.getZ(), 2);
     }
 
+    @SuppressWarnings({"RedundantThrows", "SpellCheckingInspection"})
     @Override
     public Vector parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
         try {
@@ -80,8 +82,11 @@ public class VectorHandler implements DecreeParameterHandler<Vector> {
                 if (!DecreeContext.get().isPlayer()) {
                     throw new DecreeParsingException("You cannot specify look,cursor,crosshair as a console.");
                 }
-
-                return DecreeContext.get().player().getTargetBlockExact(256, FluidCollisionMode.NEVER).getLocation().toVector();
+                Block target = DecreeContext.get().player().getTargetBlockExact(256, FluidCollisionMode.NEVER);
+                if (target == null) {
+                    return null;
+                }
+                return target.getLocation().toVector();
             } else if (in.trim().toLowerCase().startsWith("player:")) {
                 String v = in.trim().split("\\Q:\\E")[1];
 

@@ -55,9 +55,9 @@ public class AtomicCache<T> {
         check.unlock();
     }
 
-    public T aquire(Supplier<T> t) {
+    public T acquire(Supplier<T> t) {
         if (nullSupport) {
-            return aquireNull(t);
+            return acquireNull(t);
         }
 
         if (this.t != null && validations > 1000) {
@@ -93,7 +93,7 @@ public class AtomicCache<T> {
         return this.t;
     }
 
-    public T aquireNull(Supplier<T> t) {
+    public T acquireNull(Supplier<T> t) {
         if (validations > 1000) {
             return this.t;
         }

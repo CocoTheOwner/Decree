@@ -48,6 +48,7 @@ public interface DecreeParameterHandler<T> {
      * @param t The object to convert to string (that should be of this type)
      * @return The resulting string.
      */
+    @SuppressWarnings("unchecked")
     default String toStringForce(Object t) {
         return toString((T) t);
     }
@@ -64,6 +65,7 @@ public interface DecreeParameterHandler<T> {
      * @throws DecreeParsingException Thrown when the parsing fails (ex: "oop" translated to an integer throws this)
      * @throws DecreeWhichException   Thrown when multiple results are possible
      */
+    @SuppressWarnings("RedundantThrows")
     T parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException;
 
     /**
@@ -132,7 +134,7 @@ public interface DecreeParameterHandler<T> {
      * - c > 16<br>
      * ! This does not return the actual value, just the multiplier!
      * @param value The inputted value
-     * @return
+     * @return The multiplier
      */
     default int getMultiplier(AtomicReference<String> value) {
         int multiplier = 1;

@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
  *
  * @author cyberpwn
  */
+@SuppressWarnings("ALL")
 public enum C {
     /**
      * Represents black
@@ -322,12 +323,13 @@ public enum C {
         this("^", code, intCode, false);
     }
 
+    @SuppressWarnings("SameParameterValue")
     C(String token, char code, int intCode) {
         this(token, code, intCode, false);
     }
 
     C(char code, int intCode, boolean isFormat) {
-        this("^", code, intCode, false);
+        this("^", code, intCode, isFormat);
     }
 
     C(String token, char code, int intCode, boolean isFormat) {

@@ -31,16 +31,16 @@ public class Form {
             return Form.f(day) + "th";
         }
         switch (day % 10) {
-            case 1: {
+            case 1 -> {
                 return Form.f(day) + "st";
             }
-            case 2: {
+            case 2 -> {
                 return Form.f(day) + "nd";
             }
-            case 3: {
+            case 3 -> {
                 return Form.f(day) + "rd";
             }
-            default: {
+            default -> {
                 return Form.f(day) + "th";
             }
         }
@@ -90,7 +90,7 @@ public class Form {
      *
      * @param i the double
      * @param p the number of decimal places to use
-     * @return the formated string
+     * @return the formatted string
      */
     public static String f(double i, int p) {
         String form = "#";
@@ -109,7 +109,7 @@ public class Form {
      *
      * @param i the float
      * @param p the number of decimal places to use
-     * @return the formated string
+     * @return the formatted string
      */
     public static String f(float i, int p) {
         String form = "#";

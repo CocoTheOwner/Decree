@@ -1,10 +1,9 @@
 package nl.codevs.decree.decrees;
 
 import nl.codevs.decree.decree.objects.DecreeCommandExecutor;
-import nl.codevs.decree.decree.objects.DecreeOrigin;
 import nl.codevs.decree.decree.objects.Decree;
-import nl.codevs.decree.decree.objects.Param;
 
+@SuppressWarnings("SpellCheckingInspection")
 @Decree(name = "command", aliases = {"cmmd", "cmd", "cd"}, description = "Main commands", permission = "decree")
 public class MainCommandClass implements DecreeCommandExecutor {
 
