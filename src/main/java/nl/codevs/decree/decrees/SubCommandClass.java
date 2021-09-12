@@ -23,6 +23,6 @@ public class SubCommandClass implements DecreeCommandExecutor {
             )
                     Player player
     ){
-        player.setHealth(0.0d);
+        sender().sendMessageRaw("yeet");
     }
 }

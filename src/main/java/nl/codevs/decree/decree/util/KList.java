@@ -271,4 +271,8 @@ public class KList<T> extends ArrayList<T> implements List<T> {
     public T getLast() {
         return this.get(this.last());
     }
+
+    public KList<T> shuffle() {
+        return shuffle(new Random());
+    }
 }

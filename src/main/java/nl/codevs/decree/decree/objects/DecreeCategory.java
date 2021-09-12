@@ -13,6 +13,7 @@ import java.lang.reflect.Modifier;
 
 @Getter
 public class DecreeCategory implements Decreed {
+    private static final String newline = "<reset>\n";
     private final DecreeCategory parent;
     private final KList<DecreeCommand> commands;
     private final KList<DecreeCategory> subCats;
@@ -201,6 +202,81 @@ public class DecreeCategory implements Decreed {
         return subCats.copy();
     }
 
+    public void sendHelpTo(DecreeSender sender) {
+
+        if (getSubCats().isNotEmpty() || getCommands().isNotEmpty()) {
+            sender.sendHeader(Form.capitalize(getName()) + " Help");
+
+            // Back button
+            if (sender.isPlayer() && getParent() != null) {
+                sender.sendMessageRaw(
+                        "<hover:show_text:'<#b54b38>Click to go back to <#3299bf>" + Form.capitalize(getParent().getName()) + " Help'>" +
+                            "<click:run_command:" + getParent().getPath() + ">" +
+                                "<font:minecraft:uniform><#f58571>〈 Back" +
+                            "</click>" +
+                        "</hover>"
+                );
+            }
+
+            for (DecreeCategory subCat : getSubCats()) {
+                sender.sendMessageRaw(subCat.getHelp(sender));
+            }
+            for (DecreeCommand command : getCommands()) {
+                sender.sendMessageRaw(command.getHelp(sender));
+            }
+
+        } else {
+            sender.sendMessage(C.RED + "There are no subcommands in this group! Contact an administrator, this is a command design issue!");
+        }
+
+    }
+
+    @Override
+    public String getHelp(DecreeSender sender) {
+
+        if (!sender.isPlayer()) {
+            return getPath();
+        }
+
+        String hoverTitle = getNames().copy().convert((f) -> "<#42ecf5>" + f).toString(", ");
+        String hoverUsage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform> This is a command category. Click to run.";
+        String hoverPermission;
+        String hoverOrigin = "<#dbe61c>⌘ <#d61aba><#ff33cc><font:minecraft:uniform>" + Form.capitalize(getOrigin().toString().toLowerCase());
+
+        String runOnClick = getPath();
+        String realText = "<#46826a>⇀<gradient:#42ecf5:#428df5> " + getName() + "<gradient:#afe3d3:#a2dae0> - Category of Commands";
+
+        // Permission
+        if (!getDecree().permission().equals(Decree.NO_PERMISSION)){
+            String granted;
+            if (sender.isOp() || sender.hasPermission(getDecree().permission())){
+                granted = "<#a73abd>(Granted)";
+            } else {
+                granted = "<#db4321>(Not Granted)";
+            }
+            hoverPermission = "<#2181db>⏍ <#78dcf0><font:minecraft:uniform>Permission: <#ffa500>" + getDecree().permission() + " " + granted + newline;
+        } else {
+            hoverPermission = "";
+        }
+
+        // Origin
+        if (getOrigin().equals(DecreeOrigin.BOTH)){
+            hoverOrigin = "";
+        } else if (getOrigin().validFor(sender)) {
+            hoverOrigin += "<#0ba10b> origin, so you can use it.";
+        } else {
+            hoverOrigin += "<#c4082e> origin, so you cannot use it.";
+        }
+
+        return "<hover:show_text:'" +
+                    hoverTitle + newline +
+                    hoverUsage + newline +
+                    hoverPermission + (hoverPermission.isEmpty() ? "" : newline) +
+                    hoverOrigin + "'>" +
+                    "<click:run_command:" + runOnClick + ">" + realText + "</click>" +
+                "</hover>";
+    }
+
     @Override
     public Decreed parent() {
         return getParent();
@@ -209,53 +285,6 @@ public class DecreeCategory implements Decreed {
     @Override
     public Decree decree() {
         return getDecree();
-    }
-
-    @Override
-    public void sendHelpTo(DecreeSender sender) {
-        if (!sender.isPlayer()) {
-            sender.sendHeader(Form.capitalize(getName()) + " Category");
-            sender.sendMessage(C.GREEN + "Categories (" + getSubCats().size() + ")");
-            getSubCats().convert(Decreed::getPath).forEach(sender::sendMessage);
-            sender.sendMessage(C.GREEN + "Commands (" + getCommands().size() + ")");
-            getCommands().convert(Decreed::getPath).forEach(sender::sendMessage);
-            return;
-        }
-
-        String newline = "<reset>\n";
-        String usage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform> This is a command category. Click to run.";
-        String onClick = "run_command";
-        String nodes = "<gradient:#afe3d3:#a2dae0> - Category of Commands";
-        String permission = "";
-        String granted;
-        if (!getDecree().permission().equals(Decree.NO_PERMISSION)){
-            if (sender.isOp() || sender.hasPermission(getDecree().permission())){
-                granted = "<#a73abd>(Granted)";
-            } else {
-                granted = "<#db4321>(Not Granted)";
-            }
-            permission = "<#2181db>⏍ <#78dcf0><font:minecraft:uniform>Permission: <#ffa500>" + getDecree().permission() + " " + granted + newline;
-        }
-
-        sender.sendMessageRaw(
-                "<hover:show_text:'" +
-                        getNames().toString(", ") + newline +
-                        description + newline +
-                        permission + // Newlines added internally
-                        usage + // Newlines added internally
-                        suggestion + // Newlines added internally
-                        suggestions + newline +
-                        originText +
-                        "'>" +
-                        "<click:" +
-                        onClick +
-                        ":" +
-                        realText +
-                        "</hover>" +
-                        " " +
-                        nodes +
-                        "</click>"
-        );
     }
 
     @Override

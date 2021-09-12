@@ -179,4 +179,11 @@ public class DecreeParameter {
     public boolean isContextual() {
         return param.contextual();
     }
+
+    /**
+     * @return Command help for this parameter
+     */
+    public String getHelp() {
+        return getName();
+    }
 }

@@ -33,9 +33,9 @@ import java.lang.reflect.Modifier;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.*;
-
+/*
 @Data
-public class DecreeVirtualCommand implements Decreed {
+public class DecreeVirtualCommand {
 
     private ConcurrentHashMap<String, Object> map(DecreeSender sender, KList<String> in) {
         ConcurrentHashMap<String, Object> data = new ConcurrentHashMap<>();
@@ -266,19 +266,7 @@ public class DecreeVirtualCommand implements Decreed {
         return true;
     }
 
-    public void sendDecreeHelp(DecreeVirtualCommand v) {
 
-        if (v.getNodes().isNotEmpty()) {
-            sendHeader(Form.capitalize(v.getName()) + " Help");
-            if (isPlayer() && v.getParent() != null) {
-                sendMessageRaw("<hover:show_text:'" + "<#b54b38>Click to go back to <#3299bf>" + Form.capitalize(v.getParent().getName()) + " Help" + "'><click:run_command:" + v.getParent().getPath() + "><font:minecraft:uniform><#f58571>〈 Back</click></hover>");
-            }
-
-            for (DecreeVirtualCommand i : v.getNodes()) {
-                sendDecreeHelpNode(i);
-            }
-        } else {
-            sendMessage(C.RED + "There are no subcommands in this group! Contact support, this is a command design issue!");
-        }
-    }
 }
+
+ */

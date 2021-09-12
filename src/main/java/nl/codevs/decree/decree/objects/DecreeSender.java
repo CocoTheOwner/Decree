@@ -298,12 +298,6 @@ public class DecreeSender implements CommandSender {
         sendHeader(name, 40);
     }
 
-
-
-    public void sendDecreeHelpNode(DecreeVirtualCommand i){
-
-    }
-
     public void playSound(Sound sound, float volume, float pitch) {
         if (isPlayer()) {
             player().playSound(player().getLocation(), sound, volume, pitch);

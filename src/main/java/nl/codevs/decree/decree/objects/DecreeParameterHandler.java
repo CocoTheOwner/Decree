@@ -43,6 +43,12 @@ public interface DecreeParameterHandler<T> {
     String toString(T t);
 
     /**
+     * Return a random value that may be entered
+     * @return A random default value
+     */
+    String getRandomDefault();
+
+    /**
      * Forces conversion to the designated type before converting to a string using {@link #toString(T t)}
      *
      * @param t The object to convert to string (that should be of this type)
@@ -56,6 +62,7 @@ public interface DecreeParameterHandler<T> {
     default T parse(String in) throws DecreeParsingException, DecreeWhichException {
         return parse(in, false);
     }
+
 
     /**
      * Should parse a String into the designated type
@@ -114,14 +121,6 @@ public interface DecreeParameterHandler<T> {
         }
 
         return matches;
-    }
-
-    /**
-     * Return a random value that may be entered
-     * @return A random default value
-     */
-    default String getRandomDefault() {
-        return "NO DEFAULT";
     }
 
     /**

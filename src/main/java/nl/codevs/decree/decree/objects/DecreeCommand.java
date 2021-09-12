@@ -26,13 +26,13 @@ import nl.codevs.decree.decree.util.Maths;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Random;
 
 /**
  * Represents a single command (non-category)
  */
 @Data
 public class DecreeCommand implements Decreed {
+    private static final String newline = "<reset>\n";
     private final KList<DecreeParameter> parameters;
     private final Method method;
     private final Object parent;
@@ -99,44 +99,45 @@ public class DecreeCommand implements Decreed {
      */
     private KList<String> getRandomSuggestions(int max) {
 
+        //            ✦ /command sub name
+        String prefix = "<#aebef2>✦ <#5ef288>" + parent().getPath() + " <#42ecf5>";
         KList<String> suggestions = new KList<>();
-        int maxTries = 25;
 
-        while (maxTries > 0 && suggestions.size() < max) {
-            suggestions.qadd(
-                    /*
-                     ✦ /command sub name parameter=value p2=v
-                     */
-                    "<#aebef2>✦ <#5ef288>" + parent().getPath() + " <#42ecf5>" + getName() + " "
-                    + getParameters().shuffle(new Random()).convert((f)
-                            -> (f.isRequired() || Maths.drand(0, 1) > 0.5
-                            ? "<#f2e15e>" + f.exampleName() + "="
-                            + "<#d665f0>" + f.exampleValue()
-                            : ""))
-                    .toString(" ")
-            ).removeDuplicates();
-            maxTries--;
+        suggestions.add(prefix + getName() + " " + getParameters().convert(p -> p.getHandler().getRandomDefault()).toString(" "));
+
+        for (int i = 0; i < 15 + max * 2; i++) {
+            KList<String> params = new KList<>();
+            if (Maths.r()) {
+                // Unordered list with '=' signs & name prefix
+                getParameters().shuffle().forEach(p -> {
+                    if (p.isRequired() || Maths.r()) {
+                        params.add("<#f2e15e>" + p.exampleName() + "=<#d665f0>" + p.exampleValue());
+                    }
+                });
+            } else {
+                // Ordered list without '=' signs & name prefix
+                for (DecreeParameter parameter : getParameters()) {
+                    if (parameter.isRequired() || Maths.r()) {
+                        params.add("<#d665f0>" + parameter.exampleValue());
+                    }
+                }
+            }
+            // Random name prefix
+            suggestions.add(prefix + getNames().getRandom() + " " + params.toString(" "));
+        }
+        
+        suggestions.removeDuplicates();
+        return new KList<>(suggestions.subList(0, Math.min(max, suggestions.size()) - 1));
+    }
+
+    @Override
+    public String getHelp(DecreeSender sender) {
+
+        if (!sender.isPlayer()) {
+            return getPath() + " " + getParameters().convert(p -> p.getName() + "=" + p.getHandler().getRandomDefault()).toString(" ");
         }
 
-        return suggestions.convert(r -> r.replaceAll("\\Q  \\E", " "));
-    }
-
-    @Override
-    public Decreed parent() {
-        return (Decreed) getParent();
-    }
-
-    @Override
-    public Decree decree() {
-        return getDecree();
-    }
-
-    @Override
-    public void sendHelpTo(DecreeSender sender) {
-
-        String newline = "<reset>\n";
-
-        String hoverTitle = getNames().copy().reverse().convert((f) -> "<#42ecf5>" + f).toString(", ");
+        String hoverTitle = getNames().copy().convert((f) -> "<#42ecf5>" + f).toString(", ");
         String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
         String hoverPermission;
         String hoverSuggestions;
@@ -144,7 +145,10 @@ public class DecreeCommand implements Decreed {
         String hoverUsage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform>";
 
         String doOnClick;
-        String realText = getPath() + " >" + "<#46826a>⇀<gradient:#42ecf5:#428df5> " + getName();
+        String runOnClick = getPath();
+        String realText = "<#46826a>⇀<gradient:#42ecf5:#428df5> " + getName();
+
+        String realParameters;
 
 
         // Permission
@@ -162,15 +166,15 @@ public class DecreeCommand implements Decreed {
 
         // Suggestions
         if (getParameters().isNotEmpty()) {
-            hoverSuggestions = "<#aebef2>✦ <#5ef288><font:minecraft:uniform>" + parent().getPath() + " <#42ecf5>" + getName() + " "
-                    + getParameters().convert((f) -> "<#d665f0>" + f.exampleValue()).toString(" ") + newline;
-            hoverSuggestions += "<font:minecraft:uniform>" + getRandomSuggestions(Math.min(parameters.size() + 1, 5)).toString(newline);
+            hoverSuggestions = "<font:minecraft:uniform>" + getRandomSuggestions(Math.min(parameters.size() + 1, 5)).toString(newline);
         } else {
             hoverSuggestions = "";
         }
 
         // Origin
-        if (getOrigin().validFor(sender)) {
+        if (getOrigin().equals(DecreeOrigin.BOTH)){
+            hoverOrigin = "";
+        } else if (getOrigin().validFor(sender)) {
             hoverOrigin += "<#0ba10b> origin, so you can run it.";
         } else {
             hoverOrigin += "<#c4082e> origin, so you cannot run it.";
@@ -185,31 +189,28 @@ public class DecreeCommand implements Decreed {
             doOnClick = "suggest_command";
         }
 
-        String result = "<hover:show_text:'" +
-                hoverTitle + newline +
-                hoverDescription + newline +
-                hoverPermission + (hoverPermission.isEmpty() ? "" : newline) +
-                hoverSuggestions + (hoverSuggestions.isEmpty() ? "" : newline) +
-                hoverOrigin + newline +
-                hoverUsage +
-                "'>" +
-                "<click:" +
-                doOnClick +
-                ":" +
-                realText +
-                "</hover>" +
-                " " +
-                realNodes +
-                "</click>";
-
-        while(result.contains("  ")){
-            result = result.replaceAll("\\Q  \\E", " ");
+        // Parameters
+        if (getParameters().isEmpty()) {
+            realParameters = " ";
+        } else {
+            realParameters = getParameters().convert(DecreeParameter::getHelp).toString(" ");
         }
 
-        sender.sendMessageRaw(
-
-        );
-
+        return "<hover:show_text:'" +
+                    hoverTitle + newline +
+                    hoverDescription + newline +
+                    hoverPermission + (hoverPermission.isEmpty() ? "" : newline) +
+                    hoverSuggestions + (hoverSuggestions.isEmpty() ? "" : newline) +
+                    hoverOrigin + (hoverOrigin.isEmpty() ? "" : newline) +
+                    hoverUsage +
+                "'>" +
+                    "<click:" + doOnClick + ":" + runOnClick + ">" +
+                        realText +
+                    "</click>" +
+                "</hover>" +
+                " " +
+                realParameters; // TODO: Make parameters be clickable
+        /*
         /// Params
         StringBuilder nodes = new StringBuilder();
         for (DecreeParameter p : getParameters()) {
@@ -244,6 +245,17 @@ public class DecreeCommand implements Decreed {
                     .append(fullTitle)
                     .append("</hover>");
         }
+        */
+    }
+
+    @Override
+    public Decreed parent() {
+        return (Decreed) getParent();
+    }
+
+    @Override
+    public Decree decree() {
+        return getDecree();
     }
 
     @Override

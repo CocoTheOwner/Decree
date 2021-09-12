@@ -42,6 +42,13 @@ public class Maths {
     }
 
     /**
+     * Get true or false, randomly
+     */
+    public static boolean r() {
+        return Math.random() < 0.5;
+    }
+
+    /**
      * Get a random int from to (inclusive)
      *
      * @param f the lower bound

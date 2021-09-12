@@ -20,7 +20,7 @@ public interface Decreed {
      * Send the help information for this Decreed to
      * @param sender the sender
      */
-    void sendHelpTo(DecreeSender sender);
+    String getHelp(DecreeSender sender);
 
     /**
      * Get the primary name of the node
