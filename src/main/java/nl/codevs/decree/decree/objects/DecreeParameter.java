@@ -86,7 +86,6 @@ public class DecreeParameter {
     }
 
     /**
-     * TODO: Pull upwards because of potentially interfering {@link DecreeContextHandler}s
      * @return Whether this parameter is required or not
      */
     public boolean isRequired() {

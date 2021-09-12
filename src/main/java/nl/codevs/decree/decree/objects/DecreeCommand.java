@@ -165,6 +165,7 @@ public class DecreeCommand implements Decreed {
 
     @Override
     public boolean invoke(KList<String> args, DecreeSender sender) {
+        // TODO: Write invocation
         system.debug("Wow! Reached a command (" + getName() + ")! " + getPath());
         return true;
     }
