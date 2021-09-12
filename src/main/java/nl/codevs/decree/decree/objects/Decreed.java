@@ -79,10 +79,17 @@ public interface Decreed {
      * Get the command path to this node
      */
     default String getPath() {
-        if (parent() == null) {
-            return "/" + getName();
+        String shortest = getName();
+        for (String name : getNames()) {
+            if (name.length() < shortest.length()) {
+                shortest = name;
+            }
         }
-        return parent().getPath() + " " + getName();
+
+        if (parent() == null) {
+            return "/" + shortest;
+        }
+        return parent().getPath() + " " + shortest;
     }
 
     /**
