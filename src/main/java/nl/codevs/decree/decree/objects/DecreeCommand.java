@@ -20,10 +20,13 @@ package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
 import nl.codevs.decree.decree.DecreeSystem;
+import nl.codevs.decree.decree.util.Form;
 import nl.codevs.decree.decree.util.KList;
+import nl.codevs.decree.decree.util.Maths;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Random;
 
 /**
  * Represents a single command (non-category)
@@ -89,6 +92,35 @@ public class DecreeCommand implements Decreed {
         return parameters.copy();
     }
 
+    /**
+     * Get random suggestions for this command
+     * @param max The maximal amount of suggestions
+     * @return A list of suggestions
+     */
+    private KList<String> getRandomSuggestions(int max) {
+
+        KList<String> suggestions = new KList<>();
+        int maxTries = 25;
+
+        while (maxTries > 0 && suggestions.size() < max) {
+            suggestions.qadd(
+                    /*
+                     ✦ /command sub name parameter=value p2=v
+                     */
+                    "<#aebef2>✦ <#5ef288>" + parent().getPath() + " <#42ecf5>" + getName() + " "
+                    + getParameters().shuffle(new Random()).convert((f)
+                            -> (f.isRequired() || Maths.drand(0, 1) > 0.5
+                            ? "<#f2e15e>" + f.exampleName() + "="
+                            + "<#d665f0>" + f.exampleValue()
+                            : ""))
+                    .toString(" ")
+            ).removeDuplicates();
+            maxTries--;
+        }
+
+        return suggestions.convert(r -> r.replaceAll("\\Q  \\E", " "));
+    }
+
     @Override
     public Decreed parent() {
         return (Decreed) getParent();
@@ -101,7 +133,117 @@ public class DecreeCommand implements Decreed {
 
     @Override
     public void sendHelpTo(DecreeSender sender) {
-        sender.sendMessageRaw("YEet!" + getPath());
+
+        String newline = "<reset>\n";
+
+        String hoverTitle = getNames().copy().reverse().convert((f) -> "<#42ecf5>" + f).toString(", ");
+        String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
+        String hoverPermission;
+        String hoverSuggestions;
+        String hoverOrigin = "<#dbe61c>⌘ <#d61aba><#ff33cc><font:minecraft:uniform>" + Form.capitalize(getOrigin().toString().toLowerCase());
+        String hoverUsage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform>";
+
+        String doOnClick;
+        String realText = getPath() + " >" + "<#46826a>⇀<gradient:#42ecf5:#428df5> " + getName();
+
+
+        // Permission
+        if (!getDecree().permission().equals(Decree.NO_PERMISSION)){
+            String granted;
+            if (sender.isOp() || sender.hasPermission(getDecree().permission())){
+                granted = "<#a73abd>(Granted)";
+            } else {
+                granted = "<#db4321>(Not Granted)";
+            }
+            hoverPermission = "<#2181db>⏍ <#78dcf0><font:minecraft:uniform>Permission: <#ffa500>" + getDecree().permission() + " " + granted + newline;
+        } else {
+            hoverPermission = "";
+        }
+
+        // Suggestions
+        if (getParameters().isNotEmpty()) {
+            hoverSuggestions = "<#aebef2>✦ <#5ef288><font:minecraft:uniform>" + parent().getPath() + " <#42ecf5>" + getName() + " "
+                    + getParameters().convert((f) -> "<#d665f0>" + f.exampleValue()).toString(" ") + newline;
+            hoverSuggestions += "<font:minecraft:uniform>" + getRandomSuggestions(Math.min(parameters.size() + 1, 5)).toString(newline);
+        } else {
+            hoverSuggestions = "";
+        }
+
+        // Origin
+        if (getOrigin().validFor(sender)) {
+            hoverOrigin += "<#0ba10b> origin, so you can run it.";
+        } else {
+            hoverOrigin += "<#c4082e> origin, so you cannot run it.";
+        }
+
+        // Usage and clicking
+        if (getParameters().isEmpty()){
+            hoverUsage += "There are no parameters. Click to run.";
+            doOnClick = "run_command";
+        } else {
+            hoverUsage += "Hover over parameters to learn more. Click to put in chat.";
+            doOnClick = "suggest_command";
+        }
+
+        String result = "<hover:show_text:'" +
+                hoverTitle + newline +
+                hoverDescription + newline +
+                hoverPermission + (hoverPermission.isEmpty() ? "" : newline) +
+                hoverSuggestions + (hoverSuggestions.isEmpty() ? "" : newline) +
+                hoverOrigin + newline +
+                hoverUsage +
+                "'>" +
+                "<click:" +
+                doOnClick +
+                ":" +
+                realText +
+                "</hover>" +
+                " " +
+                realNodes +
+                "</click>";
+
+        while(result.contains("  ")){
+            result = result.replaceAll("\\Q  \\E", " ");
+        }
+
+        sender.sendMessageRaw(
+
+        );
+
+        /// Params
+        StringBuilder nodes = new StringBuilder();
+        for (DecreeParameter p : getParameters()) {
+
+            String nTitle = "<gradient:#d665f0:#a37feb>" + p.getName();
+            String nHoverTitle = p.getNames().convert((ff) -> "<#d665f0>" + ff).toString(", ");
+            String nDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + p.getDescription();
+            String nUsage;
+            String fullTitle;
+            if (p.isContextual() && sender.isPlayer()) {
+                fullTitle = "<#ffcc00>[" + nTitle + "<#ffcc00>] ";
+                nUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>The value may be derived from environment context.";
+            } else if (p.isRequired()) {
+                fullTitle = "<red>[" + nTitle + "<red>] ";
+                nUsage = "<#db4321>⚠ <#faa796><font:minecraft:uniform>This parameter is required.";
+            } else if (p.hasDefault()) {
+                fullTitle = "<#4f4f4f>⊰" + nTitle + "<#4f4f4f>⊱";
+                nUsage = "<#2181db>✔ <#78dcf0><font:minecraft:uniform>Defaults to \"" + p.getParam().defaultValue() + "\" if undefined.";
+            } else {
+                fullTitle = "<#4f4f4f>⊰" + nTitle + "<#4f4f4f>⊱";
+                nUsage = "<#a73abd>✔ <#78dcf0><font:minecraft:uniform>This parameter is optional.";
+            }
+            String type = "<#cc00ff>✢ <#ff33cc><font:minecraft:uniform>This parameter is of type " + p.getType().getSimpleName() + ".";
+
+            nodes
+                    .append("<hover:show_text:'")
+                    .append(nHoverTitle).append(newline)
+                    .append(nDescription).append(newline)
+                    .append(nUsage).append(newline)
+                    .append(type)
+                    .append("'>")
+                    .append(fullTitle)
+                    .append("</hover>");
+        }
     }
 
     @Override

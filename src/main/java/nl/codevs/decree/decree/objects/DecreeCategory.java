@@ -213,12 +213,49 @@ public class DecreeCategory implements Decreed {
 
     @Override
     public void sendHelpTo(DecreeSender sender) {
-        // TODO: Clickable and stuff
-        sender.sendHeader(Form.capitalize(getName()) + " Category");
-        sender.sendMessage(C.GREEN + "Categories (" + getSubCats().size() + ")");
-        getSubCats().convert(Decreed::getPath).forEach(sender::sendMessageRaw);
-        sender.sendMessage(C.GREEN + "Commands (" + getCommands().size() + ")");
-        getCommands().convert(Decreed::getPath).forEach(sender::sendMessageRaw);
+        if (!sender.isPlayer()) {
+            sender.sendHeader(Form.capitalize(getName()) + " Category");
+            sender.sendMessage(C.GREEN + "Categories (" + getSubCats().size() + ")");
+            getSubCats().convert(Decreed::getPath).forEach(sender::sendMessage);
+            sender.sendMessage(C.GREEN + "Commands (" + getCommands().size() + ")");
+            getCommands().convert(Decreed::getPath).forEach(sender::sendMessage);
+            return;
+        }
+
+        String newline = "<reset>\n";
+        String usage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform> This is a command category. Click to run.";
+        String onClick = "run_command";
+        String nodes = "<gradient:#afe3d3:#a2dae0> - Category of Commands";
+        String permission = "";
+        String granted;
+        if (!getDecree().permission().equals(Decree.NO_PERMISSION)){
+            if (sender.isOp() || sender.hasPermission(getDecree().permission())){
+                granted = "<#a73abd>(Granted)";
+            } else {
+                granted = "<#db4321>(Not Granted)";
+            }
+            permission = "<#2181db>⏍ <#78dcf0><font:minecraft:uniform>Permission: <#ffa500>" + getDecree().permission() + " " + granted + newline;
+        }
+
+        sender.sendMessageRaw(
+                "<hover:show_text:'" +
+                        getNames().toString(", ") + newline +
+                        description + newline +
+                        permission + // Newlines added internally
+                        usage + // Newlines added internally
+                        suggestion + // Newlines added internally
+                        suggestions + newline +
+                        originText +
+                        "'>" +
+                        "<click:" +
+                        onClick +
+                        ":" +
+                        realText +
+                        "</hover>" +
+                        " " +
+                        nodes +
+                        "</click>"
+        );
     }
 
     @Override

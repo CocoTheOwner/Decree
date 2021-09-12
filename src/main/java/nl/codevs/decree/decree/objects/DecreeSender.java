@@ -279,29 +279,6 @@ public class DecreeSender implements CommandSender {
         return s.spigot();
     }
 
-    private String pickRandoms(int max, DecreeVirtualCommand command) {
-        KList<String> randoms = new KList<>();
-        if (!command.isNode() || command.getNode().getParameters().isEmpty()) {
-            return "";
-        }
-        for (int ix = 0; ix < max; ix++) {
-            randoms.add(
-                    "<#aebef2>✦ <#5ef288>"
-                    + command.parent().getPath()
-                    + " <#42ecf5>"
-                    + command.getName() + " "
-                    + command.getNode().getParameters().shuffleCopy(new Random()).convert((f)
-                            -> (f.isRequired() || Maths.drand(0, 1) > 0.5
-                            ? "<#f2e15e>" + f.exampleName() + "="
-                            + "<#d665f0>" + f.exampleValue()
-                            : ""))
-                    .toString(" "));
-        }
-
-        return randoms.removeDuplicates().convert((iff) -> iff.replaceAll("\\Q  \\E", " ")).toString("\n");
-    }
-
-
     public void sendHeader(String name, int overrideLength) {
         int h = name.length() + 2;
         String s = Form.repeat(" ", overrideLength - h - 4);
@@ -321,136 +298,10 @@ public class DecreeSender implements CommandSender {
         sendHeader(name, 40);
     }
 
-    public void sendDecreeHelp(DecreeVirtualCommand v) {
 
-        if (v.getNodes().isNotEmpty()) {
-            sendHeader(Form.capitalize(v.getName()) + " Help");
-            if (isPlayer() && v.getParent() != null) {
-                sendMessageRaw("<hover:show_text:'" + "<#b54b38>Click to go back to <#3299bf>" + Form.capitalize(v.getParent().getName()) + " Help" + "'><click:run_command:" + v.getParent().getPath() + "><font:minecraft:uniform><#f58571>〈 Back</click></hover>");
-            }
-
-            for (DecreeVirtualCommand i : v.getNodes()) {
-                sendDecreeHelpNode(i);
-            }
-        } else {
-            sendMessage(C.RED + "There are no subcommands in this group! Contact support, this is a command design issue!");
-        }
-    }
 
     public void sendDecreeHelpNode(DecreeVirtualCommand i){
-        if (isPlayer()) {
 
-            String newline = "<reset>\n";
-
-            /// Command
-            // Contains main command & aliases
-            String realText = i.getPath() + " >" + "<#46826a>⇀<gradient:#42ecf5:#428df5> " + i.getName();
-            String hoverTitle = i.getNames().copy().reverse().convert((f) -> "<#42ecf5>" + f).toString(", ");
-            String description = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + i.getDescription();
-            DecreeOrigin origin = i.getOrigin();
-            String originText = "<#dbe61c>⌘ <#d61aba><#ff33cc><font:minecraft:uniform>" + Form.capitalize(origin.toString().toLowerCase());
-            if (origin.validFor(this)) {
-                originText += "<#0ba10b> origin, so you can run it.";
-            } else {
-                originText += "<#c4082e> origin, so you cannot run it.";
-            }
-            String usage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform>";
-            String onClick;
-            if (i.isNode()) {
-                if (i.getNode().getParameters().isEmpty()){
-                    usage += "There are no parameters. Click to run.";
-                    onClick = "run_command";
-                } else {
-                    usage += "Hover over all of the parameters to learn more.";
-                    onClick = "suggest_command";
-                }
-            } else {
-                usage += "This is a command category. Click to run.";
-                onClick = "run_command";
-            }
-
-            String permission = "";
-            String granted;
-            if (!i.getDecree().permission().equals(Decree.NO_PERMISSION)){
-                if (isOp() || hasPermission(i.getDecree().permission())){
-                    granted = "<#a73abd>(Granted)";
-                } else {
-                    granted = "<#db4321>(Not Granted)";
-                }
-                permission += "<#2181db>⏍ <#78dcf0><font:minecraft:uniform>Permission: <#ffa500>" + i.getDecree().permission() + " " + granted + newline;
-            }
-
-            String suggestion = "";
-            String suggestions = "";
-            if (i.isNode() && i.getNode().getParameters().isNotEmpty()) {
-                suggestion += newline + "<#aebef2>✦ <#5ef288><font:minecraft:uniform>" + i.parent().getPath() + " <#42ecf5>" + i.getName() + " "
-                        + i.getNode().getParameters().convert((f) -> "<#d665f0>" + f.exampleValue()).toString(" ");
-                suggestions += newline + "<font:minecraft:uniform>" + pickRandoms(Math.min(i.getNode().getParameters().size() + 1, 5), i);
-            }
-
-            /// Params
-            StringBuilder nodes = new StringBuilder();
-            if (i.isNode()){
-                for (DecreeParameter p : i.getNode().getParameters()) {
-
-                    String nTitle = "<gradient:#d665f0:#a37feb>" + p.getName();
-                    String nHoverTitle = p.getNames().convert((ff) -> "<#d665f0>" + ff).toString(", ");
-                    String nDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + p.getDescription();
-                    String nUsage;
-                    String fullTitle;
-                    if (p.isContextual() && isPlayer()) {
-                        fullTitle = "<#ffcc00>[" + nTitle + "<#ffcc00>] ";
-                        nUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>The value may be derived from environment context.";
-                    } else if (p.isRequired()) {
-                        fullTitle = "<red>[" + nTitle + "<red>] ";
-                        nUsage = "<#db4321>⚠ <#faa796><font:minecraft:uniform>This parameter is required.";
-                    } else if (p.hasDefault()) {
-                        fullTitle = "<#4f4f4f>⊰" + nTitle + "<#4f4f4f>⊱";
-                        nUsage = "<#2181db>✔ <#78dcf0><font:minecraft:uniform>Defaults to \"" + p.getParam().defaultValue() + "\" if undefined.";
-                    } else {
-                        fullTitle = "<#4f4f4f>⊰" + nTitle + "<#4f4f4f>⊱";
-                        nUsage = "<#a73abd>✔ <#78dcf0><font:minecraft:uniform>This parameter is optional.";
-                    }
-                    String type = "<#cc00ff>✢ <#ff33cc><font:minecraft:uniform>This parameter is of type " + p.getType().getSimpleName() + ".";
-
-                    nodes
-                            .append("<hover:show_text:'")
-                            .append(nHoverTitle).append(newline)
-                            .append(nDescription).append(newline)
-                            .append(nUsage).append(newline)
-                            .append(type)
-                            .append("'>")
-                            .append(fullTitle)
-                            .append("</hover>");
-                }
-            } else {
-                nodes = new StringBuilder("<gradient:#afe3d3:#a2dae0> - Category of Commands");
-            }
-
-            /// Wrapper
-            String wrapper =
-                    "<hover:show_text:'" +
-                        hoverTitle + newline +
-                        description + newline +
-                        permission + // Newlines added internally
-                        usage + // Newlines added internally
-                        suggestion + // Newlines added internally
-                        suggestions + newline +
-                        originText +
-                    "'>" +
-                    "<click:" +
-                        onClick +
-                        ":" +
-                        realText +
-                    "</hover>" +
-                        " " +
-                        nodes +
-                    "</click>";
-
-            sendMessageRaw(wrapper);
-        } else {
-            sendMessage(i.getPath());
-        }
     }
 
     public void playSound(Sound sound, float volume, float pitch) {

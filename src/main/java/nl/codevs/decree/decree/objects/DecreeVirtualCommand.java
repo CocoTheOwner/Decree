@@ -36,210 +36,6 @@ import java.util.concurrent.*;
 
 @Data
 public class DecreeVirtualCommand implements Decreed {
-    private final DecreeVirtualCommand parent;
-    private final Decree decree;
-    private final KList<DecreeVirtualCommand> nodes;
-    private final DecreeCommand node;
-    private final DecreeSystem system;
-
-    private DecreeVirtualCommand(DecreeVirtualCommand parent, Decree decree, KList<DecreeVirtualCommand> nodes, DecreeCommand node, DecreeSystem system) {
-        this.parent = parent;
-        this.decree = decree;
-        this.nodes = nodes;
-        this.node = node;
-        this.system = system;
-    }
-
-    public static DecreeVirtualCommand createOrigin(Object v, Decree decree, DecreeSystem system) throws Throwable {
-        return createRoot(null, v, decree, system);
-    }
-
-    public static DecreeVirtualCommand createRoot(DecreeVirtualCommand parent, Object v, Decree decree, DecreeSystem system) throws Throwable {
-        DecreeVirtualCommand c = new DecreeVirtualCommand(parent, decree, new KList<>(), null, system);
-
-        for (Field i : v.getClass().getDeclaredFields()) {
-            if (Modifier.isStatic(i.getModifiers()) || Modifier.isFinal(i.getModifiers()) || Modifier.isTransient(i.getModifiers()) || Modifier.isVolatile(i.getModifiers())) {
-                continue;
-            }
-
-            if (!i.getType().isAnnotationPresent(Decree.class)) {
-                continue;
-            }
-
-            i.setAccessible(true);
-            Object childRoot = i.get(v);
-
-            if (childRoot == null) {
-                childRoot = i.getType().getConstructor().newInstance();
-                i.set(v, childRoot);
-            }
-
-            c.getNodes().add(createRoot(c, childRoot, childRoot.getClass().getDeclaredAnnotation(Decree.class), system));
-        }
-
-        for (Method i : v.getClass().getDeclaredMethods()) {
-            if (Modifier.isStatic(i.getModifiers()) || Modifier.isFinal(i.getModifiers()) || Modifier.isPrivate(i.getModifiers())) {
-                continue;
-            }
-
-            if (!i.isAnnotationPresent(Decree.class)) {
-                continue;
-            }
-
-            c.getNodes().add(new DecreeVirtualCommand(c, decree, new KList<>(), new DecreeCommand(v, i, system), system));
-        }
-
-        return c;
-    }
-
-    @Override
-    public Decreed parent() {
-        return parent;
-    }
-
-    @Override
-    public Decree decree() {
-        return decree;
-    }
-
-    @Override
-    public void sendHelpTo(DecreeSender sender) {
-        sender.sendMessageRaw(getPath());
-    }
-
-    @Override
-    public KList<String> tab(KList<String> args, DecreeSender sender) {
-        return null;
-    }
-
-    @Override
-    public boolean invoke(KList<String> args, DecreeSender sender) {
-        return false;
-    }
-
-    public boolean isNode() {
-        return getNode() != null;
-    }
-
-    public String getName() {
-        return isNode() ? getNode().getName() : getDecree().name();
-    }
-
-    public DecreeOrigin getOrigin(){
-        return isNode() ? getNode().getOrigin() : getDecree().origin();
-    }
-
-    public String getPermission(){
-        return isNode() ? getNode().getPermission() : getDecree().permission();
-    }
-
-    public String getDescription() {
-        return isNode() ? getNode().getDescription() : getDecree().description();
-    }
-
-    public KList<String> getNames() {
-        if (isNode()) {
-            return getNode().getNames();
-        }
-
-        KList<String> d = new KList<>();
-        for (String i : getDecree().aliases()) {
-            if (i.isEmpty()) {
-                continue;
-            }
-
-            d.add(i);
-        }
-
-        d.add(getDecree().name());
-        d.removeDuplicates();
-
-        return d;
-    }
-
-    public KList<String> invokeTabComplete(KList<String> args, DecreeSender sender) {
-
-        if (isNode() || args.isEmpty() || args.size() <= 1 && !args.get(0).endsWith(" ")) {
-            return tab(args);
-        }
-
-        DecreeVirtualCommand match = matchNode(args.get(0), new KList<>(), sender);
-
-        if (match == null) {
-            return new KList<>();
-        }
-
-        args.remove(0);
-        return match.invokeTabComplete(args, sender);
-    }
-
-    private KList<String> tab(KList<String> args) {
-
-        if (args.isEmpty()) {
-            return new KList<>();
-        }
-
-        KList<String> tabs = new KList<>();
-        String last = args.popLast();
-        KList<DecreeParameter> ignore = new KList<>();
-
-        // Remove auto-completions for existing keys
-        for (String a : args) {
-            if (isNode()) {
-                String sea = a.contains("=") ? a.split("\\Q=\\E")[0] : a;
-                sea = sea.trim();
-
-                searching:
-                for (DecreeParameter i : getNode().getParameters()) {
-                    for (String m : i.getNames()) {
-                        if (m.equalsIgnoreCase(sea) || m.toLowerCase().contains(sea.toLowerCase()) || sea.toLowerCase().contains(m.toLowerCase())) {
-                            ignore.add(i);
-                            continue searching;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Add auto-completions
-        if (isNode()) {
-            for (DecreeParameter i : getNode().getParameters()) {
-                if (ignore.contains(i)) {
-                    continue;
-                }
-
-                int g = 0;
-
-                if (last.contains("=")) {
-                    String[] vv = last.trim().split("\\Q=\\E");
-                    String vx = vv.length == 2 ? vv[1] : "";
-                    for (String f : i.getHandler().getPossibilities(vx).convert((v) -> i.getHandler().toStringForce(v))) {
-                        g++;
-                        tabs.add(i.getName() + "=" + f);
-                    }
-                } else {
-                    for (String f : i.getHandler().getPossibilities("").convert((v) -> i.getHandler().toStringForce(v))) {
-                        g++;
-                        tabs.add(i.getName() + "=" + f);
-                    }
-                }
-
-                if (g == 0) {
-                    tabs.add(i.getName() + "=");
-                    tabs.add(i.getName() + "=" + i.getDefaultRaw());
-                }
-            }
-        } else {
-            for (DecreeVirtualCommand i : getNodes()) {
-                String m = i.getName();
-                if (m.equalsIgnoreCase(last) || m.toLowerCase().contains(last.toLowerCase()) || last.toLowerCase().contains(m.toLowerCase())) {
-                    tabs.addAll(i.getNames());
-                }
-            }
-        }
-
-        return tabs;
-    }
 
     private ConcurrentHashMap<String, Object> map(DecreeSender sender, KList<String> in) {
         ConcurrentHashMap<String, Object> data = new ConcurrentHashMap<>();
@@ -378,38 +174,6 @@ public class DecreeVirtualCommand implements Decreed {
         return null;
     }
 
-    public boolean invoke(DecreeSender sender, KList<String> args, KList<Integer> skip) {
-
-        system.debug("@ " + getPath() + " with " + args.toString(", "));
-        if (isNode()) {
-            system.debug("Invoke " + getPath() + "(" + args.toString(",") + ") at ");
-            if (invokeNode(sender, map(sender, args))) {
-                return true;
-            }
-
-            skip.add(hashCode());
-            return false;
-        }
-
-        if (args.isEmpty()) {
-            sender.sendDecreeHelp(this);
-
-            return true;
-        }
-
-        String head = args.get(0);
-        DecreeVirtualCommand match = matchNode(head, skip, sender);
-
-        if (match != null) {
-            args.pop();
-            return match.invoke(sender, args, skip);
-        }
-
-        skip.add(hashCode());
-
-        return false;
-    }
-
     private boolean invokeNode(DecreeSender sender, ConcurrentHashMap<String, Object> map) {
         if (map == null) {
             return false;
@@ -502,46 +266,19 @@ public class DecreeVirtualCommand implements Decreed {
         return true;
     }
 
-    // Category
-    public DecreeVirtualCommand matchNode(String in, KList<Integer> skip, DecreeSender sender) {
+    public void sendDecreeHelp(DecreeVirtualCommand v) {
 
-        if (in.trim().isEmpty()) {
-            return null;
-        }
-
-        for (DecreeVirtualCommand i : nodes) {
-            if (skip.contains(i.hashCode()) || !i.getOrigin().validFor(sender) || !sender.hasPermission(i.getPermission())) {
-                continue;
+        if (v.getNodes().isNotEmpty()) {
+            sendHeader(Form.capitalize(v.getName()) + " Help");
+            if (isPlayer() && v.getParent() != null) {
+                sendMessageRaw("<hover:show_text:'" + "<#b54b38>Click to go back to <#3299bf>" + Form.capitalize(v.getParent().getName()) + " Help" + "'><click:run_command:" + v.getParent().getPath() + "><font:minecraft:uniform><#f58571>〈 Back</click></hover>");
             }
 
-            if (i.matches(in)) {
-                return i;
+            for (DecreeVirtualCommand i : v.getNodes()) {
+                sendDecreeHelpNode(i);
             }
+        } else {
+            sendMessage(C.RED + "There are no subcommands in this group! Contact support, this is a command design issue!");
         }
-
-        for (DecreeVirtualCommand i : nodes) {
-            if (skip.contains(i.hashCode()) || !i.getOrigin().validFor(sender) || !sender.hasPermission(i.getPermission())) {
-                continue;
-            }
-
-            if (i.deepMatches(in)) {
-                return i;
-            }
-        }
-
-        return null;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getName(), decree(), getPath());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof DecreeVirtualCommand)) {
-            return false;
-        }
-        return this.hashCode() == obj.hashCode();
     }
 }
