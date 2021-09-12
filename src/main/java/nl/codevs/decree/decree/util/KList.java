@@ -74,11 +74,6 @@ public class KList<T> extends ArrayList<T> implements List<T> {
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "[" + toString(", ") + "]";
-    }
-
     /**
      * Tostring with a seperator for each item in the list
      *
@@ -274,5 +269,10 @@ public class KList<T> extends ArrayList<T> implements List<T> {
 
     public KList<T> shuffle() {
         return shuffle(new Random());
+    }
+
+    @Override
+    public String toString() {
+        return "[" + toString(", ") + "]";
     }
 }
