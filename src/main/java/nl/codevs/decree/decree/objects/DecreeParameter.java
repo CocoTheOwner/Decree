@@ -185,5 +185,41 @@ public class DecreeParameter {
      */
     public String getHelp() {
         return getName();
+        /*
+        /// Params
+        StringBuilder nodes = new StringBuilder();
+        for (DecreeParameter p : getParameters()) {
+
+            String nTitle = "<gradient:#d665f0:#a37feb>" + p.getName();
+            String nHoverTitle = p.getNames().convert((ff) -> "<#d665f0>" + ff).toString(", ");
+            String nDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + p.getDescription();
+            String nUsage;
+            String fullTitle;
+            if (p.isContextual() && sender.isPlayer()) {
+                fullTitle = "<#ffcc00>[" + nTitle + "<#ffcc00>] ";
+                nUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>The value may be derived from environment context.";
+            } else if (p.isRequired()) {
+                fullTitle = "<red>[" + nTitle + "<red>] ";
+                nUsage = "<#db4321>⚠ <#faa796><font:minecraft:uniform>This parameter is required.";
+            } else if (p.hasDefault()) {
+                fullTitle = "<#4f4f4f>⊰" + nTitle + "<#4f4f4f>⊱";
+                nUsage = "<#2181db>✔ <#78dcf0><font:minecraft:uniform>Defaults to \"" + p.getParam().defaultValue() + "\" if undefined.";
+            } else {
+                fullTitle = "<#4f4f4f>⊰" + nTitle + "<#4f4f4f>⊱";
+                nUsage = "<#a73abd>✔ <#78dcf0><font:minecraft:uniform>This parameter is optional.";
+            }
+            String type = "<#cc00ff>✢ <#ff33cc><font:minecraft:uniform>This parameter is of type " + p.getType().getSimpleName() + ".";
+
+            nodes
+                    .append("<hover:show_text:'")
+                    .append(nHoverTitle).append(newline)
+                    .append(nDescription).append(newline)
+                    .append(nUsage).append(newline)
+                    .append(type)
+                    .append("'>")
+                    .append(fullTitle)
+                    .append("</hover>");
+        }
+        */
     }
 }
