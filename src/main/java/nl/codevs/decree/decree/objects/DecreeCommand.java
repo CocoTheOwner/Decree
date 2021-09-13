@@ -2,14 +2,17 @@ package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
 import nl.codevs.decree.decree.DecreeSystem;
+import nl.codevs.decree.decree.exceptions.DecreeParsingException;
+import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.Form;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
+import org.bukkit.Bukkit;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,7 +25,7 @@ public class DecreeCommand implements Decreed {
     private static final String newline = "<reset>\n";
     private final KList<DecreeParameter> parameters;
     private final Method method;
-    private final Object parent;
+    private final DecreeCategory parent;
     private final Decree decree;
     private final DecreeSystem system;
 
@@ -31,7 +34,7 @@ public class DecreeCommand implements Decreed {
      * @param parent The instantiated class containing the
      * @param method Method that represents a Decree (must be annotated by @{@link Decree})
      */
-    public DecreeCommand(Object parent, Method method, DecreeSystem system) {
+    public DecreeCommand(DecreeCategory parent, Method method, DecreeSystem system) {
         if (!method.isAnnotationPresent(Decree.class)) {
             throw new RuntimeException("Cannot instantiate DecreeCommand on method " + method.getName() + " in " + method.getDeclaringClass().getCanonicalName() + " not annotated by @Decree");
         }
@@ -236,7 +239,7 @@ public class DecreeCommand implements Decreed {
 
     @Override
     public Decreed parent() {
-        return (Decreed) getParent();
+        return getParent();
     }
 
     @Override
@@ -315,23 +318,53 @@ public class DecreeCommand implements Decreed {
         args.removeIf(Objects::isNull);
         args.removeIf(String::isEmpty);
 
-        ConcurrentHashMap<String, Object> params = computeParameters(args, sender);
+        ConcurrentHashMap<DecreeParameter, Object> params = computeParameters(args, sender);
 
+        Runnable rx = () -> {
+            try {
+                try {
+                    DecreeContext.touch(sender);
+                    getMethod().setAccessible(true);
+                    getMethod().invoke(getParent().getInstance(), params.values());
+                } catch (InvocationTargetException e) {
+                    if (e.getCause().getMessage().endsWith("may only be triggered synchronously.")) {
+                        sender.sendMessage(C.RED + "The command you tried to run (" + getPath() + ") may only be run sync! Contact your admin!");
+                        return;
+                    }
+                    throw e;
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                throw new RuntimeException("Failed to execute " + getPath());
+            }
+        };
 
-
+        if (isSync()) {
+            Bukkit.getScheduler().scheduleSyncDelayedTask(system.getInstance(), rx);
+        } else {
+            rx.run();
+        }
 
         return false;
     }
 
-    private ConcurrentHashMap<String, Object> computeParameters(KList<String> args, DecreeSender sender) {
-        ConcurrentHashMap<String, DecreeParameter> argToParam = new ConcurrentHashMap<>();
+    /**
+     * Compute parameter objects from string argument inputs
+     * @param args The arguments (parameters) to parse into this command
+     * @param sender The sender of the command
+     * @return A {@link ConcurrentHashMap} from the parameter to the instantiated object for that parameter
+     */
+    private ConcurrentHashMap<DecreeParameter, Object> computeParameters(KList<String> args, DecreeSender sender) {
+        ConcurrentHashMap<String, KList<DecreeParameter>> argToParam = new ConcurrentHashMap<>();
         KList<DecreeParameter> options = getParameters();
+        KList<String> remainingArgs = new KList<>();
 
         // Keyed arguments (key=value)
         argumentChecking: for (String arg : args) {
 
             // These are handled later, after other (keyed) options were removed
             if (!arg.contains("=")) {
+                remainingArgs.add(arg);
                 continue;
             }
 
@@ -340,7 +373,7 @@ public class DecreeCommand implements Decreed {
             // Quick equals
             for (DecreeParameter option : options) {
                 if (option.getNames().contains(key)) {
-                    argToParam.put(arg, option);
+                    argToParam.put(arg, new KList<>(option));
                     options.remove(option);
                     continue argumentChecking;
                 }
@@ -350,7 +383,7 @@ public class DecreeCommand implements Decreed {
             for (DecreeParameter option : options) {
                 for (String name : option.getNames()) {
                     if (name.equalsIgnoreCase(key)) {
-                        argToParam.put(arg, option);
+                        argToParam.put(arg, new KList<>(option));
                         options.remove(option);
                         continue argumentChecking;
                     }
@@ -361,7 +394,7 @@ public class DecreeCommand implements Decreed {
             for (DecreeParameter option : options) {
                 for (String name : option.getNames()) {
                     if (name.contains(key)) {
-                        argToParam.put(arg, option);
+                        argToParam.put(arg, new KList<>(option));
                         options.remove(option);
                         continue argumentChecking;
                     }
@@ -372,42 +405,72 @@ public class DecreeCommand implements Decreed {
             for (DecreeParameter option : options) {
                 for (String name : option.getNames()) {
                     if (key.contains(name)) {
-                        argToParam.put(arg, option);
+                        argToParam.put(arg, new KList<>(option));
                         options.remove(option);
                         continue argumentChecking;
                     }
                 }
             }
+
+            remainingArgs.add(arg);
         }
 
         // Keyless arguments (value)
-        for (String arg : args) {
-            if (argToParam.containsKey(arg)) {
-                continue;
+        if (remainingArgs.isNotEmpty()) {
+            system.debug("Conducted default processing on arguments, remaining arguments are: " + remainingArgs.toString(", "));
+            for (String arg : remainingArgs) {
+                DecreeParameter option = extractOptionFrom(arg, options);
+                if (option == null) {
+                    system.debug(C.RED + Form.capitalize(getName()) + " could not find param in " + (options.isEmpty() ? "NONE" : options.convert(DecreeParameter::getName).toString(", ")) + " for value '" + arg + "'");
+                    sender.sendMessage(C.RED + "Could not find any parameter matching keyless parameter: '" + arg + "'.");
+                    sender.sendMessage(C.RED + "If you believe this is an error, contact an admin.");
+                    continue;
+                }
+                if (argToParam.containsKey(arg)) {
+                    KList<DecreeParameter> alreadyOptions = argToParam.get(arg);
+                    alreadyOptions.add(option);
+                    argToParam.put(arg, alreadyOptions);
+                } else {
+                    argToParam.put(arg, new KList<>(option));
+                }
+                options.remove(option);
             }
-            DecreeParameter option = extractOptionFrom(arg, options);
-            if (option == null) {
-                continue;
-            }
-            options.remove(option);
-            argToParam.put(arg, option);
         }
 
         // Parse arguments to objects
+        ConcurrentHashMap<DecreeParameter, Object> map = new ConcurrentHashMap<>();
         for (String arg : args) {
             if (!argToParam.containsKey(arg)) {
-                system.debug(C.RED + Form.capitalize(getName()) + " could not find param in " + options.convert(DecreeParameter::getName).toString(", ") + " for value '" + arg + "'");
-                sender.sendMessage(C.RED + "Could not find any parameter matching keyless parameter: '" + arg + "'. Skipped.");
-                sender.sendMessage(C.RED + "If you believe this is an error, contact an admin.");
+                system.debug("Skipped parameter '" + arg + "' because no matching parameter was available in the mapping");
+                sender.sendMessage(C.YELLOW + "Skipping parameter: " + C.DECREE + arg + C.YELLOW + " because it did not match any parameter.");
                 continue;
             }
 
-            DecreeParameter parser = argToParam.get(arg);
+            KList<DecreeParameter> alreadyOptions = argToParam.get(arg);
+            DecreeParameter parameter = alreadyOptions.pop();
+            if (alreadyOptions.isEmpty()) {
+                argToParam.remove(arg);
+            } else {
+                argToParam.put(arg, alreadyOptions);
+            }
+
+            system.debug("Entering argument '" + arg + "' into parameter: '" + parameter.getName() + "'.");
+
+            Object value;
+            try {
+                value = parameter.getHandler().parse(arg.contains("=") ? arg.split("\\Q=\\E")[1] : arg);
+            } catch (DecreeParsingException e) {
+                system.debug(C.RED + "Argument '" + arg + "' failed to parse because of a parsing exception");
+                sender.sendMessage(C.RED + "Argument '" + arg + "' failed to parse because of a parsing exception");
+                continue;
+            } catch (DecreeWhichException e) {
+                system.debug(C.RED + "Argument '" + arg + "' failed to parse because of a which exception");
+                sender.sendMessage(C.RED + "Argument '" + arg + "' failed to parse because of a which exception");
+                continue;
+            }
+            map.put(parameter, value);
         }
-
-        ConcurrentHashMap<String, Object> parameters = new ConcurrentHashMap<>();
-
-        return parameters;
+        return map;
     }
 
     /**
