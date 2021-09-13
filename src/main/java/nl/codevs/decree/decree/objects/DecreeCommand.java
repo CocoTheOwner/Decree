@@ -2,6 +2,7 @@ package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
 import nl.codevs.decree.decree.DecreeSystem;
+import nl.codevs.decree.decree.exceptions.DecreeException;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.C;
@@ -355,134 +356,198 @@ public class DecreeCommand implements Decreed {
      * @return A {@link ConcurrentHashMap} from the parameter to the instantiated object for that parameter
      */
     private ConcurrentHashMap<DecreeParameter, Object> computeParameters(KList<String> args, DecreeSender sender) {
-        ConcurrentHashMap<String, KList<DecreeParameter>> argToParam = new ConcurrentHashMap<>();
+        ConcurrentHashMap<DecreeParameter, Object> parameters = new ConcurrentHashMap<>();
         KList<DecreeParameter> options = getParameters();
+        KList<String> keylessArgs = new KList<>();
         KList<String> remainingArgs = new KList<>();
+        KList<String> skipped = new KList<>();
 
         // Keyed arguments (key=value)
-        argumentChecking: for (String arg : args) {
+        for (String arg : args) {
 
             // These are handled later, after other (keyed) options were removed
             if (!arg.contains("=")) {
-                remainingArgs.add(arg);
+                keylessArgs.add(arg);
+                continue;
+            }
+
+            if (arg.split("=").length > 2) {
+                system.debug("Parameter has multiple '=' signs (full arg: '" + arg + "')");
+                skipped.add(arg);
                 continue;
             }
 
             String key = arg.split("\\Q=\\E")[0];
+            String value = arg.split("\\Q=\\E")[1];
 
-            // Quick equals
-            for (DecreeParameter option : options) {
-                if (option.getNames().contains(key)) {
-                    argToParam.put(arg, new KList<>(option));
-                    options.remove(option);
-                    continue argumentChecking;
-                }
+            if (key.isEmpty()) {
+                system.debug("Parameter key has empty value (full arg: '" + arg + "')");
+                skipped.add(arg);
+                continue;
             }
 
-            // Ignored case
-            for (DecreeParameter option : options) {
-                for (String name : option.getNames()) {
-                    if (name.equalsIgnoreCase(key)) {
-                        argToParam.put(arg, new KList<>(option));
-                        options.remove(option);
-                        continue argumentChecking;
-                    }
-                }
-            }
-
-            // Name contains key (key substring of name)
-            for (DecreeParameter option : options) {
-                for (String name : option.getNames()) {
-                    if (name.contains(key)) {
-                        argToParam.put(arg, new KList<>(option));
-                        options.remove(option);
-                        continue argumentChecking;
-                    }
-                }
-            }
-
-            // Key contains name (name substring of key)
-            for (DecreeParameter option : options) {
-                for (String name : option.getNames()) {
-                    if (key.contains(name)) {
-                        argToParam.put(arg, new KList<>(option));
-                        options.remove(option);
-                        continue argumentChecking;
-                    }
-                }
+            if (value.isEmpty()) {
+                system.debug("Parameter key: '" + key + "' has empty value (full arg: '" + arg + "')");
+                skipped.add(arg);
+                continue;
             }
 
             remainingArgs.add(arg);
         }
 
-        // Keyless arguments (value)
-        if (remainingArgs.isNotEmpty()) {
-            system.debug("Conducted default processing on arguments, remaining arguments are: " + remainingArgs.toString(", "));
-            for (String arg : remainingArgs) {
-                DecreeParameter option = extractOptionFrom(arg, options);
-                if (option == null) {
-                    system.debug(C.RED + Form.capitalize(getName()) + " could not find param in " + (options.isEmpty() ? "NONE" : options.convert(DecreeParameter::getName).toString(", ")) + " for value '" + arg + "'");
-                    sender.sendMessage(C.RED + "Could not find any parameter matching keyless parameter: '" + arg + "'.");
-                    sender.sendMessage(C.RED + "If you believe this is an error, contact an admin.");
-                    continue;
+        // Quick equals
+        looping: for (String arg : remainingArgs.copy()) {
+            String key = arg.split("\\Q=\\E")[0];
+            String value = arg.split("\\Q=\\E")[1];
+            for (DecreeParameter option : options) {
+                if (option.getNames().contains(key)) {
+                    if (parseParamInto(parameters, option, value)) {
+                        options.remove(option);
+                        remainingArgs.remove(arg);
+                    }
+                    continue looping;
                 }
-                if (argToParam.containsKey(arg)) {
-                    KList<DecreeParameter> alreadyOptions = argToParam.get(arg);
-                    alreadyOptions.add(option);
-                    argToParam.put(arg, alreadyOptions);
-                } else {
-                    argToParam.put(arg, new KList<>(option));
-                }
-                options.remove(option);
             }
         }
 
-        // Parse arguments to objects
-        ConcurrentHashMap<DecreeParameter, Object> map = new ConcurrentHashMap<>();
-        for (String arg : args) {
-            if (!argToParam.containsKey(arg)) {
-                system.debug("Skipped parameter '" + arg + "' because no matching parameter was available in the mapping");
-                sender.sendMessage(C.YELLOW + "Skipping parameter: " + C.DECREE + arg + C.YELLOW + " because it did not match any parameter.");
-                continue;
+        // Ignored case
+        looping: for (String arg : remainingArgs.copy()) {
+            String key = arg.split("\\Q=\\E")[0];
+            String value = arg.split("\\Q=\\E")[1];
+            for (DecreeParameter option : options) {
+                for (String name : option.getNames()) {
+                    if (name.equalsIgnoreCase(key)) {
+                        if (parseParamInto(parameters, option, value)) {
+                            options.remove(option);
+                            remainingArgs.remove(arg);
+                        }
+                        continue looping;
+                    }
+                }
             }
-
-            KList<DecreeParameter> alreadyOptions = argToParam.get(arg);
-            DecreeParameter parameter = alreadyOptions.pop();
-            if (alreadyOptions.isEmpty()) {
-                argToParam.remove(arg);
-            } else {
-                argToParam.put(arg, alreadyOptions);
-            }
-
-            system.debug("Entering argument '" + arg + "' into parameter: '" + parameter.getName() + "'.");
-
-            Object value;
-            try {
-                value = parameter.getHandler().parse(arg.contains("=") ? arg.split("\\Q=\\E")[1] : arg);
-            } catch (DecreeParsingException e) {
-                system.debug(C.RED + "Argument '" + arg + "' failed to parse because of a parsing exception");
-                sender.sendMessage(C.RED + "Argument '" + arg + "' failed to parse because of a parsing exception");
-                continue;
-            } catch (DecreeWhichException e) {
-                system.debug(C.RED + "Argument '" + arg + "' failed to parse because of a which exception");
-                sender.sendMessage(C.RED + "Argument '" + arg + "' failed to parse because of a which exception");
-                continue;
-            }
-            map.put(parameter, value);
         }
-        return map;
+
+        // Name contains key (key substring of name)
+        looping: for (String arg : remainingArgs.copy()) {
+            String key = arg.split("\\Q=\\E")[0];
+            String value = arg.split("\\Q=\\E")[1];
+            for (DecreeParameter option : options) {
+                for (String name : option.getNames()) {
+                    if (name.contains(key)) {
+                        if (parseParamInto(parameters, option, value)) {
+                            options.remove(option);
+                            remainingArgs.remove(arg);
+                        }
+                        continue looping;
+                    }
+                }
+            }
+        }
+
+        // Key contains name (name substring of key)
+        looping: for (String arg : remainingArgs.copy()) {
+            String key = arg.split("\\Q=\\E")[0];
+            String value = arg.split("\\Q=\\E")[1];
+            for (DecreeParameter option : options) {
+                for (String name : option.getNames()) {
+                    if (key.contains(name)) {
+                        if (parseParamInto(parameters, option, value)) {
+                            options.remove(option);
+                            remainingArgs.remove(arg);
+                        }
+                        continue looping;
+                    }
+                }
+            }
+        }
+
+        system.debug("Conducted default processing on arguments");
+
+        // Keyless arguments debug
+        if (keylessArgs.isNotEmpty()) {
+            system.debug("Leftover arguments: " + keylessArgs.toString(", ") + " / Leftover options: " + options.convert(DecreeParameter::getName).toString(", "));
+            if (options.isEmpty()) {
+                system.debug("Leftover arguments (" + keylessArgs.toString(", ") + ") found but no remaining options.");
+                skipped.addAll(keylessArgs);
+            }
+        }
+
+        // Keyless arguments (not accepting DecreeWhichExceptions)
+        looping: for (DecreeParameter option : options.copy()) {
+            for (String keylessArg : keylessArgs.copy()) {
+
+                try {
+                    Object result = option.getHandler().parse(keylessArg);
+                    if (result == null) {
+                        throw new NullPointerException("Parsed value is null");
+                    }
+                    options.remove(option);
+                    keylessArgs.remove(keylessArg);
+                    parameters.put(option, result);
+                    continue looping;
+
+                } catch (DecreeParsingException | DecreeWhichException ignored) {
+                    // This argument could not be parsed here, hence is not mapped here
+
+                } catch (Throwable e) {
+                    // This exception is actually something that is broken
+                    system.debug("Parsing '" + keylessArg + "' into '" + option.getName() + "' failed because of: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        // Keyless arguments (now does accept DecreeWhichExceptions)
+        looping: for (DecreeParameter option : options.copy()) {
+            for (String keylessArg : keylessArgs.copy()) {
+
+                try {
+                    Object result = option.getHandler().parse(keylessArg);
+                    if (result == null) {
+                        throw new NullPointerException("Parsed value is null");
+                    }
+                    options.remove(option);
+                    keylessArgs.remove(keylessArg);
+                    parameters.put(option, result);
+                    continue looping;
+
+                } catch (DecreeParsingException ignored) {
+                    // This argument could not be parsed here, hence is not mapped here
+
+                } catch (DecreeWhichException e) {
+                    system.debug(e.getMessage());
+
+                } catch (Throwable e) {
+                    // This exception is actually something that is broken
+                    system.debug("Parsing '" + keylessArg + "' into '" + option.getName() + "' failed because of: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        if (skipped.isNotEmpty()) {
+            sender.sendMessage(C.RED + "Skipped arguments: " + skipped.toString(", "));
+        }
+
+        return parameters;
     }
 
     /**
-     * Get the first matching decree parameter match from options based on the argument.
-     * This matches the first decree-parameter that can be matched.
-     * @param arg The argument to match
-     * @param options The options to consider while matching. Should be sorted based on importance (more important = lower index)
-     * @return The best matching parameter (the most important one, required), or null
+     * Parses a parameter into a map after parsing
+     * @param parameters The parameter map to store the value into
+     * @param option The parameter type to parse into
+     * @param value The value to parse
+     * @return True if successful, false if not. Nothing is added on parsing failure.
      */
-    @Nullable
-    private DecreeParameter extractOptionFrom(String arg, KList<DecreeParameter> options) {
-        return null;
+    private boolean parseParamInto(ConcurrentHashMap<DecreeParameter, Object> parameters, DecreeParameter option, String value) {
+        try {
+            parameters.put(option, option.getHandler().parse(value));
+            return true;
+        } catch (Throwable e) {
+            system.debug("Failed to parse into: '" + option.getName() + "' value '" + value + "'");
+            e.printStackTrace();
+        }
+        return false;
     }
 
     /*
