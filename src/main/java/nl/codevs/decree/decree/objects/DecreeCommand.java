@@ -72,20 +72,27 @@ public class DecreeCommand implements Decreed {
      * @return Sorted parameters
      */
     public KList<DecreeParameter> getParameters() {
-        // TODO: Solve command order; contextual is ending up before required
         return parameters.copy().qsort((o1, o2) -> {
                 if (o1.isRequired()) {
-                    return 0;
-                }
-                if (o2.isRequired()) {
+                    if (o2.isRequired()) {
+                        return 0;
+                    } else {
+                        return -1;
+                    }
+                } else if (o2.isRequired()) {
                     return 1;
                 }
+
                 if (o1.isContextual()) {
-                    return 0;
-                }
-                if (o2.isContextual()) {
+                    if (o2.isContextual()) {
+                        return 0;
+                    } else {
+                        return -1;
+                    }
+                } else if (o2.isRequired()) {
                     return 1;
                 }
+
                 return 0;
         });
     }
@@ -258,8 +265,9 @@ public class DecreeCommand implements Decreed {
 
     @Override
     public KList<String> tab(KList<String> args, DecreeSender sender) {
-        // TODO: Fix the other TODO in tab
+        system.debug("Branched to " + getName());
         if (args.isEmpty()) {
+            system.debug("Empty " + getName());
             return new KList<>();
         }
 
@@ -273,7 +281,7 @@ public class DecreeCommand implements Decreed {
             sea = sea.trim();
 
             searching:
-            for (DecreeParameter i : left) {
+            for (DecreeParameter i : left.copy()) {
                 for (String m : i.getNames()) {
                     if (m.equalsIgnoreCase(sea) || m.toLowerCase().contains(sea.toLowerCase()) || sea.toLowerCase().contains(m.toLowerCase())) {
                         left.remove(i);
@@ -282,6 +290,8 @@ public class DecreeCommand implements Decreed {
                 }
             }
         }
+
+        system.debug("Command " + getName() + " possible tabs left: " + left.convert(DecreeParameter::getName).toString(", "));
 
         // Add auto-completions
         for (DecreeParameter i : left) {
@@ -314,7 +324,7 @@ public class DecreeCommand implements Decreed {
     // TODO: Write invocation
     @Override
     public boolean invoke(KList<String> args, DecreeSender sender) {
-        system.debug("Wow! Reached a command (" + getName() + ")! " + getPath());
-        return true;
+        system.debug("Command: \"" + getName() + "\" - Processed: \"" + getPath() + "\" - Parameters: [" + args.toString(", ") + "]");
+        return false;
     }
 }

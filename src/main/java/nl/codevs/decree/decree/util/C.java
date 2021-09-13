@@ -138,7 +138,7 @@ public enum C {
         }
     },
 
-    IRIS("<#1bb19e>", 'a', 0xA) {
+    DECREE("<#1bb19e>", 'a', 0xA) {
         @Override
         public net.md_5.bungee.api.ChatColor asBungee() {
             return net.md_5.bungee.api.ChatColor.GREEN;
@@ -270,7 +270,7 @@ public enum C {
     static {
         chatHexMap.put(C.BLACK, "#000000");
         chatHexMap.put(C.DARK_BLUE, "#0000AA");
-        chatHexMap.put(C.IRIS, "#1bb19e");
+        chatHexMap.put(C.DECREE, "#1bb19e");
         chatHexMap.put(C.DARK_GREEN, "#00AA00");
         chatHexMap.put(C.DARK_AQUA, "#00AAAA");
         chatHexMap.put(C.DARK_RED, "#AA0000");

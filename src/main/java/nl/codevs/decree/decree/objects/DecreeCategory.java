@@ -79,7 +79,7 @@ public class DecreeCategory implements Decreed {
                 continue;
             }
 
-            subCats.add(new DecreeCategory(this, childRoot, childRoot.getClass().getDeclaredAnnotation(Decree.class), getSystem()));
+            subCats.add(new DecreeCategory(this, childRoot, childRoot.getClass().getDeclaredAnnotation(Decree.class), system));
         }
 
         return subCats;
@@ -100,7 +100,7 @@ public class DecreeCategory implements Decreed {
                 continue;
             }
 
-            commands.add(new DecreeCommand(this, command, getSystem()));
+            commands.add(new DecreeCommand(this, command, system));
         }
 
         return commands;
@@ -295,24 +295,27 @@ public class DecreeCategory implements Decreed {
 
     @Override
     public KList<String> tab(KList<String> args, DecreeSender sender) {
-        // TODO: Fix that elements without a 1:1 match with default cause further auto-completions to fail
         if (args.isEmpty()) {
+            system.debug("Empty " + getName());
             // This node is reached but there are no more (partial) arguments
             return new KList<>();
 
         } else if (args.size() == 1) {
+            system.debug("One " + getName());
             // This is the final node, send all options from here
             return matchAll(args.get(0), sender).convert(Decreed::getName);
 
         } else {
             // This is not the final node, so follow all possible branches downwards
             String head = args.pop();
+            system.debug("Branch " + getName() + " to " + head);
 
             KList<Decreed> matches = matchAll(head, sender, false);
             if (matches.isEmpty()) {
                 matches = matchAll(head, sender, true);
             }
             matches.removeDuplicates();
+            system.debug("Branch " + getName() + " found " + matches.convert(Decreed::getName).toString(", "));
 
             KList<String> tabs = new KList<>();
             for (Decreed match : matches) {
@@ -327,7 +330,7 @@ public class DecreeCategory implements Decreed {
     public boolean invoke(KList<String> args, DecreeSender sender) {
         if (args.isNotEmpty()) {
 
-            getSystem().debug("Category: \"" + getName() + "\" - Processed: \"" + getPath() + "\" - Remaining: [" + args.toString(", ") + "]");
+            system.debug("Category: \"" + getName() + "\" - Processed: \"" + getPath() + "\" - Remaining: [" + args.toString(", ") + "]");
 
             String head = args.pop();
             KList<Decreed> matches = matchAll(head, sender);
@@ -336,12 +339,21 @@ public class DecreeCategory implements Decreed {
                     return true;
                 }
             }
-            getSystem().debug(C.RED + "FAILED: \"" + getName() + "\"" + " from path \"" + getPath() + "\". Remaining: " + (args.isEmpty() ? "NONE" : "\"" + args.toString(", ") + "\""));
-            sender.sendMessage(C.RED + "The " + getName() + " category could not find a match for " + head + ". If you believe this is an error, contact an admin.");
+            system.debug(C.RED + "FAILED: \"" + getName() + "\"" + " from path \"" + getPath() + "\". Remaining: " + (args.isEmpty() ? "NONE" : "\"" + args.toString(", ") + "\""));
+            if (matches.isNotEmpty()) {
+                if (matches.size() == 1) {
+                    system.debug(C.RED + "The option found matching with \"" + head + "\" is: " + matches.convert(Decreed::getName).toString(", ") + ". It did not return true on invocation.");
+                } else {
+                    system.debug(C.RED + "The options found matching with \"" + head + "\" are: " + matches.convert(Decreed::getName).toString(", ") + ". None returned true on invocation.");
+                }
+            } else {
+                system.debug(C.RED + "No options found matching with \"" + head + "\".");
+            }
+            sender.sendMessage(C.RED + "The " + C.DECREE + Form.capitalize(getName()) + C.RED + " Category could find command " + C.DECREE + head + C.RED + ".\nIf you believe this is an error, contact an admin.");
             return false;
         }
 
-        getSystem().debug("Category: \"" + getName() + "\" - Processed: \"" + getPath() + "\" - Remaining: [] - Action: Sending help");
+        system.debug("Category: \"" + getName() + "\" - Processed: \"" + getPath() + "\" - Remaining: [] - Action: Sending help");
         sendHelpTo(sender);
         return true;
     }

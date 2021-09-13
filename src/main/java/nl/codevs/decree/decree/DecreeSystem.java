@@ -86,6 +86,7 @@ public class DecreeSystem implements Listener {
      * Command prefix
      */
     @Setter
+    @Getter
     private String tag = C.RED + "[" + C.GREEN + "Decree" + C.RED + "]";
 
     public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin instance) {
@@ -170,7 +171,6 @@ public class DecreeSystem implements Listener {
 
         try {
             v = getRoot(command.getName()).tab(new KList<>(args), new DecreeSender(sender, instance, this));
-        } catch (ConcurrentModificationException ignored) {
         } catch (Throwable e) {
             new DecreeSender(sender, instance, this).sendMessage(C.RED + "Exception: " + e.getClass().getSimpleName() + " thrown while executing tab completion. Check console for details.");
             e.printStackTrace();
