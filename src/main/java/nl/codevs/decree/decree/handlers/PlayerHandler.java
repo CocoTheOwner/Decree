@@ -64,7 +64,7 @@ public class PlayerHandler implements DecreeParameterHandler<Player> {
                 if (force) {
                     return options.getRandom();
                 }
-                throw new DecreeWhichException(Player.class, in);
+                throw new DecreeWhichException(Player.class, in, options);
             }
 
             return options.get(0);

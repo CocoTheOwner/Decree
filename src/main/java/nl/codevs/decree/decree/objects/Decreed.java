@@ -1,5 +1,7 @@
 package nl.codevs.decree.decree.objects;
 
+import nl.codevs.decree.decree.DecreeSystem;
+import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.KList;
 
 import java.util.Arrays;
@@ -20,6 +22,11 @@ public interface Decreed {
      * Get the primary name of the node
      */
     String getName();
+
+    /**
+     * Get the {@link DecreeSystem} managing this decreed
+     */
+    DecreeSystem system();
 
     /**
      * Tab auto-completions
@@ -98,6 +105,7 @@ public interface Decreed {
      */
     default boolean matches(String in) {
 
+        debug("DeepComparing: " + C.DECREE + in + C.RESET + " with " + C.DECREE + getNames().toString(", "));
         for (String i : getNames()) {
             if (i.equalsIgnoreCase(in)) {
                 return true;
@@ -121,6 +129,7 @@ public interface Decreed {
             return true;
         }
 
+        parent().debug("DeepComparing: " + C.DECREE + in + C.RESET + " with " + C.DECREE + getNames().toString(", "));
         for (String i : getNames()) {
             if (i.toLowerCase().contains(in.toLowerCase()) || in.toLowerCase().contains(i.toLowerCase())) {
                 return true;
@@ -156,5 +165,22 @@ public interface Decreed {
             return deepMatches(in);
         }
         return false;
+    }
+
+    /**
+     * Send a debug message
+     * @param message The message
+     */
+    default void debug(String message) {
+        debug(message, C.DECREE);
+    }
+
+    /**
+     * Send a debug message
+     * @param message The message
+     * @param color The color to prefix with
+     */
+    default void debug(String message, C color) {
+        system().debug(color + "C: " + getName() + " | Path: " + getPath() + " | " + message);
     }
 }
