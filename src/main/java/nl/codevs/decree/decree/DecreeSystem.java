@@ -91,6 +91,11 @@ public class DecreeSystem implements Listener {
     private boolean debug = true;
 
     /**
+     * Whether to debug matching or not. This is also ran on tab completion, so it causes a lot of debug.
+     */
+    private boolean debugMatching = false;
+
+    /**
      * Whether to use command sounds or not
      */
     private boolean commandSound = true;
