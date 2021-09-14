@@ -2,13 +2,13 @@ package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
 import nl.codevs.decree.decree.DecreeSystem;
+import nl.codevs.decree.decree.context.DecreeContextHandler;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.C;
 import nl.codevs.decree.decree.util.Form;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
-import org.apache.logging.log4j.core.pattern.AbstractStyleNameConverter;
 import org.bukkit.Bukkit;
 
 import java.lang.reflect.InvocationTargetException;
@@ -318,7 +318,7 @@ public class DecreeCommand implements Decreed {
     // TODO: Write invocation
     @Override
     public boolean invoke(KList<String> args, DecreeSender sender) {
-        debug("Parameters: " + args.toString(", "));
+        debug("Parameters: " + C.YELLOW + args.toString(", "), C.GREEN);
 
         args.removeIf(Objects::isNull);
         args.removeIf(String::isEmpty);
@@ -336,10 +336,10 @@ public class DecreeCommand implements Decreed {
                 try {
                     value = parameter.getDefaultValue();
                 } catch (DecreeParsingException e) {
-                    debug("Default value " + C.DECREE + parameter.getDefaultRaw() + C.RED + " could not be parsed to " + parameter.getType().getSimpleName());
-                    debug("Reason: " + C.DECREE + e.getMessage());
+                    debug("Default value " + C.YELLOW + parameter.getDefaultRaw() + C.RED + " could not be parsed to " + parameter.getType().getSimpleName(), C.RED);
+                    debug("Reason: " + C.YELLOW + e.getMessage(), C.RED);
                 } catch (DecreeWhichException e) {
-                    debug("Default value " + C.DECREE + parameter.getDefaultRaw() + C.RED + " returned multiple options. Adding: " + e.getOptions().get(0));
+                    debug("Default value " + C.YELLOW + parameter.getDefaultRaw() + C.RED + " returned multiple options. Adding: " + e.getOptions().get(0), C.RED);
                     value = e.getOptions().get(0);
                 }
 
@@ -351,17 +351,17 @@ public class DecreeCommand implements Decreed {
 
             if (parameter.isContextual() && sender.isPlayer()) {
                 Object contextValue = DecreeContextHandler.contextHandlers.get(parameter.getType()).handle(sender);
-                debug("Context value for " + C.DECREE + parameter.getName() + C.GREEN + " set to: " + contextValue.toString(), C.GREEN);
+                debug("Context value for " + C.YELLOW + parameter.getName() + C.GREEN + " set to: " + contextValue.toString(), C.GREEN);
                 params.put(parameter, contextValue);
                 continue;
             }
 
-            debug("Parameter " + C.DECREE + parameter.getName() + C.RED + " not provided", C.RED);
+            debug("Parameter " + C.YELLOW + parameter.getName() + C.RED + " not provided", C.RED);
             invalid = true;
         }
 
         if (invalid) {
-            debug("Failed to handle command.");
+            debug("Failed to handle command.", C.RED);
             return false;
         }
 
@@ -371,7 +371,7 @@ public class DecreeCommand implements Decreed {
         int x = 0;
         for (DecreeParameter parameter : getParameters()) {
             if (!params.containsKey(parameter)) {
-                debug("Failed to handle command, but did not notice one missing: " + C.DECREE + parameter.getName() + C.RED + "!", C.RED);
+                debug("Failed to handle command, but did not notice one missing: " + C.YELLOW + parameter.getName() + C.RED + "!", C.RED);
                 debug("Params stored: " + params, C.RED);
                 return false;
             }
@@ -432,7 +432,7 @@ public class DecreeCommand implements Decreed {
             }
 
             if (arg.split("=").length > 2) {
-                debug("Parameter has multiple '=' signs (full arg: " + C.DECREE + arg + C.YELLOW + ")", C.YELLOW);
+                debug("Parameter has multiple '=' signs (full arg: " + C.YELLOW + arg + C.RED + ")", C.RED);
                 skipped.add(arg);
                 continue;
             }
@@ -441,13 +441,13 @@ public class DecreeCommand implements Decreed {
             String value = arg.split("\\Q=\\E")[1];
 
             if (key.isEmpty()) {
-                debug("Parameter key has empty value (full arg: " + C.DECREE + arg + C.YELLOW + ")", C.YELLOW);
+                debug("Parameter key has empty value (full arg: " + C.YELLOW + arg + C.RED + ")", C.RED);
                 skipped.add(arg);
                 continue;
             }
 
             if (value.isEmpty()) {
-                debug("Parameter key: " + C.DECREE + key + C.YELLOW + " has empty value (full arg: " + C.DECREE + arg + C.YELLOW + ")", C.YELLOW);
+                debug("Parameter key: " + C.YELLOW + key + C.RED + " has empty value (full arg: " + C.YELLOW + arg + C.RED + ")", C.RED);
                 skipped.add(arg);
                 continue;
             }
@@ -521,13 +521,13 @@ public class DecreeCommand implements Decreed {
             }
         }
 
-        debug("Conducted default processing on arguments");
+        debug("Conducted default processing on arguments", C.GREEN);
 
         // Keyless arguments debug
         if (keylessArgs.isNotEmpty()) {
-            debug("Leftover arguments: " + C.DECREE + keylessArgs.toString(", ") + C.YELLOW + " / Leftover options: " + C.DECREE + options.convert(DecreeParameter::getName).toString(", "), C.YELLOW);
+            debug("Leftover arguments: " + C.YELLOW + keylessArgs.toString(", ") + C.RED + " / Leftover options: " + C.YELLOW + options.convert(DecreeParameter::getName).toString(", "), C.RED);
             if (options.isEmpty()) {
-                debug("Leftover arguments " + C.DECREE + keylessArgs.toString(", ") + C.YELLOW + " found but no remaining options.", C.YELLOW);
+                debug("Leftover arguments " + C.YELLOW + keylessArgs.toString(", ") + C.RED + " found but no remaining options.", C.RED);
                 skipped.addAll(keylessArgs);
             }
         }
@@ -551,7 +551,7 @@ public class DecreeCommand implements Decreed {
 
                 } catch (Throwable e) {
                     // This exception is actually something that is broken
-                    debug("Parsing " + C.DECREE + keylessArg + C.RED + " into " + C.DECREE + option.getName() + C.RED + " failed because of: " + C.DECREE + e.getMessage(), C.RED);
+                    debug("Parsing " + C.YELLOW + keylessArg + C.RED + " into " + C.YELLOW + option.getName() + C.RED + " failed because of: " + C.YELLOW + e.getMessage(), C.RED);
                     e.printStackTrace();
                 }
             }
@@ -575,11 +575,11 @@ public class DecreeCommand implements Decreed {
                     // This argument could not be parsed here, hence is not mapped here
 
                 } catch (DecreeWhichException e) {
-                    debug("Please handle this exception: " + C.DECREE + e.getMessage(), C.RED);
+                    debug("Please handle this exception: " + C.YELLOW + e.getMessage(), C.RED);
 
                 } catch (Throwable e) {
                     // This exception is actually something that is broken
-                    debug("Parsing " + C.DECREE + keylessArg + C.RED + " into " + C.DECREE + option.getName() + C.RED + " failed because of: " + C.DECREE + e.getMessage(), C.RED);
+                    debug("Parsing " + C.YELLOW + keylessArg + C.RED + " into " + C.YELLOW + option.getName() + C.RED + " failed because of: " + C.YELLOW + e.getMessage(), C.RED);
                     e.printStackTrace();
                 }
             }

@@ -105,12 +105,14 @@ public interface Decreed {
      */
     default boolean matches(String in) {
 
-        debug("DeepComparing: " + C.DECREE + in + C.RESET + " with " + C.DECREE + getNames().toString(", "));
+        String compare = "Comparing: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
         for (String i : getNames()) {
             if (i.equalsIgnoreCase(in)) {
+                parent().debug(compare + "MATCHED", C.GREEN);
                 return true;
             }
         }
+        parent().debug( compare + C.RED + "NO MATCH", C.GREEN);
 
         return false;
     }
@@ -129,12 +131,14 @@ public interface Decreed {
             return true;
         }
 
-        parent().debug("DeepComparing: " + C.DECREE + in + C.RESET + " with " + C.DECREE + getNames().toString(", "));
+        String compare = "Deep Comparing: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
         for (String i : getNames()) {
             if (i.toLowerCase().contains(in.toLowerCase()) || in.toLowerCase().contains(i.toLowerCase())) {
+                parent().debug(compare + "MATCHED", C.GREEN);
                 return true;
             }
         }
+        parent().debug( compare + C.RED + "NO MATCH", C.GREEN);
 
         return false;
     }
@@ -170,17 +174,9 @@ public interface Decreed {
     /**
      * Send a debug message
      * @param message The message
-     */
-    default void debug(String message) {
-        debug(message, C.DECREE);
-    }
-
-    /**
-     * Send a debug message
-     * @param message The message
      * @param color The color to prefix with
      */
     default void debug(String message, C color) {
-        system().debug(color + "C: " + getName() + " | Path: " + getPath() + " | " + message);
+        system().debug(color + "Name: " + C.YELLOW + getName() + color + " | Path: " + C.YELLOW + getPath() + color + " | " + message);
     }
 }

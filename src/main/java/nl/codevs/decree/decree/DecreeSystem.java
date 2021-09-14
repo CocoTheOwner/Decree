@@ -14,19 +14,19 @@ import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @AllArgsConstructor
+@Getter
+@Setter
 public class DecreeSystem implements Listener {
     private final ConcurrentHashMap<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
     private static final KList<DecreeParameterHandler<?>> handlers = new KList<>(
@@ -52,23 +52,24 @@ public class DecreeSystem implements Listener {
     /**
      * The instance of the plugin
      */
-    @Getter
     private final Plugin instance;
 
 
     /**
      * Whether to use command sounds or not
      */
-    @Setter
-    @Getter
     private boolean commandSound = true;
 
     /**
      * Command prefix
      */
-    @Setter
-    @Getter
     private String tag = C.RED + "[" + C.GREEN + "Decree" + C.RED + "]";
+
+    /**
+     * The maximal number of same-named root commands.
+     * Has barely any performance impact, and you'll likely never exceed 1, but just in case.
+     */
+    private int maxRoots = 10;
 
     public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin instance) {
         this.roots = buildRoots(rootInstances);
@@ -81,25 +82,59 @@ public class DecreeSystem implements Listener {
      * @return The built roots in a {@link ConcurrentHashMap}
      */
     private ConcurrentHashMap<String, KList<DecreeCategory>> buildRoots(KList<DecreeCommandExecutor> rootInstances) {
+
         ConcurrentHashMap<String, KList<DecreeCategory>> roots = new ConcurrentHashMap<>();
-        rootInstances.stream().filter(i -> i.getClass().isAnnotationPresent(Decree.class)).forEach(i -> {
-            Decree decree = i.getClass().getDeclaredAnnotation(Decree.class);
 
-            KList<String> names = new KList<>(decree.name());
-            names.addAll(Arrays.asList(decree.aliases()));
+        KList<DecreeCommandExecutor> rootInstancesFailed = new KList<>();
+        KList<DecreeCommandExecutor> rootInstancesSuccess = new KList<>();
+        KList<String> registeredRootNames = new KList<>();
 
-            DecreeCategory root = new DecreeCategory(null, i, decree, this);
-            System.out.println("Roots: " + names.toString(", "));
+
+        for (DecreeCommandExecutor rootInstance : rootInstances) {
+
+            if (!rootInstance.getClass().isAnnotationPresent(Decree.class)) {
+                rootInstancesFailed.add(rootInstance);
+                continue;
+            } else {
+                rootInstancesSuccess.add(rootInstance);
+            }
+
+
+
+            // Get decree, names, and category representation for root instance
+            Decree decree = rootInstance.getClass().getDeclaredAnnotation(Decree.class);
+            KList<String> names = new KList<>(decree.name()).qAddAll(Arrays.asList(decree.aliases()));
+            DecreeCategory root = new DecreeCategory(null, rootInstance, decree, this);
+
+            // Add names to root map (supports multiple)
             for (String name : names) {
+                registeredRootNames.addIfMissing(name);
                 if (roots.containsKey(name)) {
-                    KList<DecreeCategory> rootsIn = roots.get(name);
+                    KList<DecreeCategory> rootsIn = getRoots().get(name);
                     rootsIn.addIfMissing(root);
                     roots.put(name, rootsIn);
                 } else {
                     roots.put(name, new KList<>(root));
                 }
             }
-        });
+        }
+
+        if (rootInstancesSuccess.isEmpty()) {
+            System.out.println(C.RED + "No successful root instances registered. Did you register all commands in the creator?");
+        } else {
+            System.out.println(C.GREEN + "Loaded root instances: " + C.YELLOW + rootInstancesSuccess.convert(ri -> ri.getClass().getSimpleName()).toString(", "));
+        }
+
+        if (rootInstancesFailed.isNotEmpty()) {
+            System.out.println(C.RED + "Failed root instances: " + C.YELLOW + rootInstancesFailed.convert(ri -> ri.getClass().getSimpleName()).toString(", "));
+        }
+
+        if (registeredRootNames.isEmpty()) {
+            System.out.println(C.RED + "No root commands registered! Did you register all commands in hte creator? Did you give them names?");
+        } else {
+            System.out.println(C.GREEN + "Loaded root commands: " + C.YELLOW + registeredRootNames.toString(", "));
+        }
+
         return roots;
     }
 
@@ -115,7 +150,7 @@ public class DecreeSystem implements Listener {
         if(msg.startsWith("decree-future "))
         {
             String[] args = msg.split("\\Q \\E");
-            CompletableFuture<String> future = futures.get(args[1]);
+            CompletableFuture<String> future = getFutures().get(args[1]);
 
             if(future != null)
             {
@@ -131,7 +166,7 @@ public class DecreeSystem implements Listener {
      * @param future The future to fulfill
      */
     public void postFuture(String password, CompletableFuture<String> future) {
-        futures.put(password, future);
+        getFutures().put(password, future);
     }
 
     /**
@@ -139,7 +174,7 @@ public class DecreeSystem implements Listener {
      * @param message The debug message
      */
     public void debug(String message) {
-        new DecreeSender(Bukkit.getConsoleSender(), instance, this).sendMessage(tag.trim() + C.RESET + " " + message);
+        new DecreeSender(Bukkit.getConsoleSender(), getInstance(), this).sendMessage(getTag().trim() + C.RESET + " " + message);
     }
 
     /**
@@ -147,8 +182,8 @@ public class DecreeSystem implements Listener {
      * @param name The name of the root command (first argument) to start from. This allows for multi-root support.
      */
     public KList<DecreeCategory> getRoots(String name) {
-        if (roots.containsKey(name)) {
-            return roots.get(name);
+        if (getRoots().containsKey(name)) {
+            return getRoots().get(name).copy();
         }
         debug(C.RED + "Failed to get command(s) belonging to root command: " + name);
         return null;
@@ -156,7 +191,7 @@ public class DecreeSystem implements Listener {
 
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
 
-        DecreeSender decreeSender = new DecreeSender(sender, instance, this);
+        DecreeSender decreeSender = new DecreeSender(sender, getInstance(), this);
         KList<DecreeCategory> roots = getRoots(command.getName());
         KList<String> v = new KList<>();
 
@@ -171,7 +206,7 @@ public class DecreeSystem implements Listener {
 
         v.removeDuplicates();
 
-        if (decreeSender.isPlayer() && commandSound) {
+        if (decreeSender.isPlayer() && isCommandSound()) {
             if (v.isNotEmpty()) {
                 decreeSender.playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
             } else {
@@ -184,31 +219,48 @@ public class DecreeSystem implements Listener {
 
     @SuppressWarnings({"deprecation", "SameReturnValue"})
     public boolean onCommand(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
-        Bukkit.getScheduler().scheduleAsyncDelayedTask(instance, () -> {
+        Bukkit.getScheduler().scheduleAsyncDelayedTask(getInstance(), () -> {
 
-            DecreeSender decreeSender = new DecreeSender(sender, instance, this);
+            DecreeSender decreeSender = new DecreeSender(sender, getInstance(), this);
             DecreeContext.touch(decreeSender);
             KList<String> noEmptyArgs = new KList<>(args).qremoveIf(String::isEmpty);
             KList<DecreeCategory> roots = getRoots(command.getName());
+            if (roots.isEmpty()) {
+                debug(C.RED + "Found no roots for: " + C.YELLOW + command.getName() + C.RED + " | Mapping: ");
+                Iterator<String> a = getRoots().keys().asIterator();
+                String s;
+                while (a.hasNext()) {
+                    s = a.next();
+                    debug(C.RED + " - " + C.YELLOW + s + C.RED + " -> " + C.YELLOW + getRoots().get(s));
+                }
+            } else {
+                debug(C.GREEN + "Found " + C.YELLOW + roots.size() + C.GREEN + " roots: " + C.YELLOW + roots.convert(DecreeCategory::getName).toString(", "));
+            }
 
-            while (roots.isNotEmpty()) {
+            int maxTriesLeft = getMaxRoots();
+            boolean success = false;
+            while (!success && roots.isNotEmpty() && maxTriesLeft-- > 0) {
                 try {
-                    if (roots.pop().invoke(noEmptyArgs, decreeSender)) {
-                        if (decreeSender.isPlayer()) {
-                            decreeSender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
-                            decreeSender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.125f, 2.99f);
-                        }
-                    } else {
-                        debug(C.RED + "Unknown Decree Command");
-                        if (decreeSender.isPlayer()) {
-                            decreeSender.playSound(Sound.BLOCK_ANCIENT_DEBRIS_BREAK, 1f, 0.25f);
-                            decreeSender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.2f, 1.95f);
-                        }
+                    if (roots.pop().invoke(noEmptyArgs.copy(), decreeSender)) {
+                        success = true;
                     }
-
                 } catch (Throwable e) {
                     decreeSender.sendMessage(C.RED + "Exception: " + e.getClass().getSimpleName() + " thrown while executing command. Check console for details.");
                     e.printStackTrace();
+                }
+            }
+
+            if (success) {
+                debug(C.GREEN + "Successfully ran command!");
+                if (decreeSender.isPlayer() && isCommandSound()) {
+                    decreeSender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
+                    decreeSender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.125f, 2.99f);
+                }
+            } else {
+                debug(C.RED + "Unknown Decree Command");
+                if (decreeSender.isPlayer() && isCommandSound()) {
+                    decreeSender.playSound(Sound.BLOCK_ANCIENT_DEBRIS_BREAK, 1f, 0.25f);
+                    decreeSender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.2f, 1.95f);
                 }
             }
         });

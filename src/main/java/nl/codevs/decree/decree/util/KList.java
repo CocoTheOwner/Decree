@@ -289,4 +289,9 @@ public class KList<T> extends ArrayList<T> implements List<T> {
     public String toString() {
         return "[" + toString(", ") + "]";
     }
+
+    public KList<T> qAddAll(List<T> elements) {
+        addAll(elements);
+        return this;
+    }
 }

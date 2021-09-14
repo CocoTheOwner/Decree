@@ -206,10 +206,10 @@ public class DecreeCategory implements Decreed {
     public void sendHelpTo(DecreeSender sender) {
 
         if (getSubCats().isNotEmpty() || getCommands().isNotEmpty()) {
-            sender.sendHeader(Form.capitalize(getName()) + " Help");
 
             // Back button
             if (sender.isPlayer() && getParent() != null) {
+                sender.sendHeader(Form.capitalize(getName()) + " Help");
                 sender.sendMessageRaw(
                         "<hover:show_text:'<#b54b38>Click to go back to <#3299bf>" + Form.capitalize(getParent().getName()) + " Help'>" +
                             "<click:run_command:" + getParent().getPath() + ">" +
@@ -332,7 +332,7 @@ public class DecreeCategory implements Decreed {
     public boolean invoke(KList<String> args, DecreeSender sender) {
         if (args.isNotEmpty()) {
 
-            debug("Remaining: [" + args.toString(", ") + "]");
+            debug("Remaining: " + C.YELLOW + "[" + args.toString(", ") + "]", C.GREEN);
 
             String head = args.pop();
             KList<Decreed> matches = matchAll(head, sender);
@@ -341,24 +341,24 @@ public class DecreeCategory implements Decreed {
                     return true;
                 }
             }
-            debug("FAILED. Remaining: " + C.DECREE + (args.isEmpty() ? "NONE" : args.toString(", ")), C.RED);
+            debug("FAILED. Remaining: " + C.YELLOW + (args.isEmpty() ? "NONE" : args.toString(", ")), C.RED);
             if (matches.isNotEmpty()) {
                 if (matches.size() == 1) {
-                    debug("The option found matching with " + C.DECREE + head + C.RED + " is " + C.DECREE + matches.convert(Decreed::getName).toString(", ") + C.RED + ". It did not return true on invocation.", C.RED);
+                    debug("The option found matching with " + C.YELLOW + head + C.RED + " is " + C.YELLOW + matches.convert(Decreed::getName).toString(", ") + C.RED + ". It did not return true on invocation.", C.RED);
                 } else {
-                    debug("The options found matching with " + C.DECREE + head + C.RED + " are: " + C.DECREE + matches.convert(Decreed::getName).toString(", ") + C.RED + ". None returned true on invocation.", C.RED);
+                    debug("The options found matching with " + C.YELLOW + head + C.RED + " are: " + C.YELLOW + matches.convert(Decreed::getName).toString(", ") + C.RED + ". None returned true on invocation.", C.RED);
                 }
             } else {
-                debug("No options found matching with " + C.DECREE + head + C.RED + ".", C.RED);
+                debug("No options found matching with " + C.YELLOW + head + C.RED + ".", C.RED);
             }
-            sender.sendMessage(C.RED + "The " + C.DECREE + Form.capitalize(getName()) + C.RED + " Category failed to process any command related to " + C.DECREE + head + C.RED + ".");
+            sender.sendMessage(C.RED + "The " + C.YELLOW + Form.capitalize(getName()) + C.RED + " Category failed to process any command related to " + C.YELLOW + head + C.RED + ".");
             if (parent() == null) {
                 sender.sendMessage(C.RED + "If you believe this is an error, contact an admin.");
             }
             return false;
         }
 
-        debug("Remaining: " + C.DECREE + "[]" + C.GREEN + " | Action: " + C.DECREE + "sending help.", C.GREEN);
+        debug("Remaining: " + C.YELLOW + "NONE" + C.GREEN + " | Action: " + C.YELLOW + "sending help.", C.GREEN);
         sendHelpTo(sender);
         return true;
     }
