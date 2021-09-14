@@ -42,7 +42,7 @@ public class PlayerHandler implements DecreeParameterHandler<Player> {
 
     @SuppressWarnings("RedundantThrows")
     @Override
-    public Player parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
+    public @NotNull Player parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
         try {
             KList<Player> options = getPossibilities(in);
             KList<String> names = getPossibilities().convert(HumanEntity::getName);

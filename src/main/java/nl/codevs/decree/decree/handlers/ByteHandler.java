@@ -22,6 +22,7 @@ package nl.codevs.decree.decree.handlers;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
+import org.jetbrains.annotations.NotNull;
 
 public class ByteHandler implements DecreeParameterHandler<Byte> {
 
@@ -36,7 +37,7 @@ public class ByteHandler implements DecreeParameterHandler<Byte> {
     }
 
     @Override
-    public Byte parse(String in, boolean force) throws DecreeParsingException {
+    public @NotNull Byte parse(String in, boolean force) throws DecreeParsingException {
         try {
             return Byte.parseByte(in);
         } catch (Throwable e) {

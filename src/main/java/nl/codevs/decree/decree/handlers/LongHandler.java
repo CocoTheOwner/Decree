@@ -22,6 +22,7 @@ package nl.codevs.decree.decree.handlers;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,7 +33,7 @@ public class LongHandler implements DecreeParameterHandler<Long> {
     }
 
     @Override
-    public Long parse(String in, boolean force) throws DecreeParsingException {
+    public @NotNull Long parse(String in, boolean force) throws DecreeParsingException {
         try {
             AtomicReference<String> r = new AtomicReference<>(in);
             double m = getMultiplier(r);

@@ -38,7 +38,7 @@ public class WorldHandler implements DecreeParameterHandler<World> {
 
     @SuppressWarnings("RedundantThrows")
     @Override
-    public World parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
+    public @NotNull World parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
         try {
             KList<World> options = getPossibilities(in);
 

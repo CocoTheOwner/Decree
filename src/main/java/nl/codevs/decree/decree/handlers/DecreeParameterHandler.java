@@ -4,6 +4,7 @@ package nl.codevs.decree.decree.handlers;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.KList;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,7 +41,7 @@ public interface DecreeParameterHandler<T> {
      * @throws DecreeWhichException   Thrown when multiple results are possible
      */
     @SuppressWarnings("RedundantThrows")
-    T parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException;
+    @NotNull T parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException;
 
     /**
      * Parse an input string to an output of the assigned type
@@ -49,7 +50,7 @@ public interface DecreeParameterHandler<T> {
      * @throws DecreeParsingException When the input cannot be parsed into the output
      * @throws DecreeWhichException Multiple outputs would be possible for the same input
      */
-    default T parse(String in) throws DecreeParsingException, DecreeWhichException {
+    @NotNull default T parse(String in) throws DecreeParsingException, DecreeWhichException {
         return parse(in, false);
     }
 

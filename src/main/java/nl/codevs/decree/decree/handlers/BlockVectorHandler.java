@@ -32,6 +32,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.BlockVector;
 import org.jetbrains.annotations.NotNull;
 
+import java.security.InvalidParameterException;
+
 public class BlockVectorHandler implements DecreeParameterHandler<BlockVector> {
     @Override
     public @NotNull KList<BlockVector> getPossibilities() {
@@ -56,7 +58,7 @@ public class BlockVectorHandler implements DecreeParameterHandler<BlockVector> {
 
     @SuppressWarnings({"RedundantThrows", "SpellCheckingInspection"})
     @Override
-    public BlockVector parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
+    public @NotNull BlockVector parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
         try {
             if (in.contains(",")) {
                 String[] comp = in.split("\\Q,\\E");
@@ -82,7 +84,7 @@ public class BlockVectorHandler implements DecreeParameterHandler<BlockVector> {
                 }
                 Block target = DecreeContext.get().player().getTargetBlockExact(256, FluidCollisionMode.NEVER);
                 if (target == null) {
-                    return null;
+                    throw new InvalidParameterException(in + " is invalid because the targeted location is null");
                 }
                 return target.getLocation().toVector().toBlockVector();
             } else if (in.trim().toLowerCase().startsWith("player:")) {
@@ -92,15 +94,15 @@ public class BlockVectorHandler implements DecreeParameterHandler<BlockVector> {
 
                 if (px != null && px.isNotEmpty()) {
                     return ((Player) px.get(0)).getLocation().toVector().toBlockVector();
-                } else if (px == null || px.isEmpty()) {
+                } else {
                     throw new DecreeParsingException("Cannot find player: " + v);
                 }
+            } else {
+                throw new InvalidParameterException(in + " is invalid because it has no ',' - BlockVectors are written as (number,number)");
             }
         } catch (Throwable e) {
             throw new DecreeParsingException("Unable to get Vector for \"" + in + "\" because of an uncaught exception: " + e);
         }
-
-        return null;
     }
 
     @Override

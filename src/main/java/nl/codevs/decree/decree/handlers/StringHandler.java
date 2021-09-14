@@ -21,6 +21,7 @@ package nl.codevs.decree.decree.handlers;
 
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.util.KList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Abstraction can sometimes breed stupidity
@@ -38,7 +39,7 @@ public class StringHandler implements DecreeParameterHandler<String> {
 
     @SuppressWarnings("RedundantThrows")
     @Override
-    public String parse(String in, boolean force) throws DecreeParsingException {
+    public @NotNull String parse(String in, boolean force) throws DecreeParsingException {
         return in;
     }
 
