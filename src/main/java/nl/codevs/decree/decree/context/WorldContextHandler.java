@@ -1,6 +1,5 @@
 package nl.codevs.decree.decree.context;
 
-import nl.codevs.decree.decree.objects.DecreeContextHandler;
 import nl.codevs.decree.decree.objects.DecreeSender;
 import org.bukkit.World;
 

@@ -1,6 +1,6 @@
-package nl.codevs.decree.decree.objects;
+package nl.codevs.decree.decree.context;
 
-import nl.codevs.decree.decree.context.WorldContextHandler;
+import nl.codevs.decree.decree.objects.DecreeSender;
 import nl.codevs.decree.decree.util.KList;
 
 import java.util.concurrent.ConcurrentHashMap;

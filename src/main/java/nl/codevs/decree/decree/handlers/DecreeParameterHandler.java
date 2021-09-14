@@ -1,4 +1,4 @@
-package nl.codevs.decree.decree.objects;
+package nl.codevs.decree.decree.handlers;
 
 
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;

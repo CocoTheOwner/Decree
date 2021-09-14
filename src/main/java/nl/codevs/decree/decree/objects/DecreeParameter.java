@@ -4,9 +4,9 @@ import lombok.Data;
 import nl.codevs.decree.decree.DecreeSystem;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
+import nl.codevs.decree.decree.handlers.DecreeParameterHandler;
 import nl.codevs.decree.decree.util.AtomicCache;
 import nl.codevs.decree.decree.util.KList;
-import nl.codevs.decree.decree.util.Maths;
 
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
