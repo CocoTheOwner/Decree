@@ -58,7 +58,6 @@ public interface Decreed {
         return decree().permission();
     }
 
-
     /**
      * Get the primary and alias names of the node<br>
      */
@@ -79,7 +78,7 @@ public interface Decreed {
      * Get whether this node requires sync runtime or not
      */
     default boolean isSync() {
-        return decree().sync();
+        return decree().sync() || parent().isSync();
     }
 
     /**
@@ -192,9 +191,7 @@ public interface Decreed {
             reason = "No Permission & Origin Mismatch";
         }
         if (system().isDebugMismatchReason()) {
-            debug(
-                    "Name " + C.YELLOW + in + C.GREEN + " invalid for sender (" + C.YELLOW + sender.getName() +
-                            C.GREEN + ") because of " + C.YELLOW + reason, C.GREEN);
+            debug("Name " + C.YELLOW + in + C.GREEN + " invalid for sender (" + C.YELLOW + sender.getName() + C.GREEN + ") because of " + C.YELLOW + reason, C.GREEN);
         }
         return false;
     }
