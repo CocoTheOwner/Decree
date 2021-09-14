@@ -105,7 +105,7 @@ public interface Decreed {
      */
     default boolean matches(String in) {
 
-        String compare = "Comparing: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
+        String compare = "Shallow comparison: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
         for (String i : getNames()) {
             if (i.equalsIgnoreCase(in)) {
                 parent().debug(compare + "MATCHED", C.GREEN);
@@ -131,7 +131,7 @@ public interface Decreed {
             return true;
         }
 
-        String compare = "Deep Comparing: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
+        String compare = "Deep comparison: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
         for (String i : getNames()) {
             if (i.toLowerCase().contains(in.toLowerCase()) || in.toLowerCase().contains(i.toLowerCase())) {
                 parent().debug(compare + "MATCHED", C.GREEN);
@@ -165,9 +165,21 @@ public interface Decreed {
      * @return True if allowed & match, false if not
      */
     default boolean doesDeepMatchAllowed(DecreeSender sender, String in){
-        if (getOrigin().validFor(sender) && sender.hasPermission(getPermission())) {
-            return deepMatches(in);
+        String reason;
+        if (getOrigin().validFor(sender)) {
+            if (sender.hasPermission(getPermission())) {
+                return deepMatches(in);
+            } else {
+                reason = "No Permission";
+            }
+        } else if (sender.hasPermission(getPermission())) {
+            reason = "Origin Mismatch";
+        } else {
+            reason = "No Permission & Origin Mismatch";
         }
+        debug(
+                "Name " + C.YELLOW + in + C.GREEN + " invalid for sender (" + C.YELLOW + sender.getName() +
+                        C.GREEN + ") because of " + C.YELLOW + reason, C.GREEN);
         return false;
     }
 
@@ -177,6 +189,6 @@ public interface Decreed {
      * @param color The color to prefix with
      */
     default void debug(String message, C color) {
-        system().debug(color + "Name: " + C.YELLOW + getName() + color + " | Path: " + C.YELLOW + getPath() + color + " | " + message);
+        system().debug(color + "Name " + C.YELLOW + getName() + color + " @ " + C.YELLOW + getPath() + color + " | " + message);
     }
 }

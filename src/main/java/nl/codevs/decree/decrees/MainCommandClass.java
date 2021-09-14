@@ -6,7 +6,7 @@ import nl.codevs.decree.decree.objects.DecreeOrigin;
 import nl.codevs.decree.decree.objects.Param;
 
 @SuppressWarnings("SpellCheckingInspection")
-@Decree(name = "command", aliases = {"cmmd", "cmd", "cd"}, description = "Main commands", permission = "decree", origin = DecreeOrigin.PLAYER)
+@Decree(name = "command", aliases = {"cmmd", "cmd", "cd"}, description = "Main commands", permission = "decree")
 public class MainCommandClass implements DecreeCommandExecutor {
 
     // This line is a category pointer

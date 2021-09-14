@@ -163,6 +163,11 @@ public class DecreeCategory implements Decreed {
      */
     public KList<Decreed> matchAll(String in, DecreeSender sender, boolean deepSearch){
 
+        String com = deepSearch ? "Deep comparing " : "Comparing ";
+        debug(com + C.YELLOW + in + C.GREEN + " with Categories " + C.YELLOW + getSubCats().convert(c -> c.getNames().toString(", ")).toString(", "), C.GREEN);
+        debug(com + C.YELLOW + in + C.GREEN + " with Commands " + C.YELLOW + getCommands().convert(c -> c.getNames().toString(", ")).toString(", "), C.GREEN);
+
+
         KList<Decreed> matches = new KList<>();
 
 
@@ -344,12 +349,12 @@ public class DecreeCategory implements Decreed {
             debug("FAILED. Remaining: " + C.YELLOW + (args.isEmpty() ? "NONE" : args.toString(", ")), C.RED);
             if (matches.isNotEmpty()) {
                 if (matches.size() == 1) {
-                    debug("The option found matching with " + C.YELLOW + head + C.RED + " is " + C.YELLOW + matches.convert(Decreed::getName).toString(", ") + C.RED + ". It did not return true on invocation.", C.RED);
+                    debug("The option found matching with " + C.YELLOW + head + C.RED + " is " + C.YELLOW + matches.convert(Decreed::getName).toString(", ") + C.RED + ", but it returned false.", C.RED);
                 } else {
-                    debug("The options found matching with " + C.YELLOW + head + C.RED + " are: " + C.YELLOW + matches.convert(Decreed::getName).toString(", ") + C.RED + ". None returned true on invocation.", C.RED);
+                    debug("The options found matching with " + C.YELLOW + head + C.RED + " are: " + C.YELLOW + matches.convert(Decreed::getName).toString(", ") + C.RED + ". All returned false.", C.RED);
                 }
             } else {
-                debug("No options found matching with " + C.YELLOW + head + C.RED + ".", C.RED);
+                debug("No (valid) options found matching with " + C.YELLOW + head + C.RED + ".", C.RED);
             }
             sender.sendMessage(C.RED + "The " + C.YELLOW + Form.capitalize(getName()) + C.RED + " Category failed to process any command related to " + C.YELLOW + head + C.RED + ".");
             if (parent() == null) {
@@ -358,7 +363,7 @@ public class DecreeCategory implements Decreed {
             return false;
         }
 
-        debug("Remaining: " + C.YELLOW + "NONE" + C.GREEN + " | Action: " + C.YELLOW + "sending help.", C.GREEN);
+        debug("Remaining: " + C.YELLOW + "NONE" + C.GREEN + " | Action: " + C.YELLOW + "Sending help.", C.GREEN);
         sendHelpTo(sender);
         return true;
     }
