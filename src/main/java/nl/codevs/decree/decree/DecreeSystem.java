@@ -24,13 +24,19 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 @AllArgsConstructor
 @Getter
 @Setter
 public class DecreeSystem implements Listener {
+
+    public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin instance) {
+        this.roots = buildRoots(rootInstances);
+        this.instance = instance;
+    }
+
     private final ConcurrentHashMap<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
 
     /**
@@ -79,6 +85,12 @@ public class DecreeSystem implements Listener {
     private final Plugin instance;
 
     /**
+     * Whether to send debug messages or not.
+     * You can also make runOnDebug equal to `(s) -> {};`
+     */
+    private boolean debug = true;
+
+    /**
      * Whether to use command sounds or not
      */
     private boolean commandSound = true;
@@ -95,7 +107,7 @@ public class DecreeSystem implements Listener {
     private boolean allowNullInput = false;
 
     /**
-     * When an argument parser returns multiple options, should the system pick the first element and continue?
+     * When an argument parser returns multiple options for a certain input, should the system always pick the first element and continue?
      * Note: When the command sender is a console, this is done regardless.
      */
     private boolean pickFirstOnMultiple = true;
@@ -116,7 +128,7 @@ public class DecreeSystem implements Listener {
     /**
      * Command prefix
      */
-    private String tag = C.RED + "[" + C.GREEN + "Decree" + C.RED + "]";
+    private String prefix = C.RED + "[" + C.GREEN + "Decree" + C.RED + "]";
 
     /**
      * The maximal number of same-named root commands.
@@ -124,10 +136,10 @@ public class DecreeSystem implements Listener {
      */
     private int maxRoots = 10;
 
-    public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin instance) {
-        this.roots = buildRoots(rootInstances);
-        this.instance = instance;
-    }
+    /**
+     * What to do with debug messages. Best not to touch and let Decree handle.
+     */
+    Consumer<String> runOnDebug = (message) -> new DecreeSender(Bukkit.getConsoleSender(), getInstance(), this).sendMessage(getPrefix().trim() + C.RESET + " " + message);
 
     /**
      * Build roots for instances
@@ -196,8 +208,7 @@ public class DecreeSystem implements Listener {
      * @param e The event to check
      */
     @EventHandler
-    public void on(PlayerCommandPreprocessEvent e)
-    {
+    public void on(PlayerCommandPreprocessEvent e) {
         String msg = e.getMessage().startsWith("/") ? e.getMessage().substring(1) : e.getMessage();
 
         if(msg.startsWith("decree-future "))
@@ -227,7 +238,9 @@ public class DecreeSystem implements Listener {
      * @param message The debug message
      */
     public void debug(String message) {
-        new DecreeSender(Bukkit.getConsoleSender(), getInstance(), this).sendMessage(getTag().trim() + C.RESET + " " + message);
+        if (debug) {
+            runOnDebug.accept(message);
+        }
     }
 
     /**
@@ -242,6 +255,13 @@ public class DecreeSystem implements Listener {
         return null;
     }
 
+    /**
+     * Tab completion
+     * @param sender The sender of the tab-complete
+     * @param args The existing arguments
+     * @param command The root command
+     * @return List of completions
+     */
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
 
         DecreeSender decreeSender = new DecreeSender(sender, getInstance(), this);
