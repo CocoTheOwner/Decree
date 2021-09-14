@@ -110,44 +110,6 @@ public class DecreeCategory implements Decreed {
      * Match a subcategory or command of this category
      * @param in The string to use to query
      * @param sender The {@link DecreeSender} to use to search
-     * @return A {@link Decreed} or null
-     */
-    public Decreed matchOne(String in, DecreeSender sender){
-        if (in.trim().isEmpty()){
-            return null;
-        }
-
-        for (DecreeCategory subCat : getSubCats()) {
-            if (subCat.doesMatchAllowed(sender, in)){
-                return subCat;
-            }
-        }
-
-        for (DecreeCommand command : getCommands()) {
-            if (command.doesMatchAllowed(sender, in)){
-                return command;
-            }
-        }
-
-        for (DecreeCategory subCat : getSubCats()) {
-            if (subCat.doesDeepMatchAllowed(sender, in)){
-                return subCat;
-            }
-        }
-
-        for (DecreeCommand command : getCommands()) {
-            if (command.doesDeepMatchAllowed(sender, in)){
-                return command;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Match a subcategory or command of this category
-     * @param in The string to use to query
-     * @param sender The {@link DecreeSender} to use to search
      * @return A list of {@link Decreed} or null
      */
     public KList<Decreed> matchAll(String in, DecreeSender sender) {
@@ -163,10 +125,11 @@ public class DecreeCategory implements Decreed {
      */
     public KList<Decreed> matchAll(String in, DecreeSender sender, boolean deepSearch){
 
-        String com = deepSearch ? "Deep comparing " : "Comparing ";
-        debug(com + C.YELLOW + in + C.GREEN + " with Categories " + C.YELLOW + (getSubCats().isEmpty() ? "NONE" : getSubCats().convert(c -> c.getNames().toString(", ")).toString(", ")), C.GREEN);
-        debug(com + C.YELLOW + in + C.GREEN + " with Commands " + C.YELLOW + (getCommands().isEmpty() ? "NONE": getCommands().convert(c -> c.getNames().toString(", ")).toString(", ")), C.GREEN);
-
+        if (system().isDebugMatching()) {
+            String com = deepSearch ? "Deep comparing " : "Comparing ";
+            debug(com + C.YELLOW + in + C.GREEN + " with Categories " + C.YELLOW + (getSubCats().isEmpty() ? "NONE" : getSubCats().convert(c -> c.getNames().toString(", ")).toString(", ")), C.GREEN);
+            debug(com + C.YELLOW + in + C.GREEN + " with Commands " + C.YELLOW + (getCommands().isEmpty() ? "NONE" : getCommands().convert(c -> c.getNames().toString(", ")).toString(", ")), C.GREEN);
+        }
 
         KList<Decreed> matches = new KList<>();
 
