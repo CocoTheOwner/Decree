@@ -328,7 +328,7 @@ public class DecreeCommand implements Decreed {
         args.removeIf(Objects::isNull);
         args.removeIf(String::isEmpty);
 
-        ConcurrentHashMap<DecreeParameter, Object> params = computeAbsentParameters(computeParameters(args, sender), sender);
+        ConcurrentHashMap<DecreeParameter, Object> params = computeParameters(args, sender);
 
         if (params == null) {
             debug("Parameter parsing failed for " + C.YELLOW + getName(), C.RED);
@@ -382,62 +382,6 @@ public class DecreeCommand implements Decreed {
     }
 
     /**
-     * Fill out absent parameters (all parameters will be assigned a value)
-     * @param params The existing parameters (specified by the player)
-     * @param sender The command sender
-     * @return A {@link ConcurrentHashMap} with parameter-to-object mappings for each parameter
-     */
-    @Nullable
-    private ConcurrentHashMap<DecreeParameter, Object> computeAbsentParameters(ConcurrentHashMap<DecreeParameter, Object> params, DecreeSender sender) {
-        boolean invalid = false;
-        for (DecreeParameter parameter : getParameters()) {
-            if (params.containsValue(parameter)) {
-                continue;
-            }
-
-            if (parameter.hasDefault()) {
-                try {
-                    params.put(parameter, parameter.getDefaultValue());
-                } catch (DecreeParsingException e) {
-                    debug("Default value " + C.YELLOW + parameter.getDefaultRaw() + C.RED + " could not be parsed to " + parameter.getType().getSimpleName(), C.RED);
-                    debug("Reason: " + C.YELLOW + e.getMessage(), C.RED);
-                    if (getSystem().isNullOnFailure()) {
-                        params.put(parameter, nullParam);
-                    } else {
-                        invalid = true;
-                    }
-                } catch (DecreeWhichException e) {
-                    debug("Default value " + C.YELLOW + parameter.getDefaultRaw() + C.RED + " returned multiple options. Adding: " + e.getOptions().get(0), C.RED);
-                    if (getSystem().isPickFirstOnMultiple() || sender.isPlayer()) {
-                        params.put(parameter, e.getOptions().get(0));
-                    } else {
-                        invalid = true;
-                        // TODO: Futures
-                    }
-                }
-                continue;
-            }
-
-            if (parameter.isContextual() && sender.isPlayer()) {
-                Object contextValue = DecreeSystem.getContextHandlers().get(parameter.getType()).handle(sender);
-                debug("Context value for " + C.YELLOW + parameter.getName() + C.GREEN + " set to: " + contextValue.toString(), C.GREEN);
-                params.put(parameter, contextValue);
-                continue;
-            }
-
-            debug("Required parameter " + C.YELLOW + parameter.getName() + C.RED + " not provided and not contextual", C.RED);
-            invalid = true;
-        }
-
-        if (invalid) {
-            debug("Failed to handle command.", C.RED);
-            return null;
-        }
-
-        return params;
-    }
-
-    /**
      * Compute parameter objects from string argument inputs
      * @param args The arguments (parameters) to parse into this command
      * @param sender The sender of the command
@@ -457,11 +401,11 @@ public class DecreeCommand implements Decreed {
         ConcurrentHashMap<DecreeParameter, Object> parameters = new ConcurrentHashMap<>();
         KList<DecreeParameter> options = getParameters();
         KList<String> keylessArgs = new KList<>();
-        KList<String> remainingArgs = new KList<>();
+        KList<String> keyedArgs = new KList<>();
         KList<String> nullArgs = new KList<>();
-        KList<String> skipped = new KList<>();
+        KList<String> badArgs = new KList<>();
 
-        // Keyed arguments (key=value)
+        // Split args into correct corresponding handlers
         for (String arg : args) {
 
             // These are handled later, after other (keyed) options were removed
@@ -472,7 +416,7 @@ public class DecreeCommand implements Decreed {
 
             if (arg.split("=").length > 2) {
                 debug("Parameter has multiple '=' signs (full arg: " + C.YELLOW + arg + C.RED + ")", C.RED);
-                skipped.add(arg);
+                badArgs.add(arg);
                 continue;
             }
 
@@ -487,28 +431,28 @@ public class DecreeCommand implements Decreed {
 
             if (key.isEmpty()) {
                 debug("Parameter key has empty value (full arg: " + C.YELLOW + arg + C.RED + ")", C.RED);
-                skipped.add(arg);
+                badArgs.add(arg);
                 continue;
             }
 
             if (value.isEmpty()) {
                 debug("Parameter key: " + C.YELLOW + key + C.RED + " has empty value (full arg: " + C.YELLOW + arg + C.RED + ")", C.RED);
-                skipped.add(arg);
+                badArgs.add(arg);
                 continue;
             }
 
-            remainingArgs.add(arg);
+            keyedArgs.add(arg);
         }
 
         // Quick equals
-        looping: for (String arg : remainingArgs.copy()) {
+        looping: for (String arg : keyedArgs.copy()) {
             String key = arg.split("\\Q=\\E")[0];
             String value = arg.split("\\Q=\\E")[1];
             for (DecreeParameter option : options) {
                 if (option.getNames().contains(key)) {
                     if (parseParamInto(parameters, option, value)) {
                         options.remove(option);
-                        remainingArgs.remove(arg);
+                        keyedArgs.remove(arg);
                     }
                     continue looping;
                 }
@@ -516,7 +460,7 @@ public class DecreeCommand implements Decreed {
         }
 
         // Ignored case
-        looping: for (String arg : remainingArgs.copy()) {
+        looping: for (String arg : keyedArgs.copy()) {
             String key = arg.split("\\Q=\\E")[0];
             String value = arg.split("\\Q=\\E")[1];
             for (DecreeParameter option : options) {
@@ -524,7 +468,7 @@ public class DecreeCommand implements Decreed {
                     if (name.equalsIgnoreCase(key)) {
                         if (parseParamInto(parameters, option, value)) {
                             options.remove(option);
-                            remainingArgs.remove(arg);
+                            keyedArgs.remove(arg);
                         }
                         continue looping;
                     }
@@ -533,7 +477,7 @@ public class DecreeCommand implements Decreed {
         }
 
         // Name contains key (key substring of name)
-        looping: for (String arg : remainingArgs.copy()) {
+        looping: for (String arg : keyedArgs.copy()) {
             String key = arg.split("\\Q=\\E")[0];
             String value = arg.split("\\Q=\\E")[1];
             for (DecreeParameter option : options) {
@@ -541,7 +485,7 @@ public class DecreeCommand implements Decreed {
                     if (name.contains(key)) {
                         if (parseParamInto(parameters, option, value)) {
                             options.remove(option);
-                            remainingArgs.remove(arg);
+                            keyedArgs.remove(arg);
                         }
                         continue looping;
                     }
@@ -550,7 +494,7 @@ public class DecreeCommand implements Decreed {
         }
 
         // Key contains name (name substring of key)
-        looping: for (String arg : remainingArgs.copy()) {
+        looping: for (String arg : keyedArgs.copy()) {
             String key = arg.split("\\Q=\\E")[0];
             String value = arg.split("\\Q=\\E")[1];
             for (DecreeParameter option : options) {
@@ -558,7 +502,7 @@ public class DecreeCommand implements Decreed {
                     if (key.contains(name)) {
                         if (parseParamInto(parameters, option, value)) {
                             options.remove(option);
-                            remainingArgs.remove(arg);
+                            keyedArgs.remove(arg);
                         }
                         continue looping;
                     }
@@ -620,20 +564,6 @@ public class DecreeCommand implements Decreed {
             }
         }
 
-        // Add leftover keyed & null arguments to leftovers
-        skipped.addAll(remainingArgs);
-        skipped.addAll(nullArgs.convert(na -> na + "=null"));
-
-        // Keyless arguments debug
-        if (keylessArgs.isNotEmpty()) {
-            if (options.isEmpty()) {
-                debug("Leftover arguments " + C.YELLOW + keylessArgs.toString(", ") + C.RED + " found but no remaining options.", C.RED);
-                skipped.addAll(keylessArgs);
-            } else {
-                debug("Leftover arguments: " + C.YELLOW + keylessArgs.toString(", ") + C.GREEN + " / Leftover options: " + C.YELLOW + options.convert(DecreeParameter::getName).toString(", "), C.GREEN);
-            }
-        }
-
         // Keyless arguments
         looping: for (DecreeParameter option : options.copy()) {
             for (String keylessArg : keylessArgs.copy()) {
@@ -664,20 +594,105 @@ public class DecreeCommand implements Decreed {
             }
         }
 
-        // Debug
-        if (skipped.isNotEmpty()) {
-            String skippedMsg = "Skipped arguments: " + C.YELLOW + skipped.toString(", ") + C.GREEN + " ";
-            if (remainingArgs.size() == 1) {
-                skippedMsg += "is";
-            } else {
-                skippedMsg += "are";
+        for (DecreeParameter parameter : options.copy()) {
+            if (parameter.hasDefault()) {
+                try {
+                    parameters.put(parameter, parameter.getDefaultValue());
+                    options.remove(parameter);
+                } catch (DecreeParsingException e) {
+                    if (getSystem().isNullOnFailure()) {
+                        parameters.put(parameter, nullParam);
+                        options.remove(parameter);
+                    } else {
+                        debug("Default value " + C.YELLOW + parameter.getDefaultRaw() + C.RED + " could not be parsed to " + parameter.getType().getSimpleName(), C.RED);
+                        debug("Reason: " + C.YELLOW + e.getMessage(), C.RED);
+                    }
+                } catch (DecreeWhichException e) {
+                    debug("Default value " + C.YELLOW + parameter.getDefaultRaw() + C.RED + " returned multiple options", C.RED);
+                    if (getSystem().isPickFirstOnMultiple() || !sender.isPlayer()) {
+                        debug("Adding: " + C.YELLOW + e.getOptions().get(0), C.GREEN);
+                        parameters.put(parameter, e.getOptions().get(0));
+                        options.remove(parameter);
+                    } else {
+                        debug("Adding: " + C.YELLOW + e.getOptions().get(0), C.GREEN);
+                        parameters.put(parameter, e.getOptions().get(0));
+                        options.remove(parameter);
+                        debug("Player should now be able to pick an option from the options, instead of the above", C.RED);
+                    }
+                }
+                continue;
             }
-            skippedMsg += " ignored";
-            debug(skippedMsg, C.GREEN);
-            sender.sendMessage(C.GREEN + skippedMsg);
+
+            if (parameter.isContextual() && sender.isPlayer()) {
+                Object contextValue = DecreeSystem.getContextHandlers().get(parameter.getType()).handle(sender);
+                debug("Context value for " + C.YELLOW + parameter.getName() + C.GREEN + " set to: " + contextValue.toString(), C.GREEN);
+                parameters.put(parameter, contextValue);
+                options.remove(parameter);
+                continue;
+            }
+
+            debug("Required parameter " + C.YELLOW + parameter.getName() + C.RED + " not provided (nor derivable)", C.RED);
         }
 
-        return parameters;
+        // Add leftover keyed & null arguments to leftovers
+        nullArgs = nullArgs.convert(na -> na + "=null");
+
+        // Debug
+        if (system().isAllowNullInput()) {
+            debug("Unmatched null argument" + (nullArgs.size() == 1 ? "" : "s") + ": " + C.YELLOW + (nullArgs.isNotEmpty() ? nullArgs.toString(", ") : "NONE"), nullArgs.isEmpty() ? C.GREEN : C.RED);
+        }
+        debug("Unmatched keyless argument" + (keylessArgs.size() == 1 ? "":"s") + ": " + C.YELLOW + (keylessArgs.isNotEmpty() ? keylessArgs.toString(", ") : "NONE"), keylessArgs.isEmpty() ? C.GREEN : C.RED);
+        debug("Unmatched keyed argument" + (keyedArgs.size() == 1 ? "":"s") + ": " + C.YELLOW + (keyedArgs.isNotEmpty() ? keyedArgs.toString(", ") : "NONE"), keyedArgs.isEmpty() ? C.GREEN : C.RED);
+        debug("Bad parameter" + (badArgs.size() == 1 ? "":"s") + ": " + C.YELLOW + (badArgs.isNotEmpty() ? badArgs.toString(", ") : "NONE"), badArgs.isEmpty() ? C.GREEN : C.RED);
+        debug("Unfulfilled parameter" + (options.size() == 1 ? "":"s") + ": " + C.YELLOW + (options.isNotEmpty() ? options.convert(DecreeParameter::getName).toString(", ") : "NONE"), options.isEmpty() ? C.GREEN : C.RED);
+
+        StringBuilder mappings = new StringBuilder("Parameter mapping:");
+        parameters.forEach((param, object) -> mappings
+                .append("\n")
+                .append(C.GREEN)
+                .append("\u0009 - ")
+                .append(C.YELLOW)
+                .append(param.getName())
+                .append(C.GREEN)
+                .append(" → ")
+                .append(C.YELLOW)
+                .append(object.toString()));
+        options.forEach(param -> mappings
+                .append("\n")
+                .append(C.GREEN)
+                .append("\u0009 - ")
+                .append(C.YELLOW)
+                .append(param.getName())
+                .append(C.GREEN)
+                .append(" → ")
+                .append(C.RED)
+                .append("NONE"));
+
+        debug(mappings.toString(), C.GREEN);
+
+        if (validateParameters(parameters, sender)) {
+            return parameters;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Validate parameters
+     * @param parameters The parameters to validate
+     * @param sender The sender of the command
+     * @return True if valid, false if not
+     */
+    private boolean validateParameters(ConcurrentHashMap<DecreeParameter, Object> parameters, DecreeSender sender) {
+        boolean valid = true;
+        for (DecreeParameter parameter : getParameters()) {
+            if (!parameters.containsKey(parameter)) {
+                debug("Parameter: " + C.YELLOW + parameter.getName() + C.RED + " not in mapping.", C.RED);
+                sender.sendMessage(C.RED + "Parameter: " + C.YELLOW + parameter.getName() + C.RED + " required but not specified. Please add.");
+                valid = false;
+            }
+        }
+        return valid;
     }
 
     /**
