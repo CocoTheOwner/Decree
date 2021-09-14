@@ -16,7 +16,6 @@ public class MainCommandClass implements DecreeCommandExecutor {
             description = "Description goes here",
             aliases = {"alias1", "alias2"},
             sync = true,
-            origin = DecreeOrigin.PLAYER,
             permission = "decree.hello",
             name = "command123"
     )

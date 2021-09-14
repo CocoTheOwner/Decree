@@ -111,7 +111,9 @@ public interface Decreed {
                 return true;
             }
         }
-        parent().debug( compare + C.RED + "NO MATCH", C.GREEN);
+        if (system().isDebugMatching()) {
+            parent().debug(compare + C.RED + "NO MATCH", C.GREEN);
+        }
 
         return false;
     }
@@ -137,7 +139,9 @@ public interface Decreed {
                 return true;
             }
         }
-        parent().debug( compare + C.RED + "NO MATCH", C.GREEN);
+        if (system().isDebugMatching()) {
+            parent().debug(compare + C.RED + "NO MATCH", C.GREEN);
+        }
 
         return false;
     }
