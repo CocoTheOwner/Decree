@@ -269,30 +269,36 @@ public class DecreeSystem implements Listener {
      */
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull String[] args, @NotNull Command command) {
 
+        if (!args[args.length-1].isEmpty()){
+            sender.sendMessage("Not last emtpy");
+            return new KList<>();
+        }
+
         DecreeSender decreeSender = new DecreeSender(sender, getInstance(), this);
+        KList<String> arguments = new KList<>(args).qremoveIf(String::isEmpty);
         KList<DecreeCategory> roots = getRoots(command.getName());
-        KList<String> v = new KList<>();
+        KList<String> completions = new KList<>();
 
         while (roots.isNotEmpty()) {
             try {
-                v.addAll(roots.pop().tab(new KList<>(args), decreeSender));
+                completions.addAll(roots.pop().tab(arguments, decreeSender));
             } catch (Throwable e) {
                 decreeSender.sendMessage(C.RED + "Exception: " + e.getClass().getSimpleName() + " thrown while executing tab completion. Check console for details.");
                 e.printStackTrace();
             }
         }
 
-        v.removeDuplicates();
+        completions.removeDuplicates();
 
         if (decreeSender.isPlayer() && isCommandSound()) {
-            if (v.isNotEmpty()) {
+            if (completions.isNotEmpty()) {
                 decreeSender.playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
             } else {
                 decreeSender.playSound(Sound.BLOCK_AMETHYST_BLOCK_BREAK, 0.25f, Maths.frand(0.125f, 1.95f));
             }
         }
 
-        return v;
+        return completions;
     }
 
     @SuppressWarnings({"deprecation", "SameReturnValue"})
@@ -303,6 +309,7 @@ public class DecreeSystem implements Listener {
             DecreeContext.touch(decreeSender);
             KList<String> noEmptyArgs = new KList<>(args).qremoveIf(String::isEmpty);
             KList<DecreeCategory> roots = getRoots(command.getName());
+
             if (roots.isEmpty()) {
                 debug(C.RED + "Found no roots for: " + C.YELLOW + command.getName() + C.RED + " | Mapping: ");
                 Iterator<String> a = getRoots().keys().asIterator();
