@@ -620,18 +620,12 @@ public class DecreeCommand implements Decreed {
                         debug("Player should now be able to pick an option from the options, instead of the above", C.RED);
                     }
                 }
-                continue;
-            }
-
-            if (parameter.isContextual() && sender.isPlayer()) {
+            } else if (parameter.isContextual() && sender.isPlayer()) {
                 Object contextValue = DecreeSystem.getContextHandlers().get(parameter.getType()).handle(sender);
                 debug("Context value for " + C.YELLOW + parameter.getName() + C.GREEN + " set to: " + contextValue.toString(), C.GREEN);
                 parameters.put(parameter, contextValue);
                 options.remove(parameter);
-                continue;
             }
-
-            debug("Required parameter " + C.YELLOW + parameter.getName() + C.RED + " not provided (nor derivable)", C.RED);
         }
 
         // Add leftover keyed & null arguments to leftovers
