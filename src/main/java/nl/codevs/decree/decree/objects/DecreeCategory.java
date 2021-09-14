@@ -165,17 +165,6 @@ public class DecreeCategory implements Decreed {
 
         KList<Decreed> matches = new KList<>();
 
-        for (DecreeCategory subCat : getSubCats()) {
-            if (subCat.doesMatchAllowed(sender, in)){
-                matches.add(subCat);
-            }
-        }
-
-        for (DecreeCommand command : getCommands()) {
-            if (command.doesMatchAllowed(sender, in)){
-                matches.add(command);
-            }
-        }
 
         if (deepSearch) {
             for (DecreeCategory subCat : getSubCats()) {
@@ -186,6 +175,18 @@ public class DecreeCategory implements Decreed {
 
             for (DecreeCommand command : getCommands()) {
                 if (command.doesDeepMatchAllowed(sender, in)) {
+                    matches.add(command);
+                }
+            }
+        } else {
+            for (DecreeCategory subCat : getSubCats()) {
+                if (!matches.contains(subCat) && subCat.doesMatchAllowed(sender, in)) {
+                    matches.add(subCat);
+                }
+            }
+
+            for (DecreeCommand command : getCommands()) {
+                if (!matches.contains(command) && command.doesMatchAllowed(sender, in)) {
                     matches.add(command);
                 }
             }

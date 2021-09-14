@@ -252,6 +252,15 @@ public class KList<T> extends ArrayList<T> implements List<T> {
         return t;
     }
 
+    public boolean addIfMissing(T t) {
+        if (!contains(t)) {
+            add(t);
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Tostring with a seperator for each item in the list
      *
