@@ -9,7 +9,7 @@ public class SubCommandClass implements DecreeCommandExecutor {
 
     @Decree(
             description = "Kill a player",
-            origin = DecreeOrigin.PLAYER,
+            origin = DecreeOrigin.CONSOLE,
             aliases = "ded",
             permission = "kill",
             sync = true

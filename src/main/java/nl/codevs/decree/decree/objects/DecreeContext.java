@@ -1,7 +1,6 @@
 package nl.codevs.decree.decree.objects;
 
 import nl.codevs.decree.decree.util.ChronoLatch;
-import nl.codevs.decree.decree.util.KList;
 
 import java.util.Enumeration;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,7 +18,7 @@ public class DecreeContext {
     }
 
     /**
-     * Add the {@link DecreeSender} to the context map
+     * Add the {@link DecreeSender} to the context map & removes dead threads
      * @param sender The sender
      */
     public static void touch(DecreeSender sender) {
@@ -27,27 +26,15 @@ public class DecreeContext {
             context.put(Thread.currentThread(), sender);
 
             if (cl.flip()) {
-                for (Thread i : contextKeys()) {
-                    if (!i.isAlive()) {
-                        context.remove(i);
+                Enumeration<Thread> contextKeys = DecreeContext.context.keys();
+
+                while (contextKeys.hasMoreElements()) {
+                    Thread thread = contextKeys.nextElement();
+                    if (!thread.isAlive()) {
+                        context.remove(thread);
                     }
                 }
             }
         }
-    }
-
-    /**
-     * Get all keys in the context map
-     * @return All context keys (threads)
-     */
-    private static KList<Thread> contextKeys() {
-        KList<Thread> k = new KList<>();
-        Enumeration<Thread> kk = DecreeContext.context.keys();
-
-        while (kk.hasMoreElements()) {
-            k.add(kk.nextElement());
-        }
-
-        return k;
     }
 }

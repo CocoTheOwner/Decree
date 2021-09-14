@@ -3,6 +3,8 @@ package nl.codevs.decree.decree;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import nl.codevs.decree.decree.context.DecreeContextHandler;
+import nl.codevs.decree.decree.context.WorldContextHandler;
 import nl.codevs.decree.decree.exceptions.DecreeException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.handlers.*;
@@ -12,6 +14,7 @@ import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.EventHandler;
@@ -29,7 +32,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @Setter
 public class DecreeSystem implements Listener {
     private final ConcurrentHashMap<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
-    private static final KList<DecreeParameterHandler<?>> handlers = new KList<>(
+
+    /**
+     * Parameter handlers list. You can add/remove handlers to/from this list.
+     * Parameters must implement {@link DecreeParameterHandler}.
+     * Parameter handlers handle string-to-type conversion (and back).
+     */
+    @Getter
+    @Setter
+    private static KList<DecreeParameterHandler<?>> parameterHandlers = new KList<>(
             new BlockVectorHandler(),
             new BooleanHandler(),
             new ByteHandler(),
@@ -45,6 +56,19 @@ public class DecreeSystem implements Listener {
     );
 
     /**
+     * Context handlers mapping. You can add/remove handlers to/from this map.
+     * Parameters must implement {@link DecreeContextHandler}.
+     * Context handlers extract data that can be auto-filled in commands from only the sender.
+     */
+    @Getter
+    @Setter
+    private static ConcurrentHashMap<Class<?>, DecreeContextHandler<?>> contextHandlers = new ConcurrentHashMap<>() {
+        {
+            put(World.class, new WorldContextHandler());
+        }
+    };
+
+    /**
      * The root of the command tree as an instantiated object
      */
     private final ConcurrentHashMap<String, KList<DecreeCategory>> roots;
@@ -54,11 +78,40 @@ public class DecreeSystem implements Listener {
      */
     private final Plugin instance;
 
-
     /**
      * Whether to use command sounds or not
      */
     private boolean commandSound = true;
+
+    /**
+     * When an argument parser fails, should the system parse null as the parameter value?
+     * Note: While preventing issues when finding commands, this may totally break command parsing. Best to leave off.
+     */
+    private boolean nullOnFailure = false;
+
+    /**
+     * When entering arguments, should people be allowed to enter "null"?
+     */
+    private boolean allowNullInput = false;
+
+    /**
+     * When an argument parser returns multiple options, should the system pick the first element and continue?
+     * Note: When the command sender is a console, this is done regardless.
+     */
+    private boolean pickFirstOnMultiple = true;
+
+    /**
+     * When an argument match fails because of failed permissions/origin, should this be debugged?
+     * Note: This is not always accurate, there are some false negatives (debugs when actually successful)
+     */
+    private boolean debugMismatchReason = true;
+
+    /**
+     * When a tab completion is requested, should tab completes be matched deeply?
+     * Note: This results in more but less accurate auto-completions.
+     * The best auto-completions will be first in the list.
+     */
+    private boolean tabMatchDeep = true;
 
     /**
      * Command prefix
@@ -274,7 +327,7 @@ public class DecreeSystem implements Listener {
      * @return The corresponding {@link DecreeParameterHandler}, or null
      */
     public static DecreeParameterHandler<?> getHandler(Class<?> type) throws DecreeException {
-        for (DecreeParameterHandler<?> i : handlers) {
+        for (DecreeParameterHandler<?> i : DecreeSystem.getParameterHandlers()) {
             if (i.supports(type)) {
                 return i;
             }

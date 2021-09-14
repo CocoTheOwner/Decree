@@ -164,8 +164,8 @@ public class DecreeCategory implements Decreed {
     public KList<Decreed> matchAll(String in, DecreeSender sender, boolean deepSearch){
 
         String com = deepSearch ? "Deep comparing " : "Comparing ";
-        debug(com + C.YELLOW + in + C.GREEN + " with Categories " + C.YELLOW + getSubCats().convert(c -> c.getNames().toString(", ")).toString(", "), C.GREEN);
-        debug(com + C.YELLOW + in + C.GREEN + " with Commands " + C.YELLOW + getCommands().convert(c -> c.getNames().toString(", ")).toString(", "), C.GREEN);
+        debug(com + C.YELLOW + in + C.GREEN + " with Categories " + C.YELLOW + (getSubCats().isEmpty() ? "NONE" : getSubCats().convert(c -> c.getNames().toString(", ")).toString(", ")), C.GREEN);
+        debug(com + C.YELLOW + in + C.GREEN + " with Commands " + C.YELLOW + (getCommands().isEmpty() ? "NONE": getCommands().convert(c -> c.getNames().toString(", ")).toString(", ")), C.GREEN);
 
 
         KList<Decreed> matches = new KList<>();
@@ -318,9 +318,9 @@ public class DecreeCategory implements Decreed {
             // This is not the final node, so follow all possible branches downwards
             String head = args.pop();
 
-            KList<Decreed> matches = matchAll(head, sender, false);
+            KList<Decreed> matches = matchAll(head, sender, system().isTabMatchDeep());
             if (matches.isEmpty()) {
-                matches = matchAll(head, sender, true);
+                matches = matchAll(head, sender);
             }
             matches.removeDuplicates();
 

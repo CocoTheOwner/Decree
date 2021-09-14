@@ -2,7 +2,6 @@ package nl.codevs.decree.decree.objects;
 
 import lombok.Data;
 import nl.codevs.decree.decree.DecreeSystem;
-import nl.codevs.decree.decree.context.DecreeContextHandler;
 import nl.codevs.decree.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.decree.util.C;
@@ -11,6 +10,7 @@ import nl.codevs.decree.decree.util.KList;
 import nl.codevs.decree.decree.util.Maths;
 import org.bukkit.Bukkit;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Data
 public class DecreeCommand implements Decreed {
+    private static final int nullParam = Integer.MAX_VALUE - 69420;
     private static final String newline = "<reset>\n";
     private final KList<DecreeParameter> parameters;
     private final Method method;
@@ -318,65 +319,36 @@ public class DecreeCommand implements Decreed {
     // TODO: Write invocation
     @Override
     public boolean invoke(KList<String> args, DecreeSender sender) {
-        debug("Parameters: " + C.YELLOW + args.toString(", "), C.GREEN);
+        if (args.isNotEmpty()) {
+            debug("Entered arguments: " + C.YELLOW + args.toString(", "), C.GREEN);
+        } else {
+            debug("No entered arguments to parse", C.GREEN);
+        }
 
         args.removeIf(Objects::isNull);
         args.removeIf(String::isEmpty);
 
-        ConcurrentHashMap<DecreeParameter, Object> params = computeParameters(args, sender);
+        ConcurrentHashMap<DecreeParameter, Object> params = computeAbsentParameters(computeParameters(args, sender), sender);
 
-        boolean invalid = false;
-        for (DecreeParameter parameter : getParameters()) {
-            if (params.containsValue(parameter)) {
-                continue;
-            }
-
-            if (parameter.hasDefault()) {
-                Object value = null;
-                try {
-                    value = parameter.getDefaultValue();
-                } catch (DecreeParsingException e) {
-                    debug("Default value " + C.YELLOW + parameter.getDefaultRaw() + C.RED + " could not be parsed to " + parameter.getType().getSimpleName(), C.RED);
-                    debug("Reason: " + C.YELLOW + e.getMessage(), C.RED);
-                } catch (DecreeWhichException e) {
-                    debug("Default value " + C.YELLOW + parameter.getDefaultRaw() + C.RED + " returned multiple options. Adding: " + e.getOptions().get(0), C.RED);
-                    value = e.getOptions().get(0);
-                }
-
-                if (value != null) {
-                    params.put(parameter, value);
-                    continue;
-                }
-            }
-
-            if (parameter.isContextual() && sender.isPlayer()) {
-                Object contextValue = DecreeContextHandler.contextHandlers.get(parameter.getType()).handle(sender);
-                debug("Context value for " + C.YELLOW + parameter.getName() + C.GREEN + " set to: " + contextValue.toString(), C.GREEN);
-                params.put(parameter, contextValue);
-                continue;
-            }
-
-            debug("Parameter " + C.YELLOW + parameter.getName() + C.RED + " not provided", C.RED);
-            invalid = true;
-        }
-
-        if (invalid) {
-            debug("Failed to handle command.", C.RED);
+        if (params == null) {
+            debug("Parameter parsing failed for " + C.YELLOW + getName(), C.RED);
             return false;
         }
 
         Object[] finalParams = new Object[getParameters().size()];
 
-
+        // Final checksum
         int x = 0;
         for (DecreeParameter parameter : getParameters()) {
             if (!params.containsKey(parameter)) {
                 debug("Failed to handle command, but did not notice one missing: " + C.YELLOW + parameter.getName() + C.RED + "!", C.RED);
                 debug("Params stored: " + params, C.RED);
+                debug("This is a big problem within the Decree system. Please contact the author(s).", C.RED);
                 return false;
             }
 
-            finalParams[x++] = params.get(parameter);
+            Object value = params.get(parameter);
+            finalParams[x++] = value.equals(nullParam) ? null : value;
         }
 
         Runnable rx = () -> {
@@ -389,7 +361,7 @@ public class DecreeCommand implements Decreed {
                     if (e.getCause().getMessage().endsWith("may only be triggered synchronously.")) {
                         debug("Sent asynchronously while it must be ran sync", C.RED);
                         e.printStackTrace();
-                        sender.sendMessage(C.RED + "The command you tried to run (" + getPath() + ") may only be run sync! Contact your admin!");
+                        sender.sendMessage(C.RED + "The command you tried to run (" + C.YELLOW + getPath() + C.RED + ") may only be run sync! Contact your admin!");
                         return;
                     }
                     throw e;
@@ -406,7 +378,63 @@ public class DecreeCommand implements Decreed {
             rx.run();
         }
 
-        return false;
+        return true;
+    }
+
+    /**
+     * Fill out absent parameters (all parameters will be assigned a value)
+     * @param params The existing parameters (specified by the player)
+     * @param sender The command sender
+     * @return A {@link ConcurrentHashMap} with parameter-to-object mappings for each parameter
+     */
+    @Nullable
+    private ConcurrentHashMap<DecreeParameter, Object> computeAbsentParameters(ConcurrentHashMap<DecreeParameter, Object> params, DecreeSender sender) {
+        boolean invalid = false;
+        for (DecreeParameter parameter : getParameters()) {
+            if (params.containsValue(parameter)) {
+                continue;
+            }
+
+            if (parameter.hasDefault()) {
+                try {
+                    params.put(parameter, parameter.getDefaultValue());
+                } catch (DecreeParsingException e) {
+                    debug("Default value " + C.YELLOW + parameter.getDefaultRaw() + C.RED + " could not be parsed to " + parameter.getType().getSimpleName(), C.RED);
+                    debug("Reason: " + C.YELLOW + e.getMessage(), C.RED);
+                    if (getSystem().isNullOnFailure()) {
+                        params.put(parameter, nullParam);
+                    } else {
+                        invalid = true;
+                    }
+                } catch (DecreeWhichException e) {
+                    debug("Default value " + C.YELLOW + parameter.getDefaultRaw() + C.RED + " returned multiple options. Adding: " + e.getOptions().get(0), C.RED);
+                    if (getSystem().isPickFirstOnMultiple() || sender.isPlayer()) {
+                        params.put(parameter, e.getOptions().get(0));
+                    } else {
+                        invalid = true;
+                        // TODO: Futures
+                    }
+                }
+                continue;
+            }
+
+            if (parameter.isContextual() && sender.isPlayer()) {
+                Object contextValue = DecreeSystem.getContextHandlers().get(parameter.getType()).handle(sender);
+                debug("Context value for " + C.YELLOW + parameter.getName() + C.GREEN + " set to: " + contextValue.toString(), C.GREEN);
+                params.put(parameter, contextValue);
+                continue;
+            }
+
+            debug("Required parameter " + C.YELLOW + parameter.getName() + C.RED + " not provided and not contextual", C.RED);
+            invalid = true;
+        }
+
+        if (invalid) {
+            debug("Failed to handle command.", C.RED);
+            return null;
+        }
+
+        return params;
     }
 
     /**
@@ -416,10 +444,21 @@ public class DecreeCommand implements Decreed {
      * @return A {@link ConcurrentHashMap} from the parameter to the instantiated object for that parameter
      */
     private ConcurrentHashMap<DecreeParameter, Object> computeParameters(KList<String> args, DecreeSender sender) {
+
+        /*
+         * Apologies for the obscene amount of loops.
+         * It is the only way this can be done functionally.
+         *
+         * Note that despite the great amount of loops the average runtime is still ~O(logn).
+         * This is because of the ever-decreasing number of arguments & options that are already matched.
+         * If all arguments are already matched in the first (quick equals) loop, the runtime is actually O(n)
+         */
+
         ConcurrentHashMap<DecreeParameter, Object> parameters = new ConcurrentHashMap<>();
         KList<DecreeParameter> options = getParameters();
         KList<String> keylessArgs = new KList<>();
         KList<String> remainingArgs = new KList<>();
+        KList<String> nullArgs = new KList<>();
         KList<String> skipped = new KList<>();
 
         // Keyed arguments (key=value)
@@ -439,6 +478,12 @@ public class DecreeCommand implements Decreed {
 
             String key = arg.split("\\Q=\\E")[0];
             String value = arg.split("\\Q=\\E")[1];
+
+            if (system().isAllowNullInput() && value.equalsIgnoreCase("null")) {
+                debug("Null parameter added: " + C.YELLOW + arg, C.GREEN);
+                nullArgs.add(key);
+                continue;
+            }
 
             if (key.isEmpty()) {
                 debug("Parameter key has empty value (full arg: " + C.YELLOW + arg + C.RED + ")", C.RED);
@@ -521,43 +566,75 @@ public class DecreeCommand implements Decreed {
             }
         }
 
-        debug("Conducted default processing on arguments", C.GREEN);
-
-        // Keyless arguments debug
-        if (keylessArgs.isNotEmpty()) {
-            debug("Leftover arguments: " + C.YELLOW + keylessArgs.toString(", ") + C.RED + " / Leftover options: " + C.YELLOW + options.convert(DecreeParameter::getName).toString(", "), C.RED);
-            if (options.isEmpty()) {
-                debug("Leftover arguments " + C.YELLOW + keylessArgs.toString(", ") + C.RED + " found but no remaining options.", C.RED);
-                skipped.addAll(keylessArgs);
-            }
-        }
-
-        // Keyless arguments (not accepting DecreeWhichExceptions)
-        looping: for (DecreeParameter option : options.copy()) {
-            for (String keylessArg : keylessArgs.copy()) {
-
-                try {
-                    Object result = option.getHandler().parse(keylessArg);
-                    if (result == null) {
-                        throw new NullPointerException("Parsed value is null");
-                    }
+        // Quick equals null
+        looping: for (String key : nullArgs.copy()) {
+            for (DecreeParameter option : options) {
+                if (option.getNames().contains(key)) {
+                    parameters.put(option, nullParam);
                     options.remove(option);
-                    keylessArgs.remove(keylessArg);
-                    parameters.put(option, result);
+                    nullArgs.remove(key);
                     continue looping;
-
-                } catch (DecreeParsingException | DecreeWhichException ignored) {
-                    // This argument could not be parsed here, hence is not mapped here
-
-                } catch (Throwable e) {
-                    // This exception is actually something that is broken
-                    debug("Parsing " + C.YELLOW + keylessArg + C.RED + " into " + C.YELLOW + option.getName() + C.RED + " failed because of: " + C.YELLOW + e.getMessage(), C.RED);
-                    e.printStackTrace();
                 }
             }
         }
 
-        // Keyless arguments (now does accept DecreeWhichExceptions)
+        // Ignored case null
+        looping: for (String key : nullArgs.copy()) {
+            for (DecreeParameter option : options) {
+                for (String name : option.getNames()) {
+                    if (name.equalsIgnoreCase(key)) {
+                        parameters.put(option, nullParam);
+                        options.remove(option);
+                        nullArgs.remove(key);
+                        continue looping;
+                    }
+                }
+            }
+        }
+
+        // Name contains key (key substring of name), null
+        looping: for (String key : nullArgs.copy()) {
+            for (DecreeParameter option : options) {
+                for (String name : option.getNames()) {
+                    if (name.contains(key)) {
+                        parameters.put(option, nullParam);
+                        options.remove(option);
+                        nullArgs.remove(key);
+                        continue looping;
+                    }
+                }
+            }
+        }
+
+        // Key contains name (name substring of key), null
+        looping: for (String key : nullArgs.copy()) {
+            for (DecreeParameter option : options) {
+                for (String name : option.getNames()) {
+                    if (key.contains(name)) {
+                        parameters.put(option, nullParam);
+                        options.remove(option);
+                        nullArgs.remove(key);
+                        continue looping;
+                    }
+                }
+            }
+        }
+
+        // Add leftover keyed & null arguments to leftovers
+        skipped.addAll(remainingArgs);
+        skipped.addAll(nullArgs.convert(na -> na + "=null"));
+
+        // Keyless arguments debug
+        if (keylessArgs.isNotEmpty()) {
+            if (options.isEmpty()) {
+                debug("Leftover arguments " + C.YELLOW + keylessArgs.toString(", ") + C.RED + " found but no remaining options.", C.RED);
+                skipped.addAll(keylessArgs);
+            } else {
+                debug("Leftover arguments: " + C.YELLOW + keylessArgs.toString(", ") + C.GREEN + " / Leftover options: " + C.YELLOW + options.convert(DecreeParameter::getName).toString(", "), C.GREEN);
+            }
+        }
+
+        // Keyless arguments
         looping: for (DecreeParameter option : options.copy()) {
             for (String keylessArg : keylessArgs.copy()) {
 
@@ -581,12 +658,23 @@ public class DecreeCommand implements Decreed {
                     // This exception is actually something that is broken
                     debug("Parsing " + C.YELLOW + keylessArg + C.RED + " into " + C.YELLOW + option.getName() + C.RED + " failed because of: " + C.YELLOW + e.getMessage(), C.RED);
                     e.printStackTrace();
+                    debug("If you see a handler in the stacktrace that we (" + C.DECREE + "Decree" + C.RED + ") wrote, please report this bug to us.", C.RED);
+                    debug("If you see a custom handler of your own, there is an issue with it.", C.RED);
                 }
             }
         }
 
+        // Debug
         if (skipped.isNotEmpty()) {
-            sender.sendMessage(C.RED + "Skipped arguments: " + skipped.toString(", "));
+            String skippedMsg = "Skipped arguments: " + C.YELLOW + skipped.toString(", ") + C.GREEN + " ";
+            if (remainingArgs.size() == 1) {
+                skippedMsg += "is";
+            } else {
+                skippedMsg += "are";
+            }
+            skippedMsg += " ignored";
+            debug(skippedMsg, C.GREEN);
+            sender.sendMessage(C.GREEN + skippedMsg);
         }
 
         return parameters;
