@@ -107,7 +107,9 @@ public interface Decreed {
         String compare = "Shallow comparison: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
         for (String i : getNames()) {
             if (i.equalsIgnoreCase(in)) {
-                parent().debug(compare + "MATCHED", C.GREEN);
+                if (system().isDebugMatching()) {
+                    parent().debug(compare + "MATCHED", C.GREEN);
+                }
                 return true;
             }
         }
@@ -135,7 +137,9 @@ public interface Decreed {
         String compare = "Deep comparison: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
         for (String i : getNames()) {
             if (i.toLowerCase().contains(in.toLowerCase()) || in.toLowerCase().contains(i.toLowerCase())) {
-                parent().debug(compare + "MATCHED", C.GREEN);
+                if (system().isDebugMatching()) {
+                    parent().debug(compare + "MATCHED", C.GREEN);
+                }
                 return true;
             }
         }
