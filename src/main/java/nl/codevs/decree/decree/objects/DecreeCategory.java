@@ -166,32 +166,32 @@ public class DecreeCategory implements Decreed {
         KList<Decreed> matches = new KList<>();
 
         for (DecreeCategory subCat : getSubCats()) {
-            if (!matches.contains(subCat)  && subCat.doesMatchAllowed(sender, in)){
+            if (subCat.doesMatchAllowed(sender, in)){
                 matches.add(subCat);
             }
         }
 
         for (DecreeCommand command : getCommands()) {
-            if (!matches.contains(command) && command.doesMatchAllowed(sender, in)){
+            if (command.doesMatchAllowed(sender, in)){
                 matches.add(command);
             }
         }
 
         if (deepSearch) {
             for (DecreeCategory subCat : getSubCats()) {
-                if (!matches.contains(subCat) && subCat.doesDeepMatchAllowed(sender, in)) {
+                if (subCat.doesDeepMatchAllowed(sender, in)) {
                     matches.add(subCat);
                 }
             }
 
             for (DecreeCommand command : getCommands()) {
-                if (!matches.contains(command) && command.doesDeepMatchAllowed(sender, in)) {
+                if (command.doesDeepMatchAllowed(sender, in)) {
                     matches.add(command);
                 }
             }
         }
 
-        return matches;
+        return matches.removeDuplicates();
     }
 
     public KList<DecreeCommand> getCommands() {
@@ -294,6 +294,11 @@ public class DecreeCategory implements Decreed {
     }
 
     @Override
+    public DecreeSystem system() {
+        return getSystem();
+    }
+
+    @Override
     public KList<String> tab(KList<String> args, DecreeSender sender) {
         if (args.isEmpty()) {
             // This node is reached but there are no more (partial) arguments
@@ -326,30 +331,33 @@ public class DecreeCategory implements Decreed {
     public boolean invoke(KList<String> args, DecreeSender sender) {
         if (args.isNotEmpty()) {
 
-            system.debug("Category: \"" + getName() + "\" - Processed: \"" + getPath() + "\" - Remaining: [" + args.toString(", ") + "]");
+            debug("Remaining: [" + args.toString(", ") + "]");
 
             String head = args.pop();
             KList<Decreed> matches = matchAll(head, sender);
             for (Decreed match : matches) {
-                if (match.invoke(args, sender)){
+                if (match.invoke(args.copy(), sender)){
                     return true;
                 }
             }
-            system.debug(C.RED + "FAILED: \"" + getName() + "\"" + " from path \"" + getPath() + "\". Remaining: " + (args.isEmpty() ? "NONE" : "\"" + args.toString(", ") + "\""));
+            debug("FAILED. Remaining: " + C.DECREE + (args.isEmpty() ? "NONE" : args.toString(", ")), C.RED);
             if (matches.isNotEmpty()) {
                 if (matches.size() == 1) {
-                    system.debug(C.RED + "The option found matching with \"" + head + "\" is: " + matches.convert(Decreed::getName).toString(", ") + ". It did not return true on invocation.");
+                    debug("The option found matching with " + C.DECREE + head + C.RED + " is " + C.DECREE + matches.convert(Decreed::getName).toString(", ") + C.RED + ". It did not return true on invocation.", C.RED);
                 } else {
-                    system.debug(C.RED + "The options found matching with \"" + head + "\" are: " + matches.convert(Decreed::getName).toString(", ") + ". None returned true on invocation.");
+                    debug("The options found matching with " + C.DECREE + head + C.RED + " are: " + C.DECREE + matches.convert(Decreed::getName).toString(", ") + C.RED + ". None returned true on invocation.", C.RED);
                 }
             } else {
-                system.debug(C.RED + "No options found matching with \"" + head + "\".");
+                debug("No options found matching with " + C.DECREE + head + C.RED + ".", C.RED);
             }
-            sender.sendMessage(C.RED + "The " + C.DECREE + Form.capitalize(getName()) + C.RED + " Category failed to process any command related to " + C.DECREE + head + C.RED + ".\nIf you believe this is an error, contact an admin.");
+            sender.sendMessage(C.RED + "The " + C.DECREE + Form.capitalize(getName()) + C.RED + " Category failed to process any command related to " + C.DECREE + head + C.RED + ".");
+            if (parent() == null) {
+                sender.sendMessage(C.RED + "If you believe this is an error, contact an admin.");
+            }
             return false;
         }
 
-        system.debug("Category: \"" + getName() + "\" - Processed: \"" + getPath() + "\" - Remaining: [] - Action: Sending help");
+        debug("Remaining: " + C.DECREE + "[]" + C.GREEN + " | Action: " + C.DECREE + "sending help.", C.GREEN);
         sendHelpTo(sender);
         return true;
     }

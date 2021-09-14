@@ -233,7 +233,12 @@ public class DecreeSender implements CommandSender {
     }
 
     @Override
-    public void sendMessage(String message) {
+    public void sendMessage(@NotNull String message) {
+        if (!isPlayer() && message.contains("\n")) {
+            sendMessage(message.split("\n"));
+            return;
+        }
+
         if (message.contains("<NOMINI>")) {
             s.sendMessage(message.replaceAll("\\Q<NOMINI>\\E", ""));
             return;

@@ -48,7 +48,7 @@ public class WorldHandler implements DecreeParameterHandler<World> {
                 if (force) {
                     return options.getRandom();
                 }
-                throw new DecreeWhichException(World.class, in);
+                throw new DecreeWhichException(World.class, in, options);
             }
             return options.get(0);
         } catch (DecreeParsingException e) {
