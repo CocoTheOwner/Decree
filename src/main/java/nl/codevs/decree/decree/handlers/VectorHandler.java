@@ -31,6 +31,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
 
+import java.security.InvalidParameterException;
+
 public class VectorHandler implements DecreeParameterHandler<Vector> {
 
     private static final KList<String> randoms = new KList<>(
@@ -86,23 +88,23 @@ public class VectorHandler implements DecreeParameterHandler<Vector> {
                     return null;
                 }
                 return target.getLocation().toVector();
+
             } else if (in.trim().toLowerCase().startsWith("player:")) {
                 String v = in.trim().split("\\Q:\\E")[1];
-
 
                 KList<?> px = DecreeSystem.getHandler(Player.class).getPossibilities(v);
 
                 if (px != null && px.isNotEmpty()) {
                     return ((Player) px.get(0)).getLocation().toVector();
-                } else if (px == null || px.isEmpty()) {
+                } else {
                     throw new DecreeParsingException("Cannot find player: " + v);
                 }
+            } else {
+                throw new InvalidParameterException(in + " is invalid because it has no ',' - Vectors are written as (number,number)");
             }
         } catch (Throwable e) {
             throw new DecreeParsingException("Unable to get Vector for \"" + in + "\" because of an uncaught exception: " + e);
         }
-
-        return null;
     }
 
     @Override
