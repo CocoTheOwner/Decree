@@ -26,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @Getter
@@ -105,13 +104,13 @@ public class DecreeSystem implements Listener {
     /**
      * What to do with debug messages. Best not to touch and let Decree handle. To disable, set 'debug' to false.
      */
-    Consumer<String> runOnDebug = (message) -> new DecreeSender(Bukkit.getConsoleSender(), getInstance()).sendMessage(getPrefix().trim() + C.RESET + " " + message);
+    Consumer<String> onDebug = (message) -> new DecreeSender(Bukkit.getConsoleSender(), getInstance()).sendMessage(getPrefix().trim() + C.RESET + " " + message);
 
     /**
      * What to do with sound effects. Best not to touch and let Decree handle. To disable, set 'commandSounds' to false.
      * Consumer takes 'success' ({@link Boolean}), 'isTab' ({@link Boolean}), and 'sender' ({@link DecreeSender})
      */
-    TriConsumer<Boolean, Boolean, DecreeSender> soundEffect = (success, isTab, sender) -> {
+    TriConsumer<Boolean, Boolean, DecreeSender> onSoundEffect = (success, isTab, sender) -> {
         if (isTab) {
             if (success) {
                 sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
@@ -137,7 +136,7 @@ public class DecreeSystem implements Listener {
      */
     public void debug(String message) {
         if (debug) {
-            runOnDebug.accept(message);
+            onDebug.accept(message);
         }
     }
 
@@ -148,8 +147,8 @@ public class DecreeSystem implements Listener {
      * @param sender The sender of the tab/command
      */
     private void playSound(boolean success, boolean isTab, DecreeSender sender) {
-        if (sender.isPlayer() && isCommandSound()) {
-            soundEffect.accept(success, isTab, sender);
+        if (sender.isPlayer() && commandSound) {
+            onSoundEffect.accept(success, isTab, sender);
         }
     }
 
@@ -170,7 +169,7 @@ public class DecreeSystem implements Listener {
      * @return List of completions
      */
     @Nullable
-    public List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull String[] arguments, @NotNull Command command) {
+    public List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String[] arguments) {
 
         DecreeSender sender = new DecreeSender(commandSender, getInstance());
         KList<String> args = new KList<>(arguments).qremoveIf(String::isEmpty);
@@ -203,7 +202,7 @@ public class DecreeSystem implements Listener {
     }
 
     @SuppressWarnings({"deprecation", "SameReturnValue"})
-    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull String[] arguments, @NotNull Command command) {
+    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String[] arguments) {
         Bukkit.getScheduler().scheduleAsyncDelayedTask(getInstance(), () -> {
 
             KList<String> args = new KList<>(arguments).qremoveIf(String::isEmpty);

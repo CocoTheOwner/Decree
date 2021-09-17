@@ -17,21 +17,16 @@ public class Decree extends JavaPlugin implements TabCompleter, CommandExecutor 
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        return decreeSystem.onTabComplete(sender, args, command);
+        return decreeSystem.onTabComplete(sender, command, args);
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return decreeSystem.onCommand(sender, args, command);
+        return decreeSystem.onCommand(sender, command, args);
     }
 
     @Override
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(decreeSystem, this);
-    }
-
-    @Override
-    public void onDisable() {
-        Bukkit.getConsoleSender().sendMessage("Goodbye world!");
     }
 }
