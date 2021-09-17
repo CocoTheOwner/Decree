@@ -1,39 +1,56 @@
 package nl.codevs.decree;
 
-import nl.codevs.decree.decree.DecreeSystem;
-import nl.codevs.decree.decree.util.KList;
-import nl.codevs.decree.decrees.MainCommandClass;
-import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import nl.codevs.decree.DecreeOrigin;
 
-public class Decree extends JavaPlugin implements TabCompleter, CommandExecutor {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    private final DecreeSystem decreeSystem = new DecreeSystem(new KList<>(new MainCommandClass()), this);
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface Decree {
 
-    @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        return decreeSystem.onTabComplete(sender, args, command);
-    }
+    String DEFAULT_DESCRIPTION = "No Description Provided";
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return decreeSystem.onCommand(sender, args, command);
-    }
+    String NO_PERMISSION = "No Permission Required";
 
-    @Override
-    public void onEnable() {
-        Bukkit.getPluginManager().registerEvents(decreeSystem, this);
-    }
+    /**
+     * The name of this command, which is the Method's name by default
+     */
+    String name() default "";
 
-    @Override
-    public void onDisable() {
-        Bukkit.getConsoleSender().sendMessage("Goodbye world!");
-    }
+    /**
+     * The aliases of this parameter (instead of just the {@link #name() name} (if specified) or Method Name (name of method))<br>
+     * Can be initialized as just a string (ex. "alias") or as an array (ex. {"alias1", "alias2"})<br>
+     * If someone uses /plugin foo, and you specify alias="f" here, /plugin f will do the exact same.
+     */
+    String[] aliases() default "";
+
+    /**
+     * The description of this command.<br>
+     * Is {@link #DEFAULT_DESCRIPTION} by default
+     */
+    String description() default DEFAULT_DESCRIPTION;
+
+    /**
+     * The origin this command must come from.<br>
+     * Must be elements of the {@link DecreeOrigin} enum<br>
+     * By default, is {@link DecreeOrigin#BOTH}, meaning both console & player can send the command
+     */
+    DecreeOrigin origin() default DecreeOrigin.BOTH;
+
+    /**
+     * The permissions class that gives the required permission for this command.<p>
+     * By default, it requires no permissions
+     * @return The permission node for this decree command
+     */
+    String permission() default NO_PERMISSION;
+
+    /**
+     * If the node's functions MUST be run in sync, set this to true.<br>
+     * Defaults to false
+     */
+    boolean sync() default false;
 }
