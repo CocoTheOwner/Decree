@@ -1,7 +1,5 @@
 package nl.codevs.decree;
 
-import nl.codevs.decree.DecreeSystem;
-import nl.codevs.decree.util.KList;
 import nl.codevs.decree.decrees.MainCommandClass;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -15,7 +13,7 @@ import java.util.List;
 
 public class Decree extends JavaPlugin implements TabCompleter, CommandExecutor {
 
-    private final DecreeSystem decreeSystem = new DecreeSystem(new KList<>(new MainCommandClass()), this);
+    private final DecreeSystem decreeSystem = new DecreeSystem(new MainCommandClass(), this);
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {

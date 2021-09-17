@@ -154,55 +154,6 @@ public class DecreeCategory implements Decreed {
     }
 
     /**
-     * Send category help to a player
-     * @param sender The sender to send help to
-     */
-    @Override
-    public void sendHelpTo(DecreeSender sender) {
-
-        sender.sendHeader(Form.capitalize(getName()) + " Help");
-
-        // Back button
-        if (sender.isPlayer() && getParent() != null) {
-            sender.sendMessageRaw(
-                    "<hover:show_text:'<#b54b38>Click to go back to <#3299bf>" + Form.capitalize(getParent().getName()) + " Help'>" +
-                            "<click:run_command:" + getParent().getPath() + ">" +
-                            "<font:minecraft:uniform><#f58571>〈 Back" +
-                            "</click>" +
-                            "</hover>"
-            );
-        }
-
-        if (getSubCats().isNotEmpty() || getCommands().isNotEmpty()) {
-
-            for (DecreeCategory subCat : getSubCats()) {
-                subCat.getHelpTo(sender);
-            }
-            for (DecreeCommand command : getCommands()) {
-                command.sendHelpTo(sender);
-            }
-
-        } else {
-            sender.sendMessage(C.RED + "There are no subcommands or categories in this group! Contact an administrator, this is a command design issue!");
-        }
-
-    }
-
-    @Override
-    public KList<Decreed> get(KList<String> args, DecreeSender sender) {
-        debug("Arguments: " + args.toString(", "), C.GREEN);
-        KList<Decreed> results = new KList<>();
-        if (args.isNotEmpty()) {
-            subCats.forEach(s -> results.addAll(s.get(args.subList(1, args.size()), sender)));
-            commands.forEach(c -> results.addAll(c.get(args.subList(1, args.size()), sender)));
-        } else {
-            results.add(this);
-        }
-        debug("Results: " + results.convert(Decreed::getName).toString(", "), C.GREEN);
-        return results;
-    }
-
-    /**
      * Send help to a sender for the category header (as it would appear in the help list of another category)
      * @param sender The sender to send help to
      */
@@ -244,13 +195,61 @@ public class DecreeCategory implements Decreed {
         }
 
         sender.sendMessageRaw("<hover:show_text:'" +
-                    hoverTitle +
-                    newline + hoverDescription +
-                    newline + hoverUsage +
-                    (hoverPermission.isEmpty() ? "" : newline) + hoverPermission +
-                    (hoverOrigin.isEmpty() ? "" : newline) + hoverOrigin + "'>" +
-                    "<click:run_command:" + runOnClick + ">" + realText + "</click>" +
+                hoverTitle +
+                newline + hoverDescription +
+                newline + hoverUsage +
+                (hoverPermission.isEmpty() ? "" : newline) + hoverPermission +
+                (hoverOrigin.isEmpty() ? "" : newline) + hoverOrigin + "'>" +
+                "<click:run_command:" + runOnClick + ">" + realText + "</click>" +
                 "</hover>");
+    }
+
+    /**
+     * Send category help to a player
+     * @param sender The sender to send help to
+     */
+    @Override
+    public void sendHelpTo(DecreeSender sender) {
+
+        sender.sendHeader(Form.capitalize(getName()) + " Help");
+
+        // Back button
+        if (sender.isPlayer() && getParent() != null) {
+            sender.sendMessageRaw(
+                    "<hover:show_text:'<#b54b38>Click to go back to <#3299bf>" + Form.capitalize(getParent().getName()) + " Help'>" +
+                            "<click:run_command:" + getParent().getPath() + ">" +
+                            "<font:minecraft:uniform><#f58571>〈 Back" +
+                            "</click>" +
+                            "</hover>"
+            );
+        }
+
+        if (getSubCats().isNotEmpty() || getCommands().isNotEmpty()) {
+
+            for (DecreeCategory subCat : getSubCats()) {
+                subCat.getHelpTo(sender);
+            }
+            for (DecreeCommand command : getCommands()) {
+                command.sendHelpTo(sender);
+            }
+
+        } else {
+            sender.sendMessage(C.RED + "There are no subcommands or categories in this group! Contact an administrator, this is a command design issue!");
+        }
+    }
+
+    @Override
+    public KList<Decreed> get(KList<String> args, DecreeSender sender) {
+        debug("Arguments: " + args.toString(", "), C.GREEN);
+        KList<Decreed> results = new KList<>();
+        if (args.isNotEmpty()) {
+            subCats.forEach(s -> results.addAll(s.get(args.subList(1, args.size()), sender)));
+            commands.forEach(c -> results.addAll(c.get(args.subList(1, args.size()), sender)));
+        } else {
+            results.add(this);
+        }
+        debug("Results: " + results.convert(Decreed::getName).toString(", "), C.GREEN);
+        return results;
     }
 
     @Override

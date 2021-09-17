@@ -11,6 +11,7 @@ import nl.codevs.decree.util.*;
 import nl.codevs.decree.virtual.Decree;
 import nl.codevs.decree.virtual.DecreeCategory;
 import nl.codevs.decree.virtual.Decreed;
+import org.apache.logging.log4j.util.TriConsumer;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -21,9 +22,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @Getter
@@ -40,9 +43,13 @@ public class DecreeSystem implements Listener {
      */
     private final Plugin instance;
 
-    public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin instance) {
+    public DecreeSystem(DecreeCommandExecutor rootInstance, Plugin plugin){
+        this(new KList<>(rootInstance), plugin);
+    }
+
+    public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin plugin) {
         this.roots = new Roots(rootInstances, this);
-        this.instance = instance;
+        this.instance = plugin;
     }
 
     /**
@@ -96,9 +103,33 @@ public class DecreeSystem implements Listener {
     private String prefix = C.RED + "[" + C.GREEN + "Decree" + C.RED + "]";
 
     /**
-     * What to do with debug messages. Best not to touch and let Decree handle.
+     * What to do with debug messages. Best not to touch and let Decree handle. To disable, set 'debug' to false.
      */
     Consumer<String> runOnDebug = (message) -> new DecreeSender(Bukkit.getConsoleSender(), getInstance()).sendMessage(getPrefix().trim() + C.RESET + " " + message);
+
+    /**
+     * What to do with sound effects. Best not to touch and let Decree handle. To disable, set 'commandSounds' to false.
+     * Consumer takes 'success' ({@link Boolean}), 'isTab' ({@link Boolean}), and 'sender' ({@link DecreeSender})
+     */
+    TriConsumer<Boolean, Boolean, DecreeSender> soundEffect = (success, isTab, sender) -> {
+        if (isTab) {
+            if (success) {
+                sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
+            } else {
+                sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_BREAK, 0.25f, Maths.frand(0.125f, 1.95f));
+            }
+        } else {
+            if (success) {
+                debug(C.GREEN + "Successfully ran command!");
+                sender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
+                sender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.125f, 2.99f);
+            } else {
+                debug(C.RED + "Unknown Decree Command");
+                sender.playSound(Sound.BLOCK_ANCIENT_DEBRIS_BREAK, 1f, 0.25f);
+                sender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.2f, 1.95f);
+            }
+        }
+    };
 
     /**
      * What to do with debug messages
@@ -111,12 +142,24 @@ public class DecreeSystem implements Listener {
     }
 
     /**
+     * Play command sounds
+     * @param success Whether the result is successful or not
+     * @param isTab whether this is tab (true) or command (false)
+     * @param sender The sender of the tab/command
+     */
+    private void playSound(boolean success, boolean isTab, DecreeSender sender) {
+        if (sender.isPlayer() && isCommandSound()) {
+            soundEffect.accept(success, isTab, sender);
+        }
+    }
+
+    /**
      * Handles the cases where there are multiple options following from the entered command values
      * @param e The event to check
      */
     @EventHandler
     public void on(PlayerCommandPreprocessEvent e) {
-        e.setCancelled(Picking.pick(e.getMessage()));
+        e.setCancelled(Completer.pick(e.getMessage()));
     }
 
     /**
@@ -126,6 +169,7 @@ public class DecreeSystem implements Listener {
      * @param command The root command
      * @return List of completions
      */
+    @Nullable
     public List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull String[] arguments, @NotNull Command command) {
 
         DecreeSender sender = new DecreeSender(commandSender, getInstance());
@@ -135,7 +179,7 @@ public class DecreeSystem implements Listener {
         for (DecreeCategory decreeCategory : getRoots().get(command.getName())) {
             try {
 
-                KList<Decreed> decreeds = decreeCategory.get(args.subList(1, args.size()), sender);
+                KList<Decreed> decreeds = decreeCategory.get(args.isEmpty() ? args : args.subList(1, args.size()), sender);
 
                 for (Decreed decreed : decreeds) {
                     completions.add(decreed.getName());
@@ -153,13 +197,7 @@ public class DecreeSystem implements Listener {
 
         completions.removeDuplicates();
 
-        if (sender.isPlayer() && isCommandSound()) {
-            if (completions.isNotEmpty()) {
-                sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
-            } else {
-                sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_BREAK, 0.25f, Maths.frand(0.125f, 1.95f));
-            }
-        }
+        playSound(completions.isNotEmpty(), true, sender);
 
         return completions;
     }
@@ -184,27 +222,16 @@ public class DecreeSystem implements Listener {
                 success = true;
             } else {
                 sender.sendMessage(C.RED + "Your query resulted in multiple options. Please pick one"); // TODO: option picking
+                results.forEach(r -> r.sendHelpTo(sender));
                 success = false; // TODO: Set to true after option pick
             }
 
-            if (success) {
-                debug(C.GREEN + "Successfully ran command!");
-                if (sender.isPlayer() && isCommandSound()) {
-                    sender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
-                    sender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.125f, 2.99f);
-                }
-            } else {
-                debug(C.RED + "Unknown Decree Command");
-                if (sender.isPlayer() && isCommandSound()) {
-                    sender.playSound(Sound.BLOCK_ANCIENT_DEBRIS_BREAK, 1f, 0.25f);
-                    sender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.2f, 1.95f);
-                }
-            }
+            playSound(success, false, sender);
         });
         return true;
     }
 
-    public static class Picking {
+    public static class Completer {
 
         public static ConcurrentHashMap<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
 
