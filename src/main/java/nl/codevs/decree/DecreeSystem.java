@@ -108,7 +108,8 @@ public class DecreeSystem implements Listener {
 
     /**
      * What to do with sound effects. Best not to touch and let Decree handle. To disable, set 'commandSounds' to false.
-     * Consumer takes 'success' ({@link Boolean}), 'isTab' ({@link Boolean}), and 'sender' ({@link DecreeSender})
+     * Consumer takes 'success' ({@link Boolean}), 'isTab' ({@link Boolean}), and 'sender' ({@link DecreeSender}).<br>
+     * If ifTab is false, it means the effect is called from command invocation.
      */
     TriConsumer<Boolean, Boolean, DecreeSender> onSoundEffect = (success, isTab, sender) -> {
         if (isTab) {

@@ -22,6 +22,7 @@ public class DecreeParameter {
     private final Param param;
     private transient final AtomicCache<DecreeParameterHandler<?>> handlerCache = new AtomicCache<>();
     private transient final AtomicCache<KList<String>> exampleCache = new AtomicCache<>();
+    private transient final AtomicCache<String> helpCache = new AtomicCache<>();
 
     /**
      * Create a parameter
@@ -119,7 +120,7 @@ public class DecreeParameter {
      * @return true if it does, false if not
      */
     public boolean hasDefault() {
-        return !param.defaultValue().trim().isEmpty();
+        return !getDefaultRaw().isEmpty();
     }
 
     /**
@@ -155,40 +156,42 @@ public class DecreeParameter {
      * @return Command help for this parameter
      */
     public String getHelp(DecreeSender sender, String runOnClick) {
-        String hoverTitle = "<gradient:#d665f0:#a37feb>" + getNames().toString(", ");
-        String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
-        String hoverUsage;
-        String hoverType = "<#cc00ff>✢ <#ff33cc><font:minecraft:uniform>This parameter is of type " + getType().getSimpleName() + ".";
-        String hoverRun = "<#2e8bdf>⎆ <#24dfdb><font:minecraft:uniform>" + runOnClick;
+        return helpCache.acquire(() -> {
+            String hoverTitle = "<gradient:#d665f0:#a37feb>" + getNames().toString(", ");
+            String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
+            String hoverUsage;
+            String hoverType = "<#cc00ff>✢ <#ff33cc><font:minecraft:uniform>This parameter is of type " + getType().getSimpleName() + ".";
+            String hoverRun = "<#2e8bdf>⎆ <#24dfdb><font:minecraft:uniform>" + runOnClick;
 
-        String realText;
+            String realText;
 
-        // Hover usage & real text
-        String realTitle = "<gradient:#d665f0:#a37feb>" + getName();
-        if (isContextual() && sender.isPlayer()) {
-            hoverUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>May be derived from environment context.";
-            realText = "<#ffcc00>[" + realTitle + "<#ffcc00>] ";
-        } else if (isRequired()) {
-            hoverUsage = "<#db4321>⚠ <#faa796><font:minecraft:uniform>This parameter is required.";
-            realText = "<red>[" + realTitle + "<red>] ";
-        } else if (hasDefault()) {
-            hoverUsage = "<#2181db>✔ <#78dcf0><font:minecraft:uniform>Defaults to \"" + getParam().defaultValue() + "\" if undefined.";
-            realText = "<#4f4f4f>⊰" + realTitle + "<#4f4f4f>⊱";
-        } else {
-            hoverUsage = "<#a73abd>✔ <#78dcf0><font:minecraft:uniform>This parameter is optional.";
-            realText = "<#4f4f4f>⊰" + realTitle + "<#4f4f4f>⊱";
-        }
+            // Hover usage & real text
+            String realTitle = "<gradient:#d665f0:#a37feb>" + getName();
+            if (isContextual() && sender.isPlayer()) {
+                hoverUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>May be derived from environment context.";
+                realText = "<#ffcc00>[" + realTitle + "<#ffcc00>] ";
+            } else if (isRequired()) {
+                hoverUsage = "<#db4321>⚠ <#faa796><font:minecraft:uniform>This parameter is required.";
+                realText = "<red>[" + realTitle + "<red>] ";
+            } else if (hasDefault()) {
+                hoverUsage = "<#2181db>✔ <#78dcf0><font:minecraft:uniform>Defaults to \"" + getParam().defaultValue() + "\" if undefined.";
+                realText = "<#4f4f4f>⊰" + realTitle + "<#4f4f4f>⊱";
+            } else {
+                hoverUsage = "<#a73abd>✔ <#78dcf0><font:minecraft:uniform>This parameter is optional.";
+                realText = "<#4f4f4f>⊰" + realTitle + "<#4f4f4f>⊱";
+            }
 
-        return "<hover:show_text:'" +
+            return "<hover:show_text:'" +
                     hoverTitle + newline +
                     hoverDescription + newline +
                     hoverUsage + newline +
                     hoverType + newline +
                     hoverRun +
-                "'>" +
+                    "'>" +
                     "<click:suggest_command:" + runOnClick + ">" +
-                        realText +
+                    realText +
                     "</click>" +
-                "</hover>";
+                    "</hover>";
+        });
     }
 }
