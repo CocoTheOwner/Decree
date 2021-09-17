@@ -1,5 +1,7 @@
-package nl.codevs.decree;
+package nl.codevs.decree.util;
 
+
+import nl.codevs.decree.virtual.Decree;
 
 /**
  * The origin from which the {@link Decree} command must come

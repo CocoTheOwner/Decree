@@ -1,4 +1,4 @@
-package nl.codevs.decree;
+package nl.codevs.decree.virtual;
 
 
 import java.lang.annotation.ElementType;

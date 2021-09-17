@@ -1,6 +1,6 @@
 package nl.codevs.decree.context;
 
-import nl.codevs.decree.DecreeSender;
+import nl.codevs.decree.util.DecreeSender;
 
 public interface DecreeContextHandler<T> {
 

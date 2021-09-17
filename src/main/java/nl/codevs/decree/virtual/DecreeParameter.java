@@ -1,9 +1,11 @@
-package nl.codevs.decree;
+package nl.codevs.decree.virtual;
 
 import lombok.Data;
+import nl.codevs.decree.DecreeSystem;
 import nl.codevs.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.handlers.DecreeParameterHandler;
+import nl.codevs.decree.util.DecreeSender;
 import nl.codevs.decree.util.AtomicCache;
 import nl.codevs.decree.util.KList;
 

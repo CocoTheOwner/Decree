@@ -21,7 +21,7 @@ package nl.codevs.decree.handlers;
 import nl.codevs.decree.DecreeSystem;
 import nl.codevs.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.exceptions.DecreeWhichException;
-import nl.codevs.decree.DecreeSender;
+import nl.codevs.decree.util.DecreeSender;
 import nl.codevs.decree.util.Form;
 import nl.codevs.decree.util.KList;
 import nl.codevs.decree.util.Maths;

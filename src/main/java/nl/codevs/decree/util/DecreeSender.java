@@ -1,4 +1,4 @@
-package nl.codevs.decree;
+package nl.codevs.decree.util;
 
 import lombok.Getter;
 import lombok.Setter;
