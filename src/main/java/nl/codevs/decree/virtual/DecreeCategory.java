@@ -157,7 +157,7 @@ public class DecreeCategory implements Decreed {
      * Send help to a sender for the category header (as it would appear in the help list of another category)
      * @param sender The sender to send help to
      */
-    public void getHelpTo(DecreeSender sender) {
+    public void sendNodeHelp(DecreeSender sender) {
 
         if (!sender.isPlayer()) {
             sender.sendMessage(C.DECREE + getPath());
@@ -227,7 +227,7 @@ public class DecreeCategory implements Decreed {
         if (getSubCats().isNotEmpty() || getCommands().isNotEmpty()) {
 
             for (DecreeCategory subCat : getSubCats()) {
-                subCat.getHelpTo(sender);
+                subCat.sendNodeHelp(sender);
             }
             for (DecreeCommand command : getCommands()) {
                 command.sendHelpTo(sender);

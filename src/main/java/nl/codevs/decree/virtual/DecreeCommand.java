@@ -652,7 +652,7 @@ public class DecreeCommand implements Decreed {
         for (DecreeParameter parameter : getParameters()) {
             if (!parameters.containsKey(parameter)) {
                 debug("Parameter: " + C.YELLOW + parameter.getName() + C.RED + " not in mapping.", C.RED);
-                sender.sendMessage(C.RED + "Parameter: " + C.YELLOW + parameter.getName() + C.RED + " required but not specified. Please add.");
+                sender.sendMessage(C.RED + "Parameter: " + C.YELLOW + parameter.getName() + C.RED + " not specified. Please add.");
                 valid = false;
             }
         }
