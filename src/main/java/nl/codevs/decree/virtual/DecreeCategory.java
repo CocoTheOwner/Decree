@@ -239,17 +239,26 @@ public class DecreeCategory implements Decreed {
     }
 
     @Override
-    public KList<Decreed> get(KList<String> args, DecreeSender sender) {
-        debug("Arguments: " + args.toString(", "), C.GREEN);
-        KList<Decreed> results = new KList<>();
-        if (args.isNotEmpty()) {
-            subCats.forEach(s -> results.addAll(s.get(args.subList(1, args.size()), sender)));
-            commands.forEach(c -> results.addAll(c.get(args.subList(1, args.size()), sender)));
-        } else {
-            results.add(this);
+    public boolean run(KList<String> args, DecreeSender sender) {
+        if (args.isEmpty()) {
+            debug("Finished here", C.GREEN);
+            sendHelpTo(sender);
+            return true;
         }
-        debug("Results: " + results.convert(Decreed::getName).toString(", "), C.GREEN);
-        return results;
+        debug("Arguments: " + args.toString(", "), C.GREEN);
+        for (DecreeCategory subCat : subCats) {
+            if (subCat.run(args.subList(1, args.size()), sender)) {
+                debug("Valid path: " + subCat.getName(), C.GREEN);
+                return true;
+            }
+        }
+        for (DecreeCommand cmd : commands) {
+            if (cmd.run(args.subList(1, args.size()), sender)) {
+                debug("Valid path: " + cmd.getName(), C.GREEN);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

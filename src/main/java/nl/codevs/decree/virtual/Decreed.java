@@ -36,11 +36,11 @@ public interface Decreed {
     void sendHelpTo(DecreeSender sender);
 
     /**
-     * Get all decreed for some arguments
+     * Run this decreed
      * @param args The arguments to parse
      * @param sender The sender to parse for
      */
-    KList<Decreed> get(KList<String> args, DecreeSender sender);
+    boolean run(KList<String> args, DecreeSender sender);
 
     /**
      * Get the origin of the node

@@ -51,7 +51,7 @@ public class WorldHandler implements DecreeParameterHandler<World> {
                 throw new DecreeWhichException(World.class, in, options);
             }
             return options.get(0);
-        } catch (DecreeParsingException e) {
+        } catch (DecreeWhichException e) {
             throw e;
         } catch (Throwable e) {
             throw new DecreeParsingException("Unable to find World \"" + in + "\" because of an uncaught exception: " + e);

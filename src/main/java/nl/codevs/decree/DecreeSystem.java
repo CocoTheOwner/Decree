@@ -20,6 +20,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -163,6 +164,15 @@ public class DecreeSystem implements Listener {
     }
 
     /**
+     * Handles the cases where there are multiple options following from the entered command values, except for Consoles instead of players.
+     * @param e The event to check
+     */
+    @EventHandler
+    public void on(ServerCommandEvent e) {
+        e.setCancelled(Completer.pickConsole(e.getCommand()));
+    }
+
+    /**
      * Tab completion
      * @param commandSender The sender of the tab-complete
      * @param arguments The existing arguments
@@ -176,29 +186,6 @@ public class DecreeSystem implements Listener {
         KList<String> args = new KList<>(arguments).qremoveIf(String::isEmpty);
         KList<String> completions = new KList<>();
 
-        for (DecreeCategory decreeCategory : getRoots().get(command.getName())) {
-            try {
-
-                KList<Decreed> decreeds = decreeCategory.get(args.isEmpty() ? args : args.subList(1, args.size()), sender);
-
-                for (Decreed decreed : decreeds) {
-                    completions.add(decreed.getName());
-                }
-
-                for (Decreed decreed : decreeds) {
-                    completions.add(decreed.getNames());
-                }
-
-            } catch (Throwable e) {
-                sender.sendMessage(C.RED + "Exception: " + e.getClass().getSimpleName() + " thrown while executing tab completion. Check console for details.");
-                e.printStackTrace();
-            }
-        }
-
-        completions.removeDuplicates();
-
-        playSound(completions.isNotEmpty(), true, sender);
-
         return completions;
     }
 
@@ -210,30 +197,22 @@ public class DecreeSystem implements Listener {
             DecreeSender sender = new DecreeSender(commandSender, getInstance());
             Context.touch(sender);
 
-            KList<Decreed> results = new KList<>();
-            getRoots().get(command.getName()).forEach(ro -> results.addAll(ro.get(args, sender)));
-
-            boolean success;
-            if (results.size() == 0) {
-                sender.sendMessage(C.RED + "Could not find any commands for your input!");
-                success = false;
-            } else if (results.size() == 1) {
-                results.get(0).sendHelpTo(sender);
-                success = true;
-            } else {
-                sender.sendMessage(C.RED + "Your query resulted in multiple options. Please pick one"); // TODO: option picking
-                results.forEach(r -> r.sendHelpTo(sender));
-                success = false; // TODO: Set to true after option pick
+            for (Decreed root : getRoots().get(command.getName())) {
+                if (root.run(args, sender)) {
+                    playSound(true, false, sender);
+                    return;
+                }
             }
 
-            playSound(success, false, sender);
+            playSound(false, false, sender);
         });
         return true;
     }
 
     public static class Completer {
 
-        public static ConcurrentHashMap<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
+        public static final ConcurrentHashMap<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
+        public static CompletableFuture<String> consoleFuture;
 
         /**
          * Try fulfilling a {@link CompletableFuture}
@@ -259,12 +238,35 @@ public class DecreeSystem implements Listener {
         }
 
         /**
+         * Try fulfilling a {@link CompletableFuture}
+         * @param command The command to use to fulfill the future
+         * @return True if the future was fulfilled, false if not.
+         */
+        public static boolean pickConsole(String command) {
+            if (consoleFuture != null && !consoleFuture.isCancelled() && !consoleFuture.isDone()) {
+                if (!command.contains(" ")) {
+                    consoleFuture.complete(command.trim().toLowerCase(Locale.ROOT));
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
          * Post a future which assists in figuring out {@link DecreeWhichException}s
          * @param password The password to access this future (appended to the onclick)
          * @param future The future to fulfill
          */
         public static void postFuture(String password, CompletableFuture<String> future) {
             futures.put(password, future);
+        }
+
+        /**
+         * Post a future which assists in figuring out {@link DecreeWhichException}s
+         * @param future The future to fulfill
+         */
+        public static void postConsoleFuture(CompletableFuture<String> future) {
+            consoleFuture = future;
         }
     }
 
@@ -290,6 +292,19 @@ public class DecreeSystem implements Listener {
                 new VectorHandler(),
                 new WorldHandler()
         );
+
+        /**
+         * Add a new handler to the list of handlers.
+         * @param handler The handler to add
+         * @return True if the handler is new, false if it was already added.
+         */
+        public static boolean addHandler(DecreeParameterHandler<?> handler) {
+            if (handlers.contains(handler)) {
+                return false;
+            }
+            handlers.add(handler);
+            return true;
+        }
 
         /**
          * Get the handler for the specified type

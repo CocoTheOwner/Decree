@@ -16,4 +16,12 @@ public interface DecreeContextHandler<T> {
      * @return The value in the assigned type
      */
     T handle(DecreeSender sender);
+
+    /**
+     * Use #handle to return the current string name
+     * @return The string name (or whatever) for this context's return
+     */
+    default String handleToString(DecreeSender sender) {
+        return handle(sender).toString();
+    }
 }

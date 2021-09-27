@@ -2,13 +2,11 @@ package nl.codevs.decree.decrees;
 
 import nl.codevs.decree.virtual.Decree;
 import nl.codevs.decree.virtual.Param;
+import org.bukkit.World;
 
 @SuppressWarnings("SpellCheckingInspection")
 @Decree(name = "command", aliases = {"cmmd", "cmd", "cd"}, description = "Main commands", permission = "decree")
 public class MainCommandClass implements DecreeCommandExecutor {
-
-    // This line is a category pointer
-    private SubCommandClass nameDoesNotMatterHere;
 
     @Decree(
             description = "Description goes here",
@@ -21,9 +19,9 @@ public class MainCommandClass implements DecreeCommandExecutor {
 
             @Param(
                     aliases = {"msawdag", "www"},
-                    description = "wawd a message to yourself"
+                    description = "wowd"
             )
-                    String poop,
+                    World poop,
             @Param(
                     defaultValue = "Hello!",
                     aliases = {"msg", "m"},
@@ -37,6 +35,6 @@ public class MainCommandClass implements DecreeCommandExecutor {
             )
                     String look
     ){
-        sender().sendMessage(message);
+        sender().sendMessage(message + " / " + poop.getName() + " / " + look);
     }
 }

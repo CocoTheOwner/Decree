@@ -11,4 +11,9 @@ public class WorldContextHandler implements DecreeContextHandler<World> {
     public World handle(DecreeSender sender) {
         return sender.isPlayer() ? sender.player().getWorld() : null;
     }
+
+    @Override
+    public String handleToString(DecreeSender sender) {
+        return handle(sender).getName();
+    }
 }
