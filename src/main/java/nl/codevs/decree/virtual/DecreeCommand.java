@@ -278,6 +278,11 @@ public class DecreeCommand implements Decreed {
 
     @Override
     public boolean run(KList<String> args, DecreeSender sender) {
+
+        if (!getOrigin().validFor(sender) || !sender.hasPermission(getPermission())) {
+            return false;
+        }
+
         if (args.isNotEmpty()) {
             debug("Entered arguments: " + C.YELLOW + args.toString(", "), C.GREEN);
         } else {

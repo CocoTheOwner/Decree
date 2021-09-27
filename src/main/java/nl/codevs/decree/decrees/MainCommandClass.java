@@ -8,6 +8,8 @@ import org.bukkit.World;
 @Decree(name = "command", aliases = {"cmmd", "cmd", "cd"}, description = "Main commands", permission = "decree")
 public class MainCommandClass implements DecreeCommandExecutor {
 
+    SubCommandClass c;
+
     @Decree(
             description = "Description goes here",
             aliases = {"alias1", "alias2"},

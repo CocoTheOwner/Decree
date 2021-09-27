@@ -224,15 +224,17 @@ public class DecreeCategory implements Decreed {
             );
         }
 
-        if (getSubCats().isNotEmpty() || getCommands().isNotEmpty()) {
-
-            for (DecreeCategory subCat : getSubCats()) {
-                subCat.sendNodeHelp(sender);
+        KList<Decreed> matches = matchAll(null, sender);
+        if (matches.isNotEmpty()) {
+            for (Decreed match : matches) {
+                if (match instanceof DecreeCategory c) {
+                    if (c.matchAll(null, sender).isNotEmpty()) {
+                        c.sendNodeHelp(sender);
+                    }
+                } else if (match.doesMatch(null, sender)){
+                    match.sendHelpTo(sender);
+                }
             }
-            for (DecreeCommand command : getCommands()) {
-                command.sendHelpTo(sender);
-            }
-
         } else {
             sender.sendMessage(C.RED + "There are no subcommands or categories in this group! Contact an administrator, this is a command design issue!");
         }
@@ -246,15 +248,14 @@ public class DecreeCategory implements Decreed {
             return true;
         }
         debug("Arguments: " + args.toString(", "), C.GREEN);
-        for (DecreeCategory subCat : subCats) {
-            if (subCat.run(args.subList(1, args.size()), sender)) {
-                debug("Valid path: " + subCat.getName(), C.GREEN);
-                return true;
+        for (Decreed decreed : matchAll(args.get(0), sender)) {
+            if (decreed instanceof DecreeCategory c) {
+                if (c.matchAll(null, sender).isEmpty()) {
+                    return false;
+                }
             }
-        }
-        for (DecreeCommand cmd : commands) {
-            if (cmd.run(args.subList(1, args.size()), sender)) {
-                debug("Valid path: " + cmd.getName(), C.GREEN);
+            if (decreed.run(args.subList(1, args.size()), sender)) {
+                debug("Valid path: " + decreed.getName(), C.GREEN);
                 return true;
             }
         }

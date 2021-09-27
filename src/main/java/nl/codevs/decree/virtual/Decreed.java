@@ -116,7 +116,7 @@ public interface Decreed {
         if (getOrigin().validFor(sender)) {
             if (sender.hasPermission(getPermission())) {
 
-                if (in.isEmpty()) {
+                if (in == null || in.isEmpty()) {
                     return true;
                 }
 
@@ -144,7 +144,7 @@ public interface Decreed {
             reason = "Origin Mismatch";
         }
         if (system().isDebugMismatchReason()) {
-            debug("Name " + C.YELLOW + in + C.GREEN + " invalid for sender (" + C.YELLOW + sender.getName() + C.GREEN + ") because of " + C.YELLOW + reason, C.GREEN);
+            debug("Name " + C.YELLOW + getName() + C.GREEN + " invalid for sender (" + C.YELLOW + sender.getName() + C.GREEN + ") because of " + C.YELLOW + reason, C.GREEN);
         }
         return false;
     }
