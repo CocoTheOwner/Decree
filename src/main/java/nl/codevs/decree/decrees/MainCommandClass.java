@@ -19,7 +19,8 @@ public class MainCommandClass implements DecreeCommandExecutor {
 
             @Param(
                     aliases = {"msawdag", "www"},
-                    description = "wowd"
+                    description = "wowd",
+                    contextual = true
             )
                     World poop,
             @Param(
@@ -30,8 +31,7 @@ public class MainCommandClass implements DecreeCommandExecutor {
                     String message,
             @Param(
                     aliases = {"msgggg", "gghm"},
-                    description = "dwad a message to yourself",
-                    contextual = true
+                    description = "dwad a message to yourself"
             )
                     String look
     ){

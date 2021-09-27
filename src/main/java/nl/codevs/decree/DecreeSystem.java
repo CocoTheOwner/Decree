@@ -95,7 +95,7 @@ public class DecreeSystem implements Listener {
      * When an argument parser returns multiple options for a certain input, should the system always pick the first element and continue?
      * Note: When the command sender is a console, this is done regardless.
      */
-    private boolean pickFirstOnMultiple = true;
+    private boolean pickFirstOnMultiple = false;
 
     /**
      * Command prefix

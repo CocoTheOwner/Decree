@@ -233,7 +233,7 @@ public class DecreeCommand implements Decreed {
                 }
 
                 // Add this parameter
-                appendedParameters.append(parameter.getHelp(sender, onClick));
+                appendedParameters.append(parameter.getHelp(sender, onClick, false));
             }
         }
 
@@ -624,8 +624,8 @@ public class DecreeCommand implements Decreed {
                 parseExceptionArgs.remove(option);
                 DecreeContextHandler<?> handler = DecreeSystem.Context.getHandlers().get(option.getType());
                 if (handler == null) {
-                    debug("Parameter" + option.getName() + " marked as contextual without available context handler (" + option.getType() + ").", C.RED);
-                    sender.sendMessage(C.RED + "Parameter" + option.getName() + " marked as contextual without available context handler (" + option.getType() + "). Please context your admin.");
+                    debug("Parameter " + option.getName() + " marked as contextual without available context handler (" + option.getType().getSimpleName() + ").", C.RED);
+                    sender.sendMessageRaw(C.RED + "Parameter " + C.GOLD + option.getHelp(sender, "yeet", true) + C.RED + " marked as contextual without available context handler (" + option.getType().getSimpleName() + "). Please context your admin.");
                     continue;
                 }
                 Object contextValue = handler.handle(sender);
@@ -715,12 +715,12 @@ public class DecreeCommand implements Decreed {
         sender.sendMessageRaw("<gradient:#1ed497:#b39427>This query will expire in 15 seconds.</gradient>");
 
         while (tries-- > 0 && (result == null || !options.contains(result))) {
-            sender.sendMessage("<gradient:#1ed497:#b39427>Please pick a valid option.");
+            sender.sendMessageRaw("<gradient:#1ed497:#b39427>Please pick a valid option.</gradient>");
             String password = UUID.randomUUID().toString().replaceAll("\\Q-\\E", "");
             int m = 0;
 
             for (String i : validOptions.convert(handler::toStringForce)) {
-                sender.sendMessage("<hover:show_text:'" + gradients[m % gradients.length] + i + "</gradient>'><click:run_command:/irisdecree " + password + " " + i + ">" + "- " + gradients[m % gradients.length] + i + "</gradient></click></hover>");
+                sender.sendMessage("<hover:show_text:'" + gradients[m % gradients.length] + i + "</gradient>'><click:run_command:/decree-future " + password + " " + i + ">" + "- " + gradients[m % gradients.length] + i + "</gradient></click></hover>");
                 m++;
             }
 
@@ -764,7 +764,7 @@ public class DecreeCommand implements Decreed {
         for (DecreeParameter parameter : getParameters()) {
             if (!parameters.containsKey(parameter)) {
                 debug("Parameter: " + C.YELLOW + parameter.getName() + C.RED + " not in mapping.", C.RED);
-                sender.sendMessage(C.RED + "Parameter: " + C.YELLOW + parameter.getName() + C.RED + " not specified. Please add.");
+                sender.sendMessageRaw(C.RED + "Parameter: " + C.YELLOW + parameter.getHelp(sender, null, true) + C.RED + " not specified. Please add.");
                 valid = false;
             }
         }
@@ -796,6 +796,7 @@ public class DecreeCommand implements Decreed {
                     parameters.put(option, result);
                 }
             }
+            return true;
         } catch (DecreeParsingException e) {
             parseExceptionArgs.put(option, value);
         } catch (Throwable e) {
