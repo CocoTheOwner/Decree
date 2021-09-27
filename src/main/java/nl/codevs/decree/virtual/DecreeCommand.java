@@ -5,6 +5,7 @@ import nl.codevs.decree.DecreeSystem;
 import nl.codevs.decree.context.DecreeContextHandler;
 import nl.codevs.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.exceptions.DecreeWhichException;
+import nl.codevs.decree.handlers.DecreeParameterHandler;
 import nl.codevs.decree.util.DecreeOrigin;
 import nl.codevs.decree.util.DecreeSender;
 import nl.codevs.decree.util.C;
@@ -17,7 +18,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
+import java.util.concurrent.*;
 
 /**
  * Represents a single command (non-category)
@@ -25,6 +27,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 public class DecreeCommand implements Decreed {
     private static final int nullParam = Integer.MAX_VALUE - 69420;
+    private static final String[] gradients = new String[]{
+            "<gradient:#f5bc42:#45b32d>",
+            "<gradient:#1ed43f:#1ecbd4>",
+            "<gradient:#1e2ad4:#821ed4>",
+            "<gradient:#d41ea7:#611ed4>",
+            "<gradient:#1ed473:#1e55d4>",
+            "<gradient:#6ad41e:#9a1ed4>"
+    };
     private static final String newline = "<reset>\n";
     private final KList<DecreeParameter> parameters;
     private final Method method;
@@ -286,7 +296,7 @@ public class DecreeCommand implements Decreed {
 
         Object[] finalParams = new Object[getParameters().size()];
 
-        // Final checksum
+        // Final checksum. Everything should already be valid, but this is just in case.
         int x = 0;
         for (DecreeParameter parameter : getParameters()) {
             if (!params.containsKey(parameter)) {
@@ -311,9 +321,9 @@ public class DecreeCommand implements Decreed {
                         debug("Sent asynchronously while it must be ran sync", C.RED);
                         e.printStackTrace();
                         sender.sendMessage(C.RED + "The command you tried to run (" + C.YELLOW + getPath() + C.RED + ") may only be run sync! Contact your admin!");
-                        return;
+                    } else {
+                        throw e;
                     }
-                    throw e;
                 }
             } catch (Throwable e) {
                 e.printStackTrace();
@@ -412,7 +422,7 @@ public class DecreeCommand implements Decreed {
             String value = arg.split("\\Q=\\E")[1];
             for (DecreeParameter option : options) {
                 if (option.getNames().contains(key)) {
-                    if (parseParamInto(parameters, option, value)) {
+                    if (parseParamInto(parameters, badArgs, parseExceptionArgs, option, value, sender)) {
                         options.remove(option);
                         keyedArgs.remove(arg);
                     } else if (system().isNullOnFailure()) {
@@ -430,7 +440,7 @@ public class DecreeCommand implements Decreed {
             for (DecreeParameter option : options) {
                 for (String name : option.getNames()) {
                     if (name.equalsIgnoreCase(key)) {
-                        if (parseParamInto(parameters, option, value)) {
+                        if (parseParamInto(parameters, badArgs, parseExceptionArgs, option, value, sender)) {
                             options.remove(option);
                             keyedArgs.remove(arg);
                         } else if (system().isNullOnFailure()) {
@@ -449,7 +459,7 @@ public class DecreeCommand implements Decreed {
             for (DecreeParameter option : options) {
                 for (String name : option.getNames()) {
                     if (name.contains(key)) {
-                        if (parseParamInto(parameters, option, value)) {
+                        if (parseParamInto(parameters, badArgs, parseExceptionArgs, option, value, sender)) {
                             options.remove(option);
                             keyedArgs.remove(arg);
                         } else if (system().isNullOnFailure()) {
@@ -468,7 +478,7 @@ public class DecreeCommand implements Decreed {
             for (DecreeParameter option : options) {
                 for (String name : option.getNames()) {
                     if (key.contains(name)) {
-                        if (parseParamInto(parameters, option, value)) {
+                        if (parseParamInto(parameters, badArgs, parseExceptionArgs, option, value, sender)) {
                             options.remove(option);
                             keyedArgs.remove(arg);
                         } else if (system().isNullOnFailure()) {
@@ -559,9 +569,17 @@ public class DecreeCommand implements Decreed {
                     options.remove(option);
                     keylessArgs.remove(keylessArg);
 
-                    // if (getSystem().isPickFirstOnMultiple())
-                    parameters.put(option, e.getOptions().get(0));
-                    // TODO: Picking
+                    if (getSystem().isPickFirstOnMultiple()) {
+                        parameters.put(option, e.getOptions().get(0));
+                    } else {
+                        Object result = pickValidOption(sender, e.getOptions(), option);
+                        if (result == null) {
+                            badArgs.add(keylessArg);
+                        } else {
+                            parameters.put(option, result);
+                        }
+                        continue looping;
+                    }
                 } catch (Throwable e) {
                     // This exception is actually something that is broken
                     debug("Parsing " + C.YELLOW + keylessArg + C.RED + " into " + C.YELLOW + option.getName() + C.RED + " failed because of: " + C.YELLOW + e.getMessage(), C.RED);
@@ -594,7 +612,12 @@ public class DecreeCommand implements Decreed {
                         debug("Adding: " + C.YELLOW + e.getOptions().get(0), C.GREEN);
                         parameters.put(option, e.getOptions().get(0));
                     } else {
-                        // TODO: Make pickable
+                        Object result = pickValidOption(sender, e.getOptions(), option);
+                        if (result == null) {
+                            badArgs.add(option.getDefaultRaw());
+                        } else {
+                            parameters.put(option, result);
+                        }
                     }
                 }
             } else if (option.isContextual() && sender.isPlayer()) {
@@ -615,6 +638,7 @@ public class DecreeCommand implements Decreed {
                     option.getHandler().parse(parseExceptionArgs.get(option));
                 } catch (DecreeParsingException e) {
                     e.printStackTrace();
+                    sender.sendMessage(C.RED + "Failed to parse " + C.GOLD + parseExceptionArgs.get(option) + C.RED + " (" + C.GOLD + option.getType().getSimpleName() + C.RED + "): " + C.GOLD + e.getMessage());
                 } catch (DecreeWhichException e) {
                     debug("Somehow, a parse-exception argument from before, is now throwing a WhichException. This is a problem in the Decree System. Please contact the authors.", C.RED);
                     sender.sendMessage(C.RED + "Somehow, a parse-exception argument from before, is now working. This is a problem in the Decree System. Please contact your admin and ask them to contact the authors of the command system.");
@@ -639,7 +663,11 @@ public class DecreeCommand implements Decreed {
         parameters.forEach((param, object) -> mappings
                 .append("\n")
                 .append(C.GREEN)
-                .append("\u0009 - ")
+                .append("\u0009 - (")
+                .append(C.YELLOW)
+                .append(param.getType().getSimpleName())
+                .append(C.GREEN)
+                .append(") ")
                 .append(C.YELLOW)
                 .append(param.getName())
                 .append(C.GREEN)
@@ -649,7 +677,11 @@ public class DecreeCommand implements Decreed {
         options.forEach(param -> mappings
                 .append("\n")
                 .append(C.GREEN)
-                .append("\u0009 - ")
+                .append("\u0009 - (")
+                .append(C.YELLOW)
+                .append(param.getType().getSimpleName())
+                .append(C.GREEN)
+                .append(") ")
                 .append(C.YELLOW)
                 .append(param.getName())
                 .append(C.GREEN)
@@ -664,6 +696,61 @@ public class DecreeCommand implements Decreed {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Instruct the sender to pick a valid option
+     * @param sender The sender that must pick an option
+     * @param validOptions The valid options that can be picked (as objects)
+     * @return The string value for the selected option
+     */
+    private Object pickValidOption(DecreeSender sender, KList<?> validOptions, DecreeParameter parameter) {
+        DecreeParameterHandler<?> handler = parameter.getHandler();
+
+        int tries = 3;
+        KList<String> options = validOptions.convert(handler::toStringForce);
+        String result = null;
+
+        sender.sendHeader("Pick a " + parameter.getName() + " (" + parameter.getType().getSimpleName() + ")");
+        sender.sendMessageRaw("<gradient:#1ed497:#b39427>This query will expire in 15 seconds.</gradient>");
+
+        while (tries-- > 0 && (result == null || !options.contains(result))) {
+            sender.sendMessage("<gradient:#1ed497:#b39427>Please pick a valid option.");
+            String password = UUID.randomUUID().toString().replaceAll("\\Q-\\E", "");
+            int m = 0;
+
+            for (String i : validOptions.convert(handler::toStringForce)) {
+                sender.sendMessage("<hover:show_text:'" + gradients[m % gradients.length] + i + "</gradient>'><click:run_command:/irisdecree " + password + " " + i + ">" + "- " + gradients[m % gradients.length] + i + "</gradient></click></hover>");
+                m++;
+            }
+
+            CompletableFuture<String> future = new CompletableFuture<>();
+            if (sender.isPlayer()) {
+                DecreeSystem.Completer.postFuture(password, future);
+                system().playSound(false, DecreeSystem.SFX.Picked, sender);
+            } else {
+                DecreeSystem.Completer.postConsoleFuture(future);
+            }
+
+            try {
+                result = future.get(15, TimeUnit.SECONDS);
+            } catch (InterruptedException | ExecutionException | TimeoutException ignored) {
+
+            }
+        }
+
+        if (result != null && options.contains(result)) {
+            for (int i = 0; i < options.size(); i++) {
+                if (options.get(i).equals(result)) {
+                    return validOptions.get(i);
+                }
+            }
+        } else {
+            sender.sendMessage(C.RED + "You did not enter a correct option within 3 tries.");
+            sender.sendMessage(C.RED + "Please double-check your arguments & option picking.");
+        }
+
+        return null;
     }
 
     /**
@@ -687,14 +774,30 @@ public class DecreeCommand implements Decreed {
     /**
      * Parses a parameter into a map after parsing
      * @param parameters The parameter map to store the value into
+     * @param parseExceptionArgs
      * @param option The parameter type to parse into
      * @param value The value to parse
      * @return True if successful, false if not. Nothing is added on parsing failure.
      */
-    private boolean parseParamInto(ConcurrentHashMap<DecreeParameter, Object> parameters, DecreeParameter option, String value) {
+    private boolean parseParamInto(ConcurrentHashMap<DecreeParameter, Object> parameters, KList<String> badArgs, ConcurrentHashMap<DecreeParameter, String> parseExceptionArgs, DecreeParameter option, String value, DecreeSender sender) {
         try {
             parameters.put(option, option.getHandler().parse(value));
             return true;
+        } catch (DecreeWhichException e) {
+            debug("Value " + C.YELLOW + value + C.RED + " returned multiple options", C.RED);
+            if (getSystem().isPickFirstOnMultiple()) {
+                debug("Adding: " + C.YELLOW + e.getOptions().get(0), C.GREEN);
+                parameters.put(option, e.getOptions().get(0));
+            } else {
+                Object result = pickValidOption(sender, e.getOptions(), option);
+                if (result == null) {
+                    badArgs.add(option.getDefaultRaw());
+                } else {
+                    parameters.put(option, result);
+                }
+            }
+        } catch (DecreeParsingException e) {
+            parseExceptionArgs.put(option, value);
         } catch (Throwable e) {
             system.debug("Failed to parse into: '" + option.getName() + "' value '" + value + "'");
             e.printStackTrace();

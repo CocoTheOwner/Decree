@@ -107,27 +107,38 @@ public class DecreeSystem implements Listener {
      */
     Consumer<String> onDebug = (message) -> new DecreeSender(Bukkit.getConsoleSender(), getInstance()).sendMessage(getPrefix().trim() + C.RESET + " " + message);
 
+
     /**
      * What to do with sound effects. Best not to touch and let Decree handle. To disable, set 'commandSounds' to false.
-     * Consumer takes 'success' ({@link Boolean}), 'isTab' ({@link Boolean}), and 'sender' ({@link DecreeSender}).<br>
-     * If ifTab is false, it means the effect is called from command invocation.
+     * Consumer takes 'success' ({@link Boolean}), a sound effect from ({@link SFX}), and 'sender' ({@link DecreeSender}).
      */
-    TriConsumer<Boolean, Boolean, DecreeSender> onSoundEffect = (success, isTab, sender) -> {
-        if (isTab) {
-            if (success) {
-                sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
-            } else {
-                sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_BREAK, 0.25f, Maths.frand(0.125f, 1.95f));
+    TriConsumer<Boolean, SFX, DecreeSender> onSoundEffect = (success, sfx, sender) -> {
+        switch (sfx) {
+            case Tab -> {
+                if (success) {
+                    sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
+                } else {
+                    sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_BREAK, 0.25f, Maths.frand(0.125f, 1.95f));
+                }
             }
-        } else {
-            if (success) {
-                debug(C.GREEN + "Successfully ran command!");
-                sender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
-                sender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.125f, 2.99f);
-            } else {
-                debug(C.RED + "Unknown Decree Command");
-                sender.playSound(Sound.BLOCK_ANCIENT_DEBRIS_BREAK, 1f, 0.25f);
-                sender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.2f, 1.95f);
+            case Command -> {
+                if (success) {
+                    debug(C.GREEN + "Successfully ran command!");
+                    sender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
+                    sender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.125f, 2.99f);
+                } else {
+                    debug(C.RED + "Unknown Decree Command");
+                    sender.playSound(Sound.BLOCK_ANCIENT_DEBRIS_BREAK, 1f, 0.25f);
+                    sender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.2f, 1.95f);
+                }
+            }
+            case Picked -> {
+                if (success) {
+                    sender.playSound(Sound.BLOCK_BEACON_ACTIVATE, 0.125f, 1.99f);
+                } else {
+                    sender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 0.65f);
+                    sender.playSound(Sound.BLOCK_BEACON_DEACTIVATE, 0.125f, 1.99f);
+                }
             }
         }
     };
@@ -145,12 +156,12 @@ public class DecreeSystem implements Listener {
     /**
      * Play command sounds
      * @param success Whether the result is successful or not
-     * @param isTab whether this is tab (true) or command (false)
+     * @param sfx The sound effect type
      * @param sender The sender of the tab/command
      */
-    private void playSound(boolean success, boolean isTab, DecreeSender sender) {
+    public void playSound(boolean success, SFX sfx, DecreeSender sender) {
         if (sender.isPlayer() && commandSound) {
-            onSoundEffect.accept(success, isTab, sender);
+            onSoundEffect.accept(success, sfx, sender);
         }
     }
 
@@ -186,6 +197,8 @@ public class DecreeSystem implements Listener {
         KList<String> args = new KList<>(arguments).qremoveIf(String::isEmpty);
         KList<String> completions = new KList<>();
 
+        // TODO: Tab completions
+
         return completions;
     }
 
@@ -199,12 +212,12 @@ public class DecreeSystem implements Listener {
 
             for (Decreed root : getRoots().get(command.getName())) {
                 if (root.run(args, sender)) {
-                    playSound(true, false, sender);
+                    playSound(true, SFX.Command, sender);
                     return;
                 }
             }
 
-            playSound(false, false, sender);
+            playSound(false, SFX.Command, sender);
         });
         return true;
     }
@@ -320,6 +333,12 @@ public class DecreeSystem implements Listener {
             }
             throw new DecreeException("Unhandled type in Decree Parameter: " + type.getName() + ". This is bad! Contact your admin! (Remove param or add handler)");
         }
+    }
+
+    public enum SFX {
+        Tab,
+        Command,
+        Picked
     }
 
     public static class Context {
