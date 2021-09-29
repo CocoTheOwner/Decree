@@ -76,7 +76,7 @@ public interface Decreed {
      * @param color The color to prefix with
      */
     default void debug(String message, C color) {
-        system().debug(C.YELLOW + getPath() + color + " → " + C.YELLOW + getName() + color + " | " + message);
+        system().debug(C.GOLD + (parent() == null ? "" : parent().getPath() + " ") + color + "→ " + C.GOLD + getShortestName() + color + " | " + message);
     }
 
     /**
@@ -89,20 +89,27 @@ public interface Decreed {
     }
 
     /**
-     * Get the command path to this node
+     * Get the shortest name for this node (includes aliases)
      */
-    default String getPath() {
+    default String getShortestName() {
         String shortest = getName();
         for (String name : getNames()) {
             if (name.length() < shortest.length()) {
                 shortest = name;
             }
         }
+        return shortest;
+    }
+
+    /**
+     * Get the command path to this node
+     */
+    default String getPath() {
 
         if (parent() == null) {
-            return "/" + shortest;
+            return "/" + getShortestName();
         }
-        return parent().getPath() + " " + shortest;
+        return parent().getPath() + " " + getShortestName();
     }
 
     /**
@@ -111,8 +118,8 @@ public interface Decreed {
      * @param sender the sender who sent the command
      */
     default void debugMismatch(String reason, DecreeSender sender) {
-        if (system().isDebugMismatchReason()) {
-            parent().debug("Hiding decreed " + C.YELLOW + getName() + C.GREEN + " for sender " + C.YELLOW + sender.getName() + C.GREEN + " because of " + C.YELLOW + reason, C.GREEN);
+        if (system().isDebugMatching()) {
+            parent().debug("Hiding decreed " + C.GOLD + getShortestName() + C.GREEN + " for sender " + C.GOLD + sender.getName() + C.GREEN + " because of " + C.GOLD + reason, C.GREEN);
         }
     }
 
@@ -121,7 +128,7 @@ public interface Decreed {
      * @param sender The sender to check against
      * @return True if permitted & origin matches
      */
-    default boolean doesMatch(DecreeSender sender) {
+    default int doesMatch(DecreeSender sender) {
         return doesMatch(null, sender);
     }
 
@@ -129,37 +136,57 @@ public interface Decreed {
      * Deep check whether this node matches input and is allowed for a sender<br>
      * @param sender The sender that called the node
      * @param in The input string
-     * @return True if allowed & match, false if not
+     * @return
+     * 0 If not allowed<br>
+     * 1 if allowed and the input contains a name<br>
+     * 2 if allowed and a name contains the input<br>
+     * 3 if allowed and the input is a 1:1 match with a name, or the input is null/empty.<br>
+     * <i>Name/names includes aliases.</i>
+     *
      */
-    default boolean doesMatch(String in, DecreeSender sender){
+    default int doesMatch(String in, DecreeSender sender){
         if (!getOrigin().validFor(sender)) {
-            debugMismatch("Origin Mismatch", sender);
-            return false;
+            debugMismatch("Origin Mismatch - 0", sender);
+            return 0;
         }
         if (!sender.hasPermission(getPermission())) {
-            debugMismatch("Permission Mismatch", sender);
-            return false;
+            debugMismatch("Permission Mismatch - 0", sender);
+            return 0;
         }
 
-        String compare = "Comparison: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
+        String compare = "Comparison: " + C.GOLD + in + C.GREEN + " with " + C.GOLD + getNames().toString(C.GREEN + ", " + C.GOLD) + C.GREEN + ": ";
 
         if (in == null || in.isEmpty()) {
-            parent().debug(compare + "MATCHED", C.GREEN);
-            return true;
+            if (system().isDebugMatching()) {
+                parent().debug(compare + "MATCHED - 3", C.GREEN);
+            }
+            return 3;
         }
 
         for (String i : getNames()) {
-            if (i.equalsIgnoreCase(in) || i.toLowerCase().contains(in.toLowerCase()) || in.toLowerCase().contains(i.toLowerCase())) {
+            if (i.equalsIgnoreCase(in)) {
                 if (system().isDebugMatching()) {
-                    parent().debug(compare + "MATCHED", C.GREEN);
+                    parent().debug(compare + "MATCHED - 1", C.GREEN);
                 }
-                return true;
+                return 3;
+            }
+            if (i.toLowerCase().contains(in.toLowerCase())) {
+                if (system().isDebugMatching()) {
+                    parent().debug(compare + "MATCHED - 2", C.GREEN);
+                }
+                return 2;
+            }
+            if (in.toLowerCase().contains(i.toLowerCase())) {
+                if (system().isDebugMatching()) {
+                    parent().debug(compare + "MATCHED - 1", C.GREEN);
+                }
+                return 1;
             }
         }
 
         if (system().isDebugMatching()) {
-            parent().debug(compare + C.RED + "NO MATCH", C.GREEN);
+            parent().debug(compare + C.RED + "NO MATCH - 0", C.GREEN);
         }
-        return false;
+        return 0;
     }
 }

@@ -34,6 +34,11 @@ import java.util.function.Consumer;
 public class DecreeSystem implements Listener {
 
     /**
+     * Decree System version.
+     */
+    private final String version = "1.2";
+
+    /**
      * Command roots ({@link ConcurrentHashMap})
      */
     private final Roots roots;
@@ -50,8 +55,16 @@ public class DecreeSystem implements Listener {
     public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin plugin) {
         this.roots = new Roots(rootInstances, this);
         this.instance = plugin;
-        System.out.println("Enabled Decree v" + plugin.getDescription().getVersion());
+        if (helpDecree) {
+            System.out.println("Enabled Command System " + C.YELLOW + "Decree v" + version + C.RESET + " for " + C.YELLOW + plugin.getName() + " v" + plugin.getDescription().getVersion());
+        }
     }
+
+    /**
+     * Whether to print a one-line message about enabling this system upon startup. <br>
+     * We kindly ask to leave this on, it helps others to find this system too!
+     */
+    private boolean helpDecree = true;
 
     /**
      * When entering arguments, should people be allowed to enter "null"?
@@ -72,13 +85,7 @@ public class DecreeSystem implements Listener {
     /**
      * Whether to debug matching or not. This is also ran on tab completion, so it causes a lot of debug.
      */
-    private boolean debugMatching = false;
-
-    /**
-     * When an argument match fails because of failed permissions/origin, should this be debugged?
-     * Note: This is not always accurate, there are some false negatives (debugs when actually successful)
-     */
-    private boolean debugMismatchReason = true;
+    private boolean debugMatching = true;
 
     /**
      * The maximal number of same-named root commands.

@@ -140,11 +140,6 @@ public class DecreeCommand implements Decreed {
     @Override
     public void sendHelpTo(DecreeSender sender) {
 
-        if (!sender.isPlayer()) {
-            sender.sendMessage(getPath() + " " + getParameters().convert(p -> p.getName() + "=" + p.getHandler().getRandomDefault()).toString(" "));
-            return;
-        }
-
         String hoverTitle = "<#42ecf5>" + getNames().toString(", ");
         String hoverUsage = "<#bbe03f>✒ <#a8e0a2><font:minecraft:uniform>";
         String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
@@ -273,18 +268,14 @@ public class DecreeCommand implements Decreed {
     }
 
     public KList<String> tab(KList<String> args) {
-        return new KList<>(getName());
+        return new KList<>(getNames());
     }
 
     @Override
     public boolean run(KList<String> args, DecreeSender sender) {
 
-        if (!doesMatch(sender)) {
-            return false;
-        }
-
         if (args.isNotEmpty()) {
-            debug("Entered arguments: " + C.YELLOW + args.toString(", "), C.GREEN);
+            debug("Entered arguments: " + C.GOLD + args.toString(", "), C.GREEN);
         } else {
             debug("No entered arguments to parse", C.GREEN);
         }
@@ -295,7 +286,7 @@ public class DecreeCommand implements Decreed {
         ConcurrentHashMap<DecreeParameter, Object> params = computeParameters(args, sender);
 
         if (params == null) {
-            debug("Parameter parsing failed for " + C.YELLOW + getName(), C.RED);
+            debug("Parameter parsing failed for " + C.GOLD + getName(), C.RED);
             return false;
         }
 
@@ -305,7 +296,7 @@ public class DecreeCommand implements Decreed {
         int x = 0;
         for (DecreeParameter parameter : getParameters()) {
             if (!params.containsKey(parameter)) {
-                debug("Failed to handle command because of missing param: " + C.YELLOW + parameter.getName() + C.RED + "!", C.RED);
+                debug("Failed to handle command because of missing param: " + C.GOLD + parameter.getName() + C.RED + "!", C.RED);
                 debug("Params stored: " + params, C.RED);
                 debug("This is a big problem within the Decree system, as it should have been caught earlier. Please contact the author(s).", C.RED);
                 return false;
@@ -325,7 +316,7 @@ public class DecreeCommand implements Decreed {
                     if (e.getCause().getMessage().endsWith("may only be triggered synchronously.")) {
                         debug("Sent asynchronously while it must be ran sync", C.RED);
                         e.printStackTrace();
-                        sender.sendMessage(C.RED + "The command you tried to run (" + C.YELLOW + getPath() + C.RED + ") may only be run sync! Contact your admin!");
+                        sender.sendMessage(C.RED + "The command you tried to run (" + C.GOLD + getPath() + C.RED + ") may only be run sync! Contact your admin!");
                     } else {
                         throw e;
                     }
@@ -393,7 +384,7 @@ public class DecreeCommand implements Decreed {
                 splitArg = new KList<>(arg.split("="));
 
                 if (splitArg.size() == 2) {
-                    debug("Parameter fixed by replacing '==' with '=' (new arg: " + C.YELLOW + arg + C.RED + ")", C.RED);
+                    debug("Parameter fixed by replacing '==' with '=' (new arg: " + C.GOLD + arg + C.RED + ")", C.RED);
                 } else {
                     badArgs.add(arg);
                     continue;
@@ -401,19 +392,19 @@ public class DecreeCommand implements Decreed {
             }
 
             if (system().isAllowNullInput() && splitArg.get(1).equalsIgnoreCase("null")) {
-                debug("Null parameter added: " + C.YELLOW + arg, C.GREEN);
+                debug("Null parameter added: " + C.GOLD + arg, C.GREEN);
                 nullArgs.add(splitArg.get(0));
                 continue;
             }
 
             if (splitArg.get(0).isEmpty()) {
-                debug("Parameter key has empty value (full arg: " + C.YELLOW + arg + C.RED + ")", C.RED);
+                debug("Parameter key has empty value (full arg: " + C.GOLD + arg + C.RED + ")", C.RED);
                 badArgs.add(arg);
                 continue;
             }
 
             if (splitArg.get(1).isEmpty()) {
-                debug("Parameter key: " + C.YELLOW + splitArg.get(0) + C.RED + " has empty value (full arg: " + C.YELLOW + arg + C.RED + ")", C.RED);
+                debug("Parameter key: " + C.GOLD + splitArg.get(0) + C.RED + " has empty value (full arg: " + C.GOLD + arg + C.RED + ")", C.RED);
                 badArgs.add(arg);
                 continue;
             }
@@ -554,7 +545,7 @@ public class DecreeCommand implements Decreed {
             for (String keylessArg : keylessArgs.copy()) {
 
                 if (system().isAllowNullInput() && keylessArg.equalsIgnoreCase("null")) {
-                    debug("Null parameter added: " + C.YELLOW + keylessArg, C.GREEN);
+                    debug("Null parameter added: " + C.GOLD + keylessArg, C.GREEN);
                     parameters.put(option, nullParam);
                     continue looping;
                 }
@@ -587,7 +578,7 @@ public class DecreeCommand implements Decreed {
                     }
                 } catch (Throwable e) {
                     // This exception is actually something that is broken
-                    debug("Parsing " + C.YELLOW + keylessArg + C.RED + " into " + C.YELLOW + option.getName() + C.RED + " failed because of: " + C.YELLOW + e.getMessage(), C.RED);
+                    debug("Parsing " + C.GOLD + keylessArg + C.RED + " into " + C.GOLD + option.getName() + C.RED + " failed because of: " + C.GOLD + e.getMessage(), C.RED);
                     e.printStackTrace();
                     debug("If you see a handler in the stacktrace that we (" + C.DECREE + "Decree" + C.RED + ") wrote, please report this bug to us.", C.RED);
                     debug("If you see a custom handler of your own, there is an issue with it.", C.RED);
@@ -607,14 +598,14 @@ public class DecreeCommand implements Decreed {
                         parameters.put(option, nullParam);
                         options.remove(option);
                     } else {
-                        debug("Default value " + C.YELLOW + option.getDefaultRaw() + C.RED + " could not be parsed to " + option.getType().getSimpleName(), C.RED);
-                        debug("Reason: " + C.YELLOW + e.getMessage(), C.RED);
+                        debug("Default value " + C.GOLD + option.getDefaultRaw() + C.RED + " could not be parsed to " + option.getType().getSimpleName(), C.RED);
+                        debug("Reason: " + C.GOLD + e.getMessage(), C.RED);
                     }
                 } catch (DecreeWhichException e) {
-                    debug("Default value " + C.YELLOW + option.getDefaultRaw() + C.RED + " returned multiple options", C.RED);
+                    debug("Default value " + C.GOLD + option.getDefaultRaw() + C.RED + " returned multiple options", C.RED);
                     options.remove(option);
                     if (getSystem().isPickFirstOnMultiple()) {
-                        debug("Adding: " + C.YELLOW + e.getOptions().get(0), C.GREEN);
+                        debug("Adding: " + C.GOLD + e.getOptions().get(0), C.GREEN);
                         parameters.put(option, e.getOptions().get(0));
                     } else {
                         Object result = pickValidOption(sender, e.getOptions(), option);
@@ -634,7 +625,7 @@ public class DecreeCommand implements Decreed {
                     continue;
                 }
                 Object contextValue = handler.handle(sender);
-                debug("Context value for " + C.YELLOW + option.getName() + C.GREEN + " set to: " + handler.handleToString(sender), C.GREEN);
+                debug("Context value for " + C.GOLD + option.getName() + C.GREEN + " set to: " + handler.handleToString(sender), C.GREEN);
                 parameters.put(option, contextValue);
                 options.remove(option);
             } else if (parseExceptionArgs.containsKey(option)) {
@@ -656,38 +647,38 @@ public class DecreeCommand implements Decreed {
 
         // Debug
         if (system().isAllowNullInput()) {
-            debug("Unmatched null argument" + (nullArgs.size() == 1 ? "" : "s") + ": " + C.YELLOW + (nullArgs.isNotEmpty() ? nullArgs.toString(", ") : "NONE"), nullArgs.isEmpty() ? C.GREEN : C.RED);
+            debug("Unmatched null argument" + (nullArgs.size() == 1 ? "" : "s") + ": " + C.GOLD + (nullArgs.isNotEmpty() ? nullArgs.toString(", ") : "NONE"), nullArgs.isEmpty() ? C.GREEN : C.RED);
         }
-        debug("Unmatched keyless argument" + (keylessArgs.size() == 1 ? "":"s") + ": " + C.YELLOW + (keylessArgs.isNotEmpty() ? keylessArgs.toString(", ") : "NONE"), keylessArgs.isEmpty() ? C.GREEN : C.RED);
-        debug("Unmatched keyed argument" + (keyedArgs.size() == 1 ? "":"s") + ": " + C.YELLOW + (keyedArgs.isNotEmpty() ? keyedArgs.toString(", ") : "NONE"), keyedArgs.isEmpty() ? C.GREEN : C.RED);
-        debug("Bad argument" + (badArgs.size() == 1 ? "":"s") + ": " + C.YELLOW + (badArgs.isNotEmpty() ? badArgs.toString(", ") : "NONE"), badArgs.isEmpty() ? C.GREEN : C.RED);
-        debug("Failed argument" + (parseExceptionArgs.size() == 1 ? "":"s") + ": " + C.YELLOW + (parseExceptionArgs.size() != 0 ? new KList<>(parseExceptionArgs.values()).toString(", ") : "NONE"), parseExceptionArgs.isEmpty() ? C.GREEN : C.RED);
-        debug("Unfulfilled parameter" + (options.size() == 1 ? "":"s") + ": " + C.YELLOW + (options.isNotEmpty() ? options.convert(DecreeParameter::getName).toString(", ") : "NONE"), options.isEmpty() ? C.GREEN : C.RED);
+        debug("Unmatched keyless argument" + (keylessArgs.size() == 1 ? "":"s") + ": " + C.GOLD + (keylessArgs.isNotEmpty() ? keylessArgs.toString(", ") : "NONE"), keylessArgs.isEmpty() ? C.GREEN : C.RED);
+        debug("Unmatched keyed argument" + (keyedArgs.size() == 1 ? "":"s") + ": " + C.GOLD + (keyedArgs.isNotEmpty() ? keyedArgs.toString(", ") : "NONE"), keyedArgs.isEmpty() ? C.GREEN : C.RED);
+        debug("Bad argument" + (badArgs.size() == 1 ? "":"s") + ": " + C.GOLD + (badArgs.isNotEmpty() ? badArgs.toString(", ") : "NONE"), badArgs.isEmpty() ? C.GREEN : C.RED);
+        debug("Failed argument" + (parseExceptionArgs.size() == 1 ? "":"s") + ": " + C.GOLD + (parseExceptionArgs.size() != 0 ? new KList<>(parseExceptionArgs.values()).toString(", ") : "NONE"), parseExceptionArgs.isEmpty() ? C.GREEN : C.RED);
+        debug("Unfulfilled parameter" + (options.size() == 1 ? "":"s") + ": " + C.GOLD + (options.isNotEmpty() ? options.convert(DecreeParameter::getName).toString(", ") : "NONE"), options.isEmpty() ? C.GREEN : C.RED);
 
         StringBuilder mappings = new StringBuilder("Parameter mapping:");
         parameters.forEach((param, object) -> mappings
                 .append("\n")
                 .append(C.GREEN)
                 .append("\u0009 - (")
-                .append(C.YELLOW)
+                .append(C.GOLD)
                 .append(param.getType().getSimpleName())
                 .append(C.GREEN)
                 .append(") ")
-                .append(C.YELLOW)
+                .append(C.GOLD)
                 .append(param.getName())
                 .append(C.GREEN)
                 .append(" → ")
-                .append(C.YELLOW)
+                .append(C.GOLD)
                 .append(object.toString()));
         options.forEach(param -> mappings
                 .append("\n")
                 .append(C.GREEN)
                 .append("\u0009 - (")
-                .append(C.YELLOW)
+                .append(C.GOLD)
                 .append(param.getType().getSimpleName())
                 .append(C.GREEN)
                 .append(") ")
-                .append(C.YELLOW)
+                .append(C.GOLD)
                 .append(param.getName())
                 .append(C.GREEN)
                 .append(" → ")
@@ -768,8 +759,8 @@ public class DecreeCommand implements Decreed {
         boolean valid = true;
         for (DecreeParameter parameter : getParameters()) {
             if (!parameters.containsKey(parameter)) {
-                debug("Parameter: " + C.YELLOW + parameter.getName() + C.RED + " not in mapping.", C.RED);
-                sender.sendMessageRaw(C.RED + "Parameter: " + C.YELLOW + parameter.getHelp(sender, true) + C.RED + " not specified. Please add.");
+                debug("Parameter: " + C.GOLD + parameter.getName() + C.RED + " not in mapping.", C.RED);
+                sender.sendMessageRaw(C.RED + "Parameter: " + C.GOLD + parameter.getHelp(sender, true) + C.RED + " not specified. Please add.");
                 valid = false;
             }
         }
@@ -792,9 +783,9 @@ public class DecreeCommand implements Decreed {
             parameters.put(option, option.getHandler().parse(value));
             return true;
         } catch (DecreeWhichException e) {
-            debug("Value " + C.YELLOW + value + C.RED + " returned multiple options", C.RED);
+            debug("Value " + C.GOLD + value + C.RED + " returned multiple options", C.RED);
             if (getSystem().isPickFirstOnMultiple()) {
-                debug("Adding: " + C.YELLOW + e.getOptions().get(0), C.GREEN);
+                debug("Adding: " + C.GOLD + e.getOptions().get(0), C.GREEN);
                 parameters.put(option, e.getOptions().get(0));
             } else {
                 Object result = pickValidOption(sender, e.getOptions(), option);
@@ -853,7 +844,7 @@ public class DecreeCommand implements Decreed {
                 // Skip param
                 if (param == null) {
                     system.debug("Can't find parameter key for " + key + "=" + value + " in " + getPath());
-                    sender.sendMessage(C.YELLOW + "Unknown Parameter: " + key);
+                    sender.sendMessage(C.GOLD + "Unknown Parameter: " + key);
                     continue;
                 }
 
@@ -893,7 +884,7 @@ public class DecreeCommand implements Decreed {
                         in.set(ix--, update);
                     }
                 } catch (IndexOutOfBoundsException e) {
-                    sender.sendMessage(C.YELLOW + "Unknown Parameter: " + i + " (" + Form.getNumberSuffixThStRd(ix + 1) + " argument)");
+                    sender.sendMessage(C.GOLD + "Unknown Parameter: " + i + " (" + Form.getNumberSuffixThStRd(ix + 1) + " argument)");
                 }
             }
         }

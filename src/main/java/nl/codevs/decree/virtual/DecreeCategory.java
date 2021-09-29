@@ -132,20 +132,20 @@ public class DecreeCategory implements Decreed {
     public KList<Decreed> matchAll(String in, DecreeSender sender){
 
         if (system().isDebugMatching()) {
-            debug("Comparing" + C.YELLOW + in + C.GREEN + " with Categories " + C.YELLOW + (getSubCats().isEmpty() ? "NONE" : getSubCats().convert(c -> c.getNames().toString(", ")).toString(", ")), C.GREEN);
-            debug("Comparing" + C.YELLOW + in + C.GREEN + " with Commands " + C.YELLOW + (getCommands().isEmpty() ? "NONE" : getCommands().convert(c -> c.getNames().toString(", ")).toString(", ")), C.GREEN);
+            debug("Comparing: " + C.GOLD + in + C.GREEN + " with Categories " + C.GOLD + (getSubCats().isEmpty() ? "NONE" : getSubCats().convert(c -> c.getNames().toString(C.GREEN + ", " + C.GOLD)).toString(C.GREEN + " / " + C.GOLD)), C.GREEN);
+            debug("Comparing: " + C.GOLD + in + C.GREEN + " with Commands " + C.GOLD + (getCommands().isEmpty() ? "NONE" : getCommands().convert(c -> c.getNames().toString(C.GREEN + ", " + C.GOLD)).toString(C.GREEN + " / " + C.GOLD)), C.GREEN);
         }
 
         KList<Decreed> matches = new KList<>();
 
         for (DecreeCategory subCat : getSubCats()) {
-            if (subCat.doesMatch(in, sender)) {
+            if (subCat.doesMatch(in, sender) > 0) {
                 matches.add(subCat);
             }
         }
 
         for (DecreeCommand command : getCommands()) {
-            if (command.doesMatch(in, sender)) {
+            if (command.doesMatch(in, sender) > 0) {
                 matches.add(command);
             }
         }
@@ -158,10 +158,6 @@ public class DecreeCategory implements Decreed {
      * @param sender The sender to send help to
      */
     public void sendNodeHelp(DecreeSender sender) {
-
-        if (!sender.isPlayer()) {
-            sender.sendMessage(C.DECREE + getPath());
-        }
 
         String hoverTitle = "<#42ecf5>" + getNames().toString(", ");
         String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
@@ -231,7 +227,7 @@ public class DecreeCategory implements Decreed {
                     if (c.matchAll(null, sender).isNotEmpty()) {
                         c.sendNodeHelp(sender);
                     }
-                } else if (match.doesMatch(sender)){
+                } else if (match.doesMatch(sender) > 0){
                     match.sendHelpTo(sender);
                 }
             }
@@ -242,19 +238,20 @@ public class DecreeCategory implements Decreed {
 
     @Override
     public boolean run(KList<String> args, DecreeSender sender) {
+        debug("Arguments: " + C.GOLD + args.toString(C.GREEN + ", " + C.GOLD), C.GREEN);
         if (args.isEmpty()) {
             debug("Finished here", C.GREEN);
             sendHelpTo(sender);
             return true;
         }
-        debug("Arguments: " + args.toString(", "), C.GREEN);
         for (Decreed decreed : matchAll(args.get(0), sender)) {
+            // If there are no allowed / visible nodes in a category, do not show
             if (decreed instanceof DecreeCategory c) {
-                // If there are no allowed / visible nodes, do not show
                 if (c.matchAll(null, sender).isEmpty()) {
                     continue;
                 }
             }
+            debug("Running matched Decreed: " + C.GOLD + decreed.getShortestName(), C.GREEN);
             if (decreed.run(args.subList(1, args.size()), sender)) {
                 return true;
             }
