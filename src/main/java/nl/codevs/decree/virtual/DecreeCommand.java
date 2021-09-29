@@ -66,7 +66,29 @@ public class DecreeCommand implements Decreed {
     private KList<DecreeParameter> calcParameters() {
         KList<DecreeParameter> parameters = new KList<>();
         Arrays.stream(method.getParameters()).filter(p -> p.isAnnotationPresent(Param.class)).forEach(p -> parameters.add(new DecreeParameter(p)));
-        return parameters;
+        return parameters.qsort((o1, o2) -> {
+            if (o1.isRequired()) {
+                if (o2.isRequired()) {
+                    return 0;
+                } else {
+                    return -1;
+                }
+            } else if (o2.isRequired()) {
+                return 1;
+            }
+
+            if (o1.isContextual()) {
+                if (o2.isContextual()) {
+                    return 0;
+                } else {
+                    return -1;
+                }
+            } else if (o2.isContextual()) {
+                return 1;
+            }
+
+            return 0;
+        });
     }
 
     /**
@@ -74,29 +96,7 @@ public class DecreeCommand implements Decreed {
      * @return Sorted parameters
      */
     public KList<DecreeParameter> getParameters() {
-        return parameters.copy().qsort((o1, o2) -> {
-                if (o1.isRequired()) {
-                    if (o2.isRequired()) {
-                        return 0;
-                    } else {
-                        return -1;
-                    }
-                } else if (o2.isRequired()) {
-                    return 1;
-                }
-
-                if (o1.isContextual()) {
-                    if (o2.isContextual()) {
-                        return 0;
-                    } else {
-                        return -1;
-                    }
-                } else if (o2.isRequired()) {
-                    return 1;
-                }
-
-                return 0;
-        });
+        return parameters.copy();
     }
 
     /**
@@ -171,7 +171,7 @@ public class DecreeCommand implements Decreed {
         if (!getDecree().permission().equals(Decree.NO_PERMISSION)){
             String granted;
             if (sender.isOp() || sender.hasPermission(getDecree().permission())){
-                granted = "<#a73abd>(Granted)";
+                granted = "<#67ff6d>(Granted)";
             } else {
                 granted = "<#db4321>(Not Granted)";
             }
@@ -233,7 +233,7 @@ public class DecreeCommand implements Decreed {
                 }
 
                 // Add this parameter
-                appendedParameters.append(parameter.getHelp(sender, onClick, false));
+                appendedParameters.append(parameter.getHelp(sender, onClick));
             }
         }
 
@@ -279,7 +279,7 @@ public class DecreeCommand implements Decreed {
     @Override
     public boolean run(KList<String> args, DecreeSender sender) {
 
-        if (!getOrigin().validFor(sender) || !sender.hasPermission(getPermission())) {
+        if (!doesMatch(sender)) {
             return false;
         }
 
@@ -630,7 +630,7 @@ public class DecreeCommand implements Decreed {
                 DecreeContextHandler<?> handler = DecreeSystem.Context.getHandlers().get(option.getType());
                 if (handler == null) {
                     debug("Parameter " + option.getName() + " marked as contextual without available context handler (" + option.getType().getSimpleName() + ").", C.RED);
-                    sender.sendMessageRaw(C.RED + "Parameter " + C.GOLD + option.getHelp(sender, "yeet", true) + C.RED + " marked as contextual without available context handler (" + option.getType().getSimpleName() + "). Please context your admin.");
+                    sender.sendMessageRaw(C.RED + "Parameter " + C.GOLD + option.getHelp(sender, true) + C.RED + " marked as contextual without available context handler (" + option.getType().getSimpleName() + "). Please context your admin.");
                     continue;
                 }
                 Object contextValue = handler.handle(sender);
@@ -769,9 +769,12 @@ public class DecreeCommand implements Decreed {
         for (DecreeParameter parameter : getParameters()) {
             if (!parameters.containsKey(parameter)) {
                 debug("Parameter: " + C.YELLOW + parameter.getName() + C.RED + " not in mapping.", C.RED);
-                sender.sendMessageRaw(C.RED + "Parameter: " + C.YELLOW + parameter.getHelp(sender, null, true) + C.RED + " not specified. Please add.");
+                sender.sendMessageRaw(C.RED + "Parameter: " + C.YELLOW + parameter.getHelp(sender, true) + C.RED + " not specified. Please add.");
                 valid = false;
             }
+        }
+        if (!valid) {
+            sendHelpTo(sender);
         }
         return valid;
     }
@@ -779,7 +782,7 @@ public class DecreeCommand implements Decreed {
     /**
      * Parses a parameter into a map after parsing
      * @param parameters The parameter map to store the value into
-     * @param parseExceptionArgs
+     * @param parseExceptionArgs Parameters which ran into parseExceptions
      * @param option The parameter type to parse into
      * @param value The value to parse
      * @return True if successful, false if not. Nothing is added on parsing failure.

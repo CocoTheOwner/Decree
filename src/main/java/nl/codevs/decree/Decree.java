@@ -13,7 +13,7 @@ import java.util.List;
 
 public class Decree extends JavaPlugin implements TabCompleter, CommandExecutor {
 
-    private final DecreeSystem decreeSystem = new DecreeSystem(new MainCommandClass(), this);
+    private DecreeSystem decreeSystem;
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
@@ -27,6 +27,7 @@ public class Decree extends JavaPlugin implements TabCompleter, CommandExecutor 
 
     @Override
     public void onEnable() {
+        decreeSystem = new DecreeSystem(new MainCommandClass(), this);
         Bukkit.getPluginManager().registerEvents(decreeSystem, this);
     }
 }

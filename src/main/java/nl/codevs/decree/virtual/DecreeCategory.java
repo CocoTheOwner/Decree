@@ -231,7 +231,7 @@ public class DecreeCategory implements Decreed {
                     if (c.matchAll(null, sender).isNotEmpty()) {
                         c.sendNodeHelp(sender);
                     }
-                } else if (match.doesMatch(null, sender)){
+                } else if (match.doesMatch(sender)){
                     match.sendHelpTo(sender);
                 }
             }
@@ -250,12 +250,12 @@ public class DecreeCategory implements Decreed {
         debug("Arguments: " + args.toString(", "), C.GREEN);
         for (Decreed decreed : matchAll(args.get(0), sender)) {
             if (decreed instanceof DecreeCategory c) {
+                // If there are no allowed / visible nodes, do not show
                 if (c.matchAll(null, sender).isEmpty()) {
-                    return false;
+                    continue;
                 }
             }
             if (decreed.run(args.subList(1, args.size()), sender)) {
-                debug("Valid path: " + decreed.getName(), C.GREEN);
                 return true;
             }
         }

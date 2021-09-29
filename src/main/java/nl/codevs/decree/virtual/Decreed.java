@@ -106,45 +106,59 @@ public interface Decreed {
     }
 
     /**
+     * Debug a mismatch
+     * @param reason the reason for the mismatch
+     * @param sender the sender who sent the command
+     */
+    default void debugMismatch(String reason, DecreeSender sender) {
+        if (system().isDebugMismatchReason()) {
+            parent().debug("Name " + C.YELLOW + getName() + C.GREEN + " invalid for sender " + C.YELLOW + sender.getName() + C.GREEN + " because of " + C.YELLOW + reason, C.GREEN);
+        }
+    }
+
+    /**
+     * Match against only a sender. Basically an is-allowed check.
+     * @param sender The sender to check against
+     * @return True if permitted & origin matches
+     */
+    default boolean doesMatch(DecreeSender sender) {
+        return doesMatch(null, sender);
+    }
+
+    /**
      * Deep check whether this node matches input and is allowed for a sender<br>
      * @param sender The sender that called the node
      * @param in The input string
      * @return True if allowed & match, false if not
      */
     default boolean doesMatch(String in, DecreeSender sender){
-        String reason;
-        if (getOrigin().validFor(sender)) {
-            if (sender.hasPermission(getPermission())) {
-
-                if (in == null || in.isEmpty()) {
-                    return true;
-                }
-
-                String compare = "Comparison: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
-                for (String i : getNames()) {
-                    if (i.equalsIgnoreCase(in) || i.toLowerCase().contains(in.toLowerCase()) || in.toLowerCase().contains(i.toLowerCase())) {
-                        if (system().isDebugMatching()) {
-                            parent().debug(compare + "MATCHED", C.GREEN);
-                        }
-                        return true;
-                    }
-                }
-                if (system().isDebugMatching()) {
-                    parent().debug(compare + C.RED + "NO MATCH", C.GREEN);
-                }
-
-                return false;
-
-            } else {
-                reason = "No Permission";
-            }
-        } else if (!sender.hasPermission(getPermission())) {
-            reason = "No Permission & Origin Mismatch";
-        } else {
-            reason = "Origin Mismatch";
+        if (!getOrigin().validFor(sender)) {
+            debugMismatch("Origin Mismatch", sender);
+            return false;
         }
-        if (system().isDebugMismatchReason()) {
-            debug("Name " + C.YELLOW + getName() + C.GREEN + " invalid for sender (" + C.YELLOW + sender.getName() + C.GREEN + ") because of " + C.YELLOW + reason, C.GREEN);
+        if (!sender.hasPermission(getPermission())) {
+            debugMismatch("Permission Mismatch", sender);
+            return false;
+        }
+
+        String compare = "Comparison: " + C.YELLOW + in + C.GREEN + " with " + C.YELLOW + getNames().toString(", ") + C.GREEN + ": ";
+
+        if (in == null || in.isEmpty()) {
+            parent().debug(compare + "MATCHED", C.GREEN);
+            return true;
+        }
+
+        for (String i : getNames()) {
+            if (i.equalsIgnoreCase(in) || i.toLowerCase().contains(in.toLowerCase()) || in.toLowerCase().contains(i.toLowerCase())) {
+                if (system().isDebugMatching()) {
+                    parent().debug(compare + "MATCHED", C.GREEN);
+                }
+                return true;
+            }
+        }
+
+        if (system().isDebugMatching()) {
+            parent().debug(compare + C.RED + "NO MATCH", C.GREEN);
         }
         return false;
     }

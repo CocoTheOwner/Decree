@@ -50,6 +50,7 @@ public class DecreeSystem implements Listener {
     public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin plugin) {
         this.roots = new Roots(rootInstances, this);
         this.instance = plugin;
+        System.out.println("Enabled Decree v" + plugin.getDescription().getVersion());
     }
 
     /**

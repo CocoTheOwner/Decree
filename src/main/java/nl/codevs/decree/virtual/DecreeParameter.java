@@ -153,6 +153,36 @@ public class DecreeParameter {
         return param.contextual();
     }
 
+
+    /**
+     * Get basic help
+     * @param sender For this sender
+     * @return The basic help string
+     */
+    public String getHelp(DecreeSender sender) {
+        return getHelp(sender, false);
+    }
+
+    /**
+     * Get help, standard or simple
+     * @param sender For this sender
+     * @param simple Whether to send simple (true) or advanced (false) help
+     * @return The help string
+     */
+    public String getHelp(DecreeSender sender, boolean simple) {
+        return getHelp(sender, null, simple);
+    }
+
+    /**
+     * Get help, with variable runOnClick
+     * @param sender For this sender
+     * @param runOnClick What to run when the user clicks the text in chat
+     * @return The help string
+     */
+    public String getHelp(DecreeSender sender, String runOnClick) {
+        return getHelp(sender, runOnClick, false);
+    }
+
     /**
      * @return Command help for this parameter
      */
@@ -174,17 +204,17 @@ public class DecreeParameter {
             if (handler == null) {
                 sender.sendMessage(C.RED + "Parameter " + C.GOLD + getName() + C.RED + " assigned contextual value but there exists no handler for it");
                 sender.sendMessage(C.RED + "Please contact your admin, this is a command configuration error!");
-                hoverUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>Cannot be derived from context! Error! Contact admin!";
+                hoverUsage = "<#ff9900>➱ <#33cc00><font:minecraft:uniform>Cannot be derived from context! Error! Contact admin!";
             } else {
                 String valueRightNow = handler.handleToString(sender);
-                hoverUsage = "<#ff9900>➱ <#ffcc00><font:minecraft:uniform>Derived from environment context: " + C.GOLD + valueRightNow;
+                hoverUsage = "<#ff9900>➱ <#33cc00><font:minecraft:uniform>Derived from environment context: " + C.GOLD + valueRightNow;
             }
             realText = "<#ffcc00>[" + realTitle + "<#ffcc00>] ";
         } else if (isRequired()) {
             hoverUsage = "<#db4321>⚠ <#faa796><font:minecraft:uniform>This parameter is required.";
             realText = "<red>[" + realTitle + "<red>] ";
         } else if (hasDefault()) {
-            hoverUsage = "<#2181db>✔ <#78dcf0><font:minecraft:uniform>Defaults to \"" + getParam().defaultValue() + "\" if undefined.";
+            hoverUsage = "<#2181db>✔ <#78dcf0><font:minecraft:uniform>Defaults to " + C.GOLD + getParam().defaultValue() + "<#78dcf0> if undefined.";
             realText = "<#4f4f4f>⊰" + realTitle + "<#4f4f4f>⊱";
         } else {
             hoverUsage = "<#a73abd>✔ <#78dcf0><font:minecraft:uniform>This parameter is optional.";
