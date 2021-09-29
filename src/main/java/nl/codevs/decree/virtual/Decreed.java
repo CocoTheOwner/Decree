@@ -112,7 +112,7 @@ public interface Decreed {
      */
     default void debugMismatch(String reason, DecreeSender sender) {
         if (system().isDebugMismatchReason()) {
-            parent().debug("Name " + C.YELLOW + getName() + C.GREEN + " invalid for sender " + C.YELLOW + sender.getName() + C.GREEN + " because of " + C.YELLOW + reason, C.GREEN);
+            parent().debug("Hiding decreed " + C.YELLOW + getName() + C.GREEN + " for sender " + C.YELLOW + sender.getName() + C.GREEN + " because of " + C.YELLOW + reason, C.GREEN);
         }
     }
 
