@@ -10,14 +10,14 @@ public class SubCommandClass implements DecreeCommandExecutor {
     @Decree(
             description = "Kill a player",
             origin = DecreeOrigin.CONSOLE,
-            aliases = "ded",
+            aliases = "kill",
             permission = "kill",
             sync = true
     )
-    public void hello(
+    public void killPlayer(
             @Param(
                     name = "Name",
-                    aliases = {"1", "16"},
+                    aliases = {"death-message", "16"},
                     description = "Idk",
                     defaultValue = "Text!"
             ) String message

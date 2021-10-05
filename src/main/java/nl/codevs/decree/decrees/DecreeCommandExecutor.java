@@ -2,7 +2,6 @@ package nl.codevs.decree.decrees;
 
 import nl.codevs.decree.DecreeSystem;
 import nl.codevs.decree.util.DecreeSender;
-import nl.codevs.decree.util.C;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 

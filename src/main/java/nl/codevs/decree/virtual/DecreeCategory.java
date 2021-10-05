@@ -276,7 +276,6 @@ public class DecreeCategory implements Decreed {
 
     @Override
     public String getName() {
-        return decree().name().isEmpty() ? getInstance().getClass().getSimpleName() : decree().name();
+        return capitalToLine(decree().name().isEmpty() ? getInstance().getClass().getSimpleName() : decree().name());
     }
-
 }

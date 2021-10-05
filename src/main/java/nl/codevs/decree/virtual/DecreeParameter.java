@@ -191,6 +191,7 @@ public class DecreeParameter {
         String hoverDescription = "<#3fe05a>✎ <#6ad97d><font:minecraft:uniform>" + getDescription();
         String hoverUsage;
         String hoverType = "<#cc00ff>✢ <#ff33cc><font:minecraft:uniform>This parameter is a " + C.GOLD + getType().getSimpleName() + "<#ff33cc>.";
+        @SuppressWarnings("SpellCheckingInspection")
         String hoverRun = newline + "<#2e8bdf>⎆ <#24dfdb><font:minecraft:uniform>" + runOnClick;
         String fullRunOnClick1 = "<click:suggest_command:" + runOnClick + ">";
         String fullRunOnClick2 = "</click>";

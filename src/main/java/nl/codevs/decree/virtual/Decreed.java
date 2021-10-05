@@ -53,7 +53,7 @@ public interface Decreed {
      * Get the required permission for this node
      */
     default String getPermission() {
-        return decree().permission();
+        return parent().getPermission() + "." + decree().permission();
     }
 
     /**
@@ -85,7 +85,7 @@ public interface Decreed {
     default KList<String> getNames() {
         KList<String> names = new KList<>(getName());
         names.addAll(Arrays.asList(decree().aliases()));
-        return names.qremoveIf(String::isEmpty).qremoveDuplicates();
+        return names.qremoveIf(String::isEmpty).qremoveDuplicates().convert(this::capitalToLine);
     }
 
     /**
@@ -188,5 +188,24 @@ public interface Decreed {
             parent().debug(compare + C.RED + "NO MATCH - 0", C.GREEN);
         }
         return 0;
+    }
+
+    /**
+     * Replace all capital letters in a string with a - and lowercase representation
+     * @param string The string to convert 'IMineDiamondsForFun'
+     * @return The converted string 'i-mine-diamonds-for-fun'
+     */
+    default String capitalToLine(String string) {
+        char[] chars = string.toCharArray();
+        StringBuilder name = new StringBuilder();
+        for (char aChar : chars) {
+            if (Character.isUpperCase(aChar)) {
+                name.append("-").append(Character.toLowerCase(aChar));
+            } else {
+                name.append(aChar);
+            }
+        }
+        String result = name.toString();
+        return result.startsWith("-") ? result.substring(1) : result;
     }
 }

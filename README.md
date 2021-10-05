@@ -1,5 +1,5 @@
 # Decree - How to
-Decree is an advanced and easy-to-use command system.
+Decree is an advanced yet easy-to-use command system.
 
 ## Setting up Decree with your Plugin
 Before starting, make sure that in your `plugin.yml` config file you add the commands for your plugin:
@@ -8,7 +8,8 @@ commands:
   mainCommandNameHere:
     aliases: [ cmmd, cmd, cd ]
 ```
-Note that these must be the same as used in the main @Decree in your main command class (`MainCommandClass`)
+Note that these must be the same as used in the main @Decree in your main command class (`MainCommandClass`).
+You can add multiple of these, after which you would add multiple root (main) @Decree annotated classes to the root registry.
 
 Then, in the main plugin class,
 ```java
@@ -201,3 +202,13 @@ public class MainCommandClass implements DecreeExecutor {
 ```
 Note that you shouldn't make recursive calls (loops)
 - The example setup used in this guide is included. See the `decrees` directory.
+
+
+
+# To-do
+1. Implement booleans to allow -name to turn them to true
+2. Implement tab-completions
+3. Make examples for using null parameters
+4. Show how picking options works
+5. Precache commands + tab completions
+6. Double-check that valueless keyed parameters are put into "bad"
