@@ -1,6 +1,7 @@
 package nl.codevs.decree.virtual;
 
 import lombok.Getter;
+import nl.codevs.decree.DecreeSettings;
 import nl.codevs.decree.DecreeSystem;
 import nl.codevs.decree.decrees.DecreeCommandExecutor;
 import nl.codevs.decree.util.DecreeOrigin;
@@ -131,9 +132,13 @@ public class DecreeCategory implements Decreed {
      */
     public KList<Decreed> matchAll(String in, DecreeSender sender){
 
-        if (system().isDebugMatching()) {
-            debug("Comparing: " + C.GOLD + in + C.GREEN + " with Categories " + C.GOLD + (getSubCats().isEmpty() ? "NONE" : getSubCats().convert(c -> c.getNames().toString(C.GREEN + ", " + C.GOLD)).toString(C.GREEN + " / " + C.GOLD)), C.GREEN);
-            debug("Comparing: " + C.GOLD + in + C.GREEN + " with Commands " + C.GOLD + (getCommands().isEmpty() ? "NONE" : getCommands().convert(c -> c.getNames().toString(C.GREEN + ", " + C.GOLD)).toString(C.GREEN + " / " + C.GOLD)), C.GREEN);
+        if (DecreeSettings.debugMatching) {
+            if (!subCats.isEmpty()) {
+                debug("Comparing: " + C.GOLD + in + C.GREEN + " with Categories " + C.GOLD + (getSubCats().isEmpty() ? "NONE" : getSubCats().convert(c -> c.getNames().toString(C.GREEN + ", " + C.GOLD)).toString(C.GREEN + " / " + C.GOLD)), C.GREEN);
+            }
+            if (!commands.isEmpty()) {
+                debug("Comparing: " + C.GOLD + in + C.GREEN + " with Commands " + C.GOLD + (getCommands().isEmpty() ? "NONE" : getCommands().convert(c -> c.getNames().toString(C.GREEN + ", " + C.GOLD)).toString(C.GREEN + " / " + C.GOLD)), C.GREEN);
+            }
         }
 
         KList<Decreed> matches = new KList<>();
@@ -169,7 +174,7 @@ public class DecreeCategory implements Decreed {
         String realText = "<#46826a>⇀<gradient:#42ecf5:#428df5> " + getName() + "<gradient:#afe3d3:#a2dae0> - Category of Commands";
 
         // Permission
-        if (!getDecree().permission().equals(Decree.NO_PERMISSION)){
+        if (!getPermission().equals(Decree.NO_PERMISSION)){
             String granted;
             if (sender.isOp() || sender.hasPermission(getDecree().permission())){
                 granted = "<#a73abd>(Granted)";
@@ -256,6 +261,9 @@ public class DecreeCategory implements Decreed {
                 return true;
             }
         }
+        sendHelpTo(sender);
+        sender.sendMessage(C.RED + "Could not find command or subcategory " + C.GOLD + args.get(0));
+        sender.sendMessage(C.YELLOW + "Please double-check your command, or click on one above.");
         return false;
     }
 

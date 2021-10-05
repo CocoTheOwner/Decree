@@ -1,17 +1,17 @@
 package nl.codevs.decree.context;
 
 import nl.codevs.decree.util.DecreeSender;
-import org.bukkit.World;
+import org.bukkit.entity.Player;
 
-public class WorldContextHandler implements DecreeContextHandler<World> {
+public class PlayerContextHandler implements DecreeContextHandler<Player> {
     @Override
     public boolean supports(Class<?> type) {
-        return type.equals(World.class);
+        return type.equals(Player.class);
     }
 
     @Override
-    public World handle(DecreeSender sender) {
-        return sender.isPlayer() ? sender.player().getWorld() : null;
+    public Player handle(DecreeSender sender) {
+        return sender.player();
     }
 
     @Override

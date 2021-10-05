@@ -21,7 +21,7 @@ public class ShortHandler implements DecreeParameterHandler<Short> {
             double m = getMultiplier(r);
             return (short) (Short.valueOf(r.get()).doubleValue() * m);
         } catch (Throwable e) {
-            throw new DecreeParsingException("Unable to parse short \"" + in + "\"");
+            throw new DecreeParsingException(Short.class, in, e);
         }
     }
 

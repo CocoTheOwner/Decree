@@ -22,7 +22,7 @@ public class FloatHandler implements DecreeParameterHandler<Float> {
             double m = getMultiplier(r);
             return (float) (Float.parseFloat(r.get()) * m);
         } catch (Throwable e) {
-            throw new DecreeParsingException("Unable to parse float \"" + in + "\"");
+            throw new DecreeParsingException(Float.class, in, e);
         }
     }
 

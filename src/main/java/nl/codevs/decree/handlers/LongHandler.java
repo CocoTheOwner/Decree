@@ -21,7 +21,7 @@ public class LongHandler implements DecreeParameterHandler<Long> {
             double m = getMultiplier(r);
             return (long) (Long.valueOf(r.get()).doubleValue() * m);
         } catch (Throwable e) {
-            throw new DecreeParsingException("Unable to parse long \"" + in + "\"");
+            throw new DecreeParsingException(Long.class, in, e);
         }
     }
 

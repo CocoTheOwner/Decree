@@ -22,7 +22,7 @@ public class DoubleHandler implements DecreeParameterHandler<Double> {
             double m = getMultiplier(r);
             return Double.parseDouble(r.get()) * m;
         } catch (Throwable e) {
-            throw new DecreeParsingException("Unable to parse double \"" + in + "\"");
+            throw new DecreeParsingException(Double.class, in, e);
         }
     }
 

@@ -18,11 +18,14 @@ public class BooleanHandler implements DecreeParameterHandler<Boolean> {
     }
 
     @Override
-    public @NotNull Boolean parse(String in, boolean force) throws DecreeParsingException {
+    public Boolean parse(String in, boolean force) throws DecreeParsingException {
+        if (in.equalsIgnoreCase("null") || in.equalsIgnoreCase("other") || in.equalsIgnoreCase("flip") || in.equalsIgnoreCase("toggle")) {
+            return null;
+        }
         try {
             return Boolean.parseBoolean(in);
         } catch (Throwable e) {
-            throw new DecreeParsingException("Unable to parse boolean \"" + in + "\"");
+            throw new DecreeParsingException(Boolean.class, in, e);
         }
     }
 

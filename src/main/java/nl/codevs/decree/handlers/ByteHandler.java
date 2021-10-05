@@ -23,7 +23,7 @@ public class ByteHandler implements DecreeParameterHandler<Byte> {
         try {
             return Byte.parseByte(in);
         } catch (Throwable e) {
-            throw new DecreeParsingException("Unable to parse byte \"" + in + "\"");
+            throw new DecreeParsingException(Byte.class, in, e);
         }
     }
 

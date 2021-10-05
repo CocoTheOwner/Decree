@@ -24,8 +24,12 @@ public class WorldHandler implements DecreeParameterHandler<World> {
         try {
             KList<World> options = getPossibilities(in);
 
+            if (options.stream().noneMatch(w -> w.getName().equalsIgnoreCase("random")) && in.equalsIgnoreCase("random")) {
+                return options.getRandom();
+            }
+
             if (options.isEmpty()) {
-                throw new DecreeParsingException("Unable to find World \"" + in + "\"");
+                throw new DecreeParsingException(World.class, in, "No worlds match that input");
             } else if (options.size() > 1) {
                 if (force) {
                     return options.getRandom();
@@ -36,7 +40,7 @@ public class WorldHandler implements DecreeParameterHandler<World> {
         } catch (DecreeWhichException | DecreeParsingException e) {
             throw e;
         } catch (Throwable e) {
-            throw new DecreeParsingException("Unable to find World \"" + in + "\" because of an uncaught exception: " + e);
+            throw new DecreeParsingException(World.class, in, e);
         }
     }
 

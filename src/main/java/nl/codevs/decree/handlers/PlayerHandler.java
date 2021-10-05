@@ -29,18 +29,43 @@ public class PlayerHandler implements DecreeParameterHandler<Player> {
             KList<Player> options = getPossibilities(in);
             KList<String> names = getPossibilities().convert(HumanEntity::getName);
 
-            if (!names.contains("self") && in.equals("self") && DecreeSystem.Context.get().isPlayer()){
+            if (!names.contains("self") && in.equalsIgnoreCase("self") && DecreeSystem.Context.get().isPlayer()) {
                 return DecreeSystem.Context.get().player();
             }
-            if (!names.contains("me") && in.equals("me") && DecreeSystem.Context.get().isPlayer()){
+            if (!names.contains("me") && in.equalsIgnoreCase("me") && DecreeSystem.Context.get().isPlayer()) {
                 return DecreeSystem.Context.get().player();
             }
-            if (!names.contains("random") && in.equals("random")){
+            if (!names.contains("random") && in.equalsIgnoreCase("random")) {
                 return options.getRandom();
+            }
+            if (!names.contains("closest") && in.equalsIgnoreCase("closest") && DecreeSystem.Context.get().isPlayer()) {
+                Player closest = null;
+                double distance = -1;
+                for (Player option : options) {
+                    if (option.getLocation().getWorld() == DecreeSystem.Context.get().player().getWorld()) {
+
+                        if (closest == null) {
+                            closest = option;
+                            distance = option.getLocation().distance(DecreeSystem.Context.get().player().getLocation());
+                            continue;
+                        }
+
+                        double d = option.getLocation().distance(DecreeSystem.Context.get().player().getLocation());
+                        if (d < distance) {
+                            closest = option;
+                            distance = d;
+                        }
+                    }
+                }
+                if (closest == null) {
+                    return options.getRandom();
+                } else {
+                    return closest;
+                }
             }
 
             if (options.isEmpty()) {
-                throw new DecreeParsingException("Unable to find Player \"" + in + "\"");
+                throw new DecreeParsingException(Byte.class, in, "No players match that input");
             } else if (options.size() > 1) {
                 if (force) {
                     return options.getRandom();
@@ -49,8 +74,10 @@ public class PlayerHandler implements DecreeParameterHandler<Player> {
             }
 
             return options.get(0);
+        } catch (DecreeParsingException | DecreeWhichException e) {
+            throw e;
         } catch (Throwable e) {
-            throw new DecreeParsingException("Unable to find Player \"" + in + "\" because of an uncaught exception: " + e);
+            throw new DecreeParsingException(Player.class, in, e);
         }
     }
 

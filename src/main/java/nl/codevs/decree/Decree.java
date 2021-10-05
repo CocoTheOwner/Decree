@@ -28,7 +28,7 @@ public class Decree extends JavaPlugin implements TabCompleter, CommandExecutor 
     @Override
     public void onEnable() {
         decreeSystem = new DecreeSystem(new MainCommandClass(), this);
-        decreeSystem.setDebug(true);
+        DecreeSettings.debug = true;
         Bukkit.getPluginManager().registerEvents(decreeSystem, this);
     }
 }

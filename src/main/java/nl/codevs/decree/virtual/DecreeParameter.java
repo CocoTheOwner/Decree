@@ -3,6 +3,7 @@ package nl.codevs.decree.virtual;
 import lombok.Data;
 import nl.codevs.decree.DecreeSystem;
 import nl.codevs.decree.context.DecreeContextHandler;
+import nl.codevs.decree.exceptions.DecreeException;
 import nl.codevs.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.handlers.DecreeParameterHandler;
@@ -201,16 +202,18 @@ public class DecreeParameter {
         // Hover usage & real text
         String realTitle = "<gradient:#d665f0:#a37feb>" + getName();
         if (isContextual() && sender.isPlayer()) {
-            DecreeContextHandler<?> handler = DecreeSystem.Context.getHandlers().get(getType());
-            if (handler == null) {
+            DecreeContextHandler<?> handler;
+            try {
+                handler = DecreeSystem.Context.getHandler(getType());
+                String valueRightNow = handler.handleToString(sender);
+                hoverUsage = "<#ff9900>➱ <#33cc00><font:minecraft:uniform>Automatically detected: " + C.GOLD + valueRightNow;
+                realText = "<#ffcc00>[" + realTitle + "<#ffcc00>] ";
+            } catch (DecreeException e) {
                 sender.sendMessage(C.RED + "Parameter " + C.GOLD + getName() + C.RED + " assigned contextual value but there exists no handler for it");
                 sender.sendMessage(C.RED + "Please contact your admin, this is a command configuration error!");
                 hoverUsage = "<#ff9900>➱ <#33cc00><font:minecraft:uniform>Cannot be derived from context! Error! Contact admin!";
-            } else {
-                String valueRightNow = handler.handleToString(sender);
-                hoverUsage = "<#ff9900>➱ <#33cc00><font:minecraft:uniform>Derived from environment context: " + C.GOLD + valueRightNow;
+                realText = "<red>[" + realTitle + "<red>] ";
             }
-            realText = "<#ffcc00>[" + realTitle + "<#ffcc00>] ";
         } else if (isRequired()) {
             hoverUsage = "<#db4321>⚠ <#faa796><font:minecraft:uniform>This parameter is required.";
             realText = "<red>[" + realTitle + "<red>] ";

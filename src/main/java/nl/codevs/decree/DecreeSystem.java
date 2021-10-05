@@ -2,6 +2,7 @@ package nl.codevs.decree;
 
 import lombok.*;
 import nl.codevs.decree.context.DecreeContextHandler;
+import nl.codevs.decree.context.PlayerContextHandler;
 import nl.codevs.decree.context.WorldContextHandler;
 import nl.codevs.decree.decrees.DecreeCommandExecutor;
 import nl.codevs.decree.exceptions.DecreeException;
@@ -11,9 +12,7 @@ import nl.codevs.decree.util.*;
 import nl.codevs.decree.virtual.Decree;
 import nl.codevs.decree.virtual.DecreeCategory;
 import nl.codevs.decree.virtual.Decreed;
-import org.apache.logging.log4j.util.TriConsumer;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -27,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 @Getter
 @Setter
@@ -36,7 +35,7 @@ public class DecreeSystem implements Listener {
     /**
      * Decree System version.
      */
-    private final String version = "1.2";
+    public static final String version = "1.2";
 
     /**
      * Command roots ({@link ConcurrentHashMap})
@@ -53,111 +52,21 @@ public class DecreeSystem implements Listener {
     }
 
     public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin plugin) {
-        this.roots = new Roots(rootInstances, this);
-        this.instance = plugin;
-        if (helpDecree) {
-            System.out.println("Enabled Command System " + C.YELLOW + "Decree v" + version + C.RESET + " for " + C.YELLOW + plugin.getName() + " v" + plugin.getDescription().getVersion());
+        roots = new Roots(rootInstances, this);
+        instance = plugin;
+        if (DecreeSettings.helpDecree) {
+            System.out.println("Enabled Advanced Command System " + C.YELLOW + "Decree v" + version + C.RESET + " for " + C.YELLOW + plugin.getName() + " v" + plugin.getDescription().getVersion());
+            System.out.println("See our GitHub page: " + C.YELLOW + "https://www.github.com/CocoTheOwner/Decree");
         }
     }
-
-    /**
-     * Whether to print a one-line message about enabling this system upon startup. <br>
-     * We kindly ask to leave this on, it helps others to find this system too!
-     */
-    private boolean helpDecree = true;
-
-    /**
-     * When entering arguments, should people be allowed to enter "null"?
-     */
-    private boolean allowNullInput = false;
-
-    /**
-     * Whether to use command sounds or not
-     */
-    private boolean commandSound = true;
-
-    /**
-     * Whether to send debug messages or not.
-     * You can also make runOnDebug equal to `(s) -> {};`
-     */
-    private boolean debug = true;
-
-    /**
-     * Whether to debug matching or not. This is also ran on tab completion, so it causes a lot of debug.
-     */
-    private boolean debugMatching = true;
-
-    /**
-     * The maximal number of same-named root commands.
-     * Has barely any performance impact, and you'll likely never exceed 1, but just in case.
-     */
-    private int maxRoots = 10;
-
-    /**
-     * When an argument parser fails, should the system parse null as the parameter value?
-     * Note: While preventing issues when finding commands, this may totally break command parsing. Best to leave off.
-     */
-    private boolean nullOnFailure = false;
-
-    /**
-     * When an argument parser returns multiple options for a certain input, should the system always pick the first element and continue?
-     * Note: When the command sender is a console, this is done regardless.
-     */
-    private boolean pickFirstOnMultiple = false;
-
-    /**
-     * Command prefix
-     */
-    private String prefix = C.RED + "[" + C.GREEN + "Decree" + C.RED + "]";
-
-    /**
-     * What to do with debug messages. Best not to touch and let Decree handle. To disable, set 'debug' to false.
-     */
-    Consumer<String> onDebug = (message) -> new DecreeSender(Bukkit.getConsoleSender(), getInstance()).sendMessage(getPrefix().trim() + C.RESET + " " + message);
-
-
-    /**
-     * What to do with sound effects. Best not to touch and let Decree handle. To disable, set 'commandSounds' to false.
-     * Consumer takes 'success' ({@link Boolean}), a sound effect from ({@link SFX}), and 'sender' ({@link DecreeSender}).
-     */
-    TriConsumer<Boolean, SFX, DecreeSender> onSoundEffect = (success, sfx, sender) -> {
-        switch (sfx) {
-            case Tab -> {
-                if (success) {
-                    sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, Maths.frand(0.125f, 1.95f));
-                } else {
-                    sender.playSound(Sound.BLOCK_AMETHYST_BLOCK_BREAK, 0.25f, Maths.frand(0.125f, 1.95f));
-                }
-            }
-            case Command -> {
-                if (success) {
-                    debug(C.GREEN + "Successfully ran command!");
-                    sender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 1.65f);
-                    sender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.125f, 2.99f);
-                } else {
-                    debug(C.RED + "Unknown Decree Command");
-                    sender.playSound(Sound.BLOCK_ANCIENT_DEBRIS_BREAK, 1f, 0.25f);
-                    sender.playSound(Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.2f, 1.95f);
-                }
-            }
-            case Picked -> {
-                if (success) {
-                    sender.playSound(Sound.BLOCK_BEACON_ACTIVATE, 0.125f, 1.99f);
-                } else {
-                    sender.playSound(Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 0.77f, 0.65f);
-                    sender.playSound(Sound.BLOCK_BEACON_DEACTIVATE, 0.125f, 1.99f);
-                }
-            }
-        }
-    };
 
     /**
      * What to do with debug messages
      * @param message The debug message
      */
     public void debug(String message) {
-        if (debug) {
-            onDebug.accept(message);
+        if (DecreeSettings.debug) {
+            DecreeSettings.onDebug.accept(message, instance);
         }
     }
 
@@ -168,8 +77,8 @@ public class DecreeSystem implements Listener {
      * @param sender The sender of the tab/command
      */
     public void playSound(boolean success, SFX sfx, DecreeSender sender) {
-        if (sender.isPlayer() && commandSound) {
-            onSoundEffect.accept(success, sfx, sender);
+        if (sender.isPlayer() && DecreeSettings.commandSound) {
+            DecreeSettings.onSoundEffect.accept(success, sfx, sender);
         }
     }
 
@@ -191,13 +100,6 @@ public class DecreeSystem implements Listener {
         e.setCancelled(Completer.pickConsole(e.getCommand()));
     }
 
-    /**
-     * Tab completion
-     * @param commandSender The sender of the tab-complete
-     * @param arguments The existing arguments
-     * @param command The root command
-     * @return List of completions
-     */
     @Nullable
     public List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String[] arguments) {
 
@@ -328,6 +230,21 @@ public class DecreeSystem implements Listener {
         }
 
         /**
+         * Remove all handlers
+         * @param type of a certain type
+         * @return True if any existed
+         */
+        public static boolean removeHandlers(Class<?> type) {
+            Stream<DecreeParameterHandler<?>> matchedHandlers = handlers.stream().filter(h -> h.supports(type));
+            if (matchedHandlers.noneMatch(h -> true)){
+                return false;
+            } else {
+                matchedHandlers.forEach(h -> handlers.remove(h));
+                return true;
+            }
+        }
+
+        /**
          * Get the handler for the specified type
          *
          * @param type The type to handle
@@ -361,11 +278,50 @@ public class DecreeSystem implements Listener {
          */
         @Getter
         @Setter
-        private static ConcurrentHashMap<Class<?>, DecreeContextHandler<?>> handlers = new ConcurrentHashMap<>() {
-            {
-                put(World.class, new WorldContextHandler());
+        private static KList<DecreeContextHandler<?>> handlers = new KList<>(new WorldContextHandler(), new PlayerContextHandler());
+
+        /**
+         * Add a new handler to the list of handlers.
+         * @param handler The handler to add
+         * @return True if the handler is new, false if it was already added.
+         */
+        public static boolean addHandler(DecreeContextHandler<?> handler) {
+            if (handlers.contains(handler)) {
+                return false;
             }
-        };
+            handlers.add(handler);
+            return true;
+        }
+
+        /**
+         * Remove all handlers
+         * @param type of a certain type
+         * @return True if any existed
+         */
+        public static boolean removeHandlers(Class<?> type) {
+            Stream<DecreeContextHandler<?>> matchedHandlers = handlers.stream().filter(h -> h.supports(type));
+            if (matchedHandlers.noneMatch(h -> true)){
+                return false;
+            } else {
+                matchedHandlers.forEach(h -> handlers.remove(h));
+                return true;
+            }
+        }
+
+        /**
+         * Get the handler for the specified type
+         *
+         * @param type The type to handle
+         * @return The corresponding {@link DecreeContextHandler}, or null
+         */
+        public static DecreeContextHandler<?> getHandler(Class<?> type) throws DecreeException {
+            for (DecreeContextHandler<?> i : handlers) {
+                if (i.supports(type)) {
+                    return i;
+                }
+            }
+            throw new DecreeException("Unhandled type in Decree Parameter: " + type.getName() + ". This is bad! Contact your admin! (Remove param or add handler)");
+        }
 
         /**
          * Get the sender from the current thread's context
@@ -404,6 +360,11 @@ public class DecreeSystem implements Listener {
             KList<DecreeCommandExecutor> rootInstancesSuccess = new KList<>();
             KList<String> registeredRootNames = new KList<>();
 
+            if (roots.size() > DecreeSettings.maxRoots) {
+                System.out.println(C.RED + "Too many roots! Excluding " + (roots.subList(DecreeSettings.maxRoots, roots.size() - 1).convert(r -> r.getClass().getSimpleName()).toString(", ")) + "!");
+                roots = roots.subList(0, DecreeSettings.maxRoots - 1);
+            }
+
             roots.forEach(r -> {
                 if (r.getClass().isAnnotationPresent(Decree.class)) {
                     rootInstancesSuccess.add(r);
@@ -436,7 +397,7 @@ public class DecreeSystem implements Listener {
             if (rootInstancesSuccess.isEmpty()) {
                 System.out.println(C.RED + "No successful root instances registered. Did you register all commands in the creator?");
             } else {
-                System.out.println(C.GREEN + "Loaded root instances: " + C.YELLOW + rootInstancesSuccess.convert(ri -> ri.getClass().getSimpleName()).toString(", "));
+                System.out.println(C.GREEN + "Loaded root category classes: " + C.YELLOW + rootInstancesSuccess.convert(ri -> ri.getClass().getSimpleName()).toString(", "));
             }
 
             if (rootInstancesFailed.isNotEmpty()) {

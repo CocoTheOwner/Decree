@@ -41,7 +41,7 @@ public interface DecreeParameterHandler<T> {
      * @throws DecreeWhichException   Thrown when multiple results are possible
      */
     @SuppressWarnings("RedundantThrows")
-    @NotNull T parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException;
+    T parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException;
 
     /**
      * Parse an input string to an output of the assigned type
@@ -50,7 +50,7 @@ public interface DecreeParameterHandler<T> {
      * @throws DecreeParsingException When the input cannot be parsed into the output
      * @throws DecreeWhichException Multiple outputs would be possible for the same input
      */
-    @NotNull default T parse(String in) throws DecreeParsingException, DecreeWhichException {
+    default T parse(String in) throws DecreeParsingException, DecreeWhichException {
         return parse(in, false);
     }
 

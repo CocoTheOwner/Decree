@@ -8,7 +8,7 @@ public interface DecreeContextHandler<T> {
      * The type this context handler handles
      * @return the type
      */
-    Class<T> getType();
+    boolean supports(Class<?> type);
 
     /**
      * The handler for this context. Can use any data found in the sender object for context derivation.
