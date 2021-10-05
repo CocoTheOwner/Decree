@@ -216,19 +216,20 @@ Note that you shouldn't make recursive calls (loops)
 # Extra parser keywords
 Some parsers have extra keywords that do something different. They are as follows:
 - (Block)Vector
-  - here/me/self^ -> Return the current player's location
-  - look/cursor/crosshair^ -> Return where the current player is looking
-  - random -> Return a random location between -30 million and +30 million and 0 - 256
-  - player:<player> -> Return the location of some other player by the name <player>
+  - `here/me/self`^ -> Return the current player's location
+  - `look/cursor/crosshair`^ -> Return where the current player is looking
+  - `random` -> Return a random location between -30 million and +30 million and 0 - 256
+  - `player:<player>` -> Return the location of some other player by the name <player>
 - Boolean
-  - null/other/flip/toggle -> Returns null, which means you can take some value (that already exists) and inverse -> save it.
+  - `null/other/flip/toggle` -> Returns null, which means you can take some value (that already exists) and inverse -> save it.
     - You need to use a Boolean (not a boolean) for this to work!
 - Player^^
-  - self/me^ -> Return the current player (unless "self" or "me" is online)
-  - random -> Return a random online player (unless "random" is online)
-  - closest/near^ -> Return the closest-by player. If no player in same world, returns random.
+  - `self/me`^ -> Return the current player (unless "self" or "me" is online)
+  - `random` -> Return a random online player (unless "random" is online)
+  - `closest/near`^ -> Return the closest-by player. If no player in same world, returns random.
 - World^^
-  - random -> Return a random world
+  - `random` -> Return a random world
 
 ^ - Player-only (not by console)
+  
 ^^ - Set `contextual=true` to use a context handler to find a match (worlds -> current world, players -> current player, etc.). Players only.
