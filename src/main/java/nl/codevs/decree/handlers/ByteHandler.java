@@ -34,6 +34,6 @@ public class ByteHandler implements DecreeParameterHandler<Byte> {
 
     @Override
     public String getRandomDefault() {
-        return String.valueOf(Maths.irand(0, Byte.MAX_VALUE));
+        return String.valueOf(Maths.irand(Byte.MIN_VALUE, Byte.MAX_VALUE));
     }
 }

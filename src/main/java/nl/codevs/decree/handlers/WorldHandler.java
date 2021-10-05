@@ -51,6 +51,6 @@ public class WorldHandler implements DecreeParameterHandler<World> {
 
     @Override
     public String getRandomDefault() {
-        return "world";
+        return getPossibilities().getRandom().getName();
     }
 }

@@ -34,8 +34,9 @@ public class BooleanHandler implements DecreeParameterHandler<Boolean> {
         return type.equals(Boolean.class) || type.equals(boolean.class);
     }
 
+    private static final KList<String> r = new KList<>("true", "false", "other", "flip", "toggle");
     @Override
     public String getRandomDefault() {
-        return Maths.r(0.5) + "";
+        return r.getRandom();
     }
 }

@@ -1,7 +1,7 @@
 package nl.codevs.decree.handlers;
 
-import nl.codevs.decree.Decree;
 import nl.codevs.decree.DecreeSystem;
+import nl.codevs.decree.exceptions.DecreeException;
 import nl.codevs.decree.exceptions.DecreeParsingException;
 import nl.codevs.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.util.DecreeSender;
@@ -15,7 +15,6 @@ import org.bukkit.util.BlockVector;
 import org.jetbrains.annotations.NotNull;
 
 import java.security.InvalidParameterException;
-import java.util.Locale;
 
 public class BlockVectorHandler implements DecreeParameterHandler<BlockVector> {
     @Override
@@ -97,8 +96,13 @@ public class BlockVectorHandler implements DecreeParameterHandler<BlockVector> {
         return type.equals(BlockVector.class);
     }
 
+    private static final KList<String> r = new KList<>("0,0", "0,0,0", "here", "look", "random");
     @Override
     public String getRandomDefault() {
-        return Maths.r(0.5) ? "0,0" : "0,0,0";
+        String option = null;
+        try {
+            option = "player:" + DecreeSystem.Handler.get(Player.class).getRandomDefault();
+        } catch (DecreeException ignored) {}
+        return Maths.r(0.8) ? r.getRandom() : option;
     }
 }
