@@ -10,6 +10,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.function.BiConsumer;
 
+@SuppressWarnings("CanBeFinal")
 public class DecreeSettings {
 
     /**

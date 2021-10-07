@@ -193,7 +193,7 @@ public interface Decreed {
     }
 
     /**
-     * Replace all capital letters in a string with a - and lowercase representation
+     * Replace all capital letters in a string with a '-' and lowercase representation
      * @param string The string to convert 'IMineDiamondsForFun'
      * @return The converted string 'i-mine-diamonds-for-fun'
      */

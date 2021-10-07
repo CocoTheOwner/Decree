@@ -18,7 +18,6 @@ public class WorldHandler implements DecreeParameterHandler<World> {
         return world.getName();
     }
 
-    @SuppressWarnings("RedundantThrows")
     @Override
     public @NotNull World parse(String in, boolean force) throws DecreeParsingException, DecreeWhichException {
         try {
