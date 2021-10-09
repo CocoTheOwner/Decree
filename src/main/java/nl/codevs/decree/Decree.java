@@ -1,6 +1,6 @@
 package nl.codevs.decree;
 
-import nl.codevs.decree.decrees.MainCommandClass;
+import nl.codevs.decree.decrees.examples.MainCommandClass;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -28,7 +28,6 @@ public class Decree extends JavaPlugin implements TabCompleter, CommandExecutor 
     @Override
     public void onEnable() {
         decreeSystem = new DecreeSystem(new MainCommandClass(), this);
-        DecreeSettings.debug = true;
         Bukkit.getPluginManager().registerEvents(decreeSystem, this);
     }
 }

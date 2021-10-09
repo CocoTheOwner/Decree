@@ -1,7 +1,6 @@
 package nl.codevs.decree.virtual;
 
 import lombok.Data;
-import nl.codevs.decree.DecreeSettings;
 import nl.codevs.decree.DecreeSystem;
 import nl.codevs.decree.context.DecreeContextHandler;
 import nl.codevs.decree.exceptions.DecreeException;
@@ -401,7 +400,7 @@ public class DecreeCommand implements Decreed {
                 }
             }
 
-            if (DecreeSettings.allowNullInput && splitArg.get(1).equalsIgnoreCase("null")) {
+            if (DecreeSystem.settings.allowNullInput && splitArg.get(1).equalsIgnoreCase("null")) {
                 debug("Null parameter added: " + C.GOLD + arg, C.GREEN);
                 nullArgs.add(splitArg.get(0));
                 continue;
@@ -431,7 +430,7 @@ public class DecreeCommand implements Decreed {
                     if (parseParamInto(parameters, badArgs, parseExceptionArgs, option, value, sender)) {
                         options.remove(option);
                         keyedArgs.remove(arg);
-                    } else if (DecreeSettings.nullOnFailure) {
+                    } else if (DecreeSystem.settings.nullOnFailure) {
                         parameters.put(option, nullParam);
                     }
                     continue looping;
@@ -449,7 +448,7 @@ public class DecreeCommand implements Decreed {
                         if (parseParamInto(parameters, badArgs, parseExceptionArgs, option, value, sender)) {
                             options.remove(option);
                             keyedArgs.remove(arg);
-                        } else if (DecreeSettings.nullOnFailure) {
+                        } else if (DecreeSystem.settings.nullOnFailure) {
                             parameters.put(option, nullParam);
                         }
                         continue looping;
@@ -468,7 +467,7 @@ public class DecreeCommand implements Decreed {
                         if (parseParamInto(parameters, badArgs, parseExceptionArgs, option, value, sender)) {
                             options.remove(option);
                             keyedArgs.remove(arg);
-                        } else if (DecreeSettings.nullOnFailure) {
+                        } else if (DecreeSystem.settings.nullOnFailure) {
                             parameters.put(option, nullParam);
                         }
                         continue looping;
@@ -487,7 +486,7 @@ public class DecreeCommand implements Decreed {
                         if (parseParamInto(parameters, badArgs, parseExceptionArgs, option, value, sender)) {
                             options.remove(option);
                             keyedArgs.remove(arg);
-                        } else if (DecreeSettings.nullOnFailure) {
+                        } else if (DecreeSystem.settings.nullOnFailure) {
                             parameters.put(option, nullParam);
                         }
                         continue looping;
@@ -554,7 +553,7 @@ public class DecreeCommand implements Decreed {
         looping: for (DecreeParameter option : options.copy()) {
             for (String keylessArg : keylessArgs.copy()) {
 
-                if (DecreeSettings.allowNullInput && keylessArg.equalsIgnoreCase("null")) {
+                if (DecreeSystem.settings.allowNullInput && keylessArg.equalsIgnoreCase("null")) {
                     debug("Null parameter added: " + C.GOLD + keylessArg, C.GREEN);
                     parameters.put(option, nullParam);
                     continue looping;
@@ -575,7 +574,7 @@ public class DecreeCommand implements Decreed {
                     options.remove(option);
                     keylessArgs.remove(keylessArg);
 
-                    if (DecreeSettings.pickFirstOnMultiple) {
+                    if (DecreeSystem.settings.pickFirstOnMultiple) {
                         parameters.put(option, e.getOptions().get(0));
                     } else {
                         Object result = pickValidOption(sender, e.getOptions(), option);
@@ -604,7 +603,7 @@ public class DecreeCommand implements Decreed {
                     parameters.put(option, option.getDefaultValue());
                     options.remove(option);
                 } catch (DecreeParsingException e) {
-                    if (DecreeSettings.nullOnFailure) {
+                    if (DecreeSystem.settings.nullOnFailure) {
                         parameters.put(option, nullParam);
                         options.remove(option);
                     } else {
@@ -614,7 +613,7 @@ public class DecreeCommand implements Decreed {
                 } catch (DecreeWhichException e) {
                     debug("Default value " + C.GOLD + option.getDefaultRaw() + C.RED + " returned multiple options", C.RED);
                     options.remove(option);
-                    if (DecreeSettings.pickFirstOnMultiple) {
+                    if (DecreeSystem.settings.pickFirstOnMultiple) {
                         debug("Adding: " + C.GOLD + e.getOptions().get(0), C.GREEN);
                         parameters.put(option, e.getOptions().get(0));
                     } else {
@@ -650,7 +649,7 @@ public class DecreeCommand implements Decreed {
         nullArgs = nullArgs.convert(na -> na + "=null");
 
         // Debug
-        if (DecreeSettings.allowNullInput) {
+        if (DecreeSystem.settings.allowNullInput) {
             debug("Unmatched null argument" + (nullArgs.size() == 1 ? "" : "s") + ": " + C.GOLD + (nullArgs.isNotEmpty() ? nullArgs.toString(", ") : "NONE"), nullArgs.isEmpty() ? C.GREEN : C.RED);
         }
         debug("Unmatched keyless argument" + (keylessArgs.size() == 1 ? "":"s") + ": " + C.GOLD + (keylessArgs.isNotEmpty() ? keylessArgs.toString(", ") : "NONE"), keylessArgs.isEmpty() ? C.GREEN : C.RED);
@@ -792,7 +791,7 @@ public class DecreeCommand implements Decreed {
             return true;
         } catch (DecreeWhichException e) {
             debug("Value " + C.GOLD + value + C.RED + " returned multiple options", C.RED);
-            if (DecreeSettings.pickFirstOnMultiple) {
+            if (DecreeSystem.settings.pickFirstOnMultiple) {
                 debug("Adding: " + C.GOLD + e.getOptions().get(0), C.GREEN);
                 parameters.put(option, e.getOptions().get(0));
             } else {

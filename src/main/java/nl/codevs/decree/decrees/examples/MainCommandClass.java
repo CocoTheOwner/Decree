@@ -1,5 +1,7 @@
-package nl.codevs.decree.decrees;
+package nl.codevs.decree.decrees.examples;
 
+import nl.codevs.decree.decrees.DecreeCommandExecutor;
+import nl.codevs.decree.decrees.DecreeSettings;
 import nl.codevs.decree.util.C;
 import nl.codevs.decree.virtual.Decree;
 import nl.codevs.decree.virtual.Param;
@@ -10,6 +12,11 @@ import org.bukkit.World;
 // If you omit "name = ..." from the annotation, the name of this category would become 'main-command-class'
 // Permission node for this command is "decree", since it is a root category
 public class MainCommandClass implements DecreeCommandExecutor { // Categories must implement DecreeCommandExecutor
+
+    // Commands that allow in-game/console commands to modify Decree settings.
+    // If you do not want to have this as a possibility, do not add this to your commands.
+    // This requires the permission for this class (+ parent classes) with `.settings`, in this case 'decree.settings`
+    DecreeSettings settings;
 
     SubCommandClass subcommands; // The name of the variable does not matter
 
@@ -39,7 +46,7 @@ public class MainCommandClass implements DecreeCommandExecutor { // Categories m
                     // There are no aliases for this, but 't' and 'ta' will still map to 'tag'. Decree's intelligent mapping system will find a match
                     description = "dwad a message to yourself"
             )
-                    Integer amount // Notice we use 'Integer' instead of 'int'. If you turn on DecreeSettings.allowNullInput, you MUST use Integer because 'int' cannot be null
+                    Integer amount // Notice we use 'Integer' instead of 'int'. If you turn on DecreeSystem.settings.allowNullInput, you MUST use Integer because 'int' cannot be null
                        // If you do not have this on (default), you can use 'int' safely
     ){
         // sender() returns the sender of the command

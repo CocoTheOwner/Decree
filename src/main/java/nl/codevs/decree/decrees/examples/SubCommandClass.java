@@ -1,5 +1,6 @@
-package nl.codevs.decree.decrees;
+package nl.codevs.decree.decrees.examples;
 
+import nl.codevs.decree.decrees.DecreeCommandExecutor;
 import nl.codevs.decree.util.DecreeOrigin;
 import nl.codevs.decree.virtual.Decree;
 import nl.codevs.decree.virtual.Param;

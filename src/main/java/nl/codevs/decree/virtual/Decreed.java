@@ -1,6 +1,5 @@
 package nl.codevs.decree.virtual;
 
-import nl.codevs.decree.DecreeSettings;
 import nl.codevs.decree.DecreeSystem;
 import nl.codevs.decree.util.DecreeOrigin;
 import nl.codevs.decree.util.DecreeSender;
@@ -8,7 +7,6 @@ import nl.codevs.decree.util.C;
 import nl.codevs.decree.util.KList;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 public interface Decreed {
 
@@ -120,7 +118,7 @@ public interface Decreed {
      * @param sender the sender who sent the command
      */
     default void debugMismatch(String reason, DecreeSender sender) {
-        if (DecreeSettings.debugMatching) {
+        if (DecreeSystem.settings.debugMatching) {
             parent().debug("Hiding decreed " + C.GOLD + getShortestName() + C.GREEN + " for sender " + C.GOLD + sender.getName() + C.GREEN + " because of " + C.GOLD + reason, C.GREEN);
         }
     }
@@ -159,7 +157,7 @@ public interface Decreed {
         String compare = "Comparison: " + C.GOLD + in + C.GREEN + " with " + C.GOLD + getNames().toString(C.GREEN + ", " + C.GOLD) + C.GREEN + ": ";
 
         if (in == null || in.isEmpty()) {
-            if (DecreeSettings.debugMatching) {
+            if (DecreeSystem.settings.debugMatching) {
                 parent().debug(compare + "MATCHED - 3", C.GREEN);
             }
             return 3;
@@ -167,26 +165,26 @@ public interface Decreed {
 
         for (String i : getNames()) {
             if (i.equalsIgnoreCase(in)) {
-                if (DecreeSettings.debugMatching) {
+                if (DecreeSystem.settings.debugMatching) {
                     parent().debug(compare + "MATCHED - 1", C.GREEN);
                 }
                 return 3;
             }
             if (i.toLowerCase().contains(in.toLowerCase())) {
-                if (DecreeSettings.debugMatching) {
+                if (DecreeSystem.settings.debugMatching) {
                     parent().debug(compare + "MATCHED - 2", C.GREEN);
                 }
                 return 2;
             }
             if (in.toLowerCase().contains(i.toLowerCase())) {
-                if (DecreeSettings.debugMatching) {
+                if (DecreeSystem.settings.debugMatching) {
                     parent().debug(compare + "MATCHED - 1", C.GREEN);
                 }
                 return 1;
             }
         }
 
-        if (DecreeSettings.debugMatching) {
+        if (DecreeSystem.settings.debugMatching) {
             parent().debug(compare + C.RED + "NO MATCH - 0", C.GREEN);
         }
         return 0;

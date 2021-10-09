@@ -5,6 +5,7 @@ import nl.codevs.decree.context.DecreeContextHandler;
 import nl.codevs.decree.context.PlayerContextHandler;
 import nl.codevs.decree.context.WorldContextHandler;
 import nl.codevs.decree.decrees.DecreeCommandExecutor;
+import nl.codevs.decree.decrees.DecreeSettings;
 import nl.codevs.decree.exceptions.DecreeException;
 import nl.codevs.decree.exceptions.DecreeWhichException;
 import nl.codevs.decree.handlers.*;
@@ -13,7 +14,6 @@ import nl.codevs.decree.virtual.Decree;
 import nl.codevs.decree.virtual.DecreeCategory;
 import nl.codevs.decree.virtual.Decreed;
 import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.EventHandler;
@@ -24,6 +24,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Stream;
@@ -36,6 +37,11 @@ public class DecreeSystem implements Listener {
      * Decree System version.
      */
     public static final String version = "1.2";
+
+    /**
+     * The settings
+     */
+    public static DecreeSettings settings;
 
     /**
      * Command roots ({@link ConcurrentHashMap})
@@ -52,12 +58,11 @@ public class DecreeSystem implements Listener {
     }
 
     public DecreeSystem(KList<DecreeCommandExecutor> rootInstances, Plugin plugin) {
+        settings = DecreeSettings.fromConfigJson(new File(plugin.getDataFolder() + "/decreeconfig.json"));
         roots = new Roots(rootInstances, this);
         instance = plugin;
-        if (DecreeSettings.helpDecree) {
-            System.out.println("Enabled Advanced Command System " + C.YELLOW + "Decree v" + version + C.RESET + " for " + C.YELLOW + plugin.getName() + " v" + plugin.getDescription().getVersion());
-            System.out.println("See our GitHub page: " + C.YELLOW + "https://www.github.com/CocoTheOwner/Decree");
-        }
+        System.out.println("Enabled Advanced Command System " + C.YELLOW + "Decree v" + version + C.RESET + " for " + C.YELLOW + plugin.getName() + " v" + plugin.getDescription().getVersion());
+        System.out.println("See our GitHub page: " + C.YELLOW + "https://www.github.com/CocoTheOwner/Decree");
     }
 
     /**
@@ -65,7 +70,7 @@ public class DecreeSystem implements Listener {
      * @param message The debug message
      */
     public void debug(String message) {
-        if (DecreeSettings.debug) {
+        if (DecreeSystem.settings.debug) {
             DecreeSettings.onDebug.accept(message, instance);
         }
     }
@@ -77,7 +82,7 @@ public class DecreeSystem implements Listener {
      * @param sender The sender of the tab/command
      */
     public void playSound(boolean success, SFX sfx, DecreeSender sender) {
-        if (sender.isPlayer() && DecreeSettings.commandSound) {
+        if (sender.isPlayer() && DecreeSystem.settings.commandSound) {
             DecreeSettings.onSoundEffect.accept(success, sfx, sender);
         }
     }
@@ -360,9 +365,9 @@ public class DecreeSystem implements Listener {
             KList<DecreeCommandExecutor> rootInstancesSuccess = new KList<>();
             KList<String> registeredRootNames = new KList<>();
 
-            if (roots.size() > DecreeSettings.maxRoots) {
-                System.out.println(C.RED + "Too many roots! Excluding " + (roots.subList(DecreeSettings.maxRoots, roots.size() - 1).convert(r -> r.getClass().getSimpleName()).toString(", ")) + "!");
-                roots = roots.subList(0, DecreeSettings.maxRoots - 1);
+            if (roots.size() > DecreeSystem.settings.maxRoots) {
+                System.out.println(C.RED + "Too many roots! Excluding " + (roots.subList(DecreeSystem.settings.maxRoots, roots.size() - 1).convert(r -> r.getClass().getSimpleName()).toString(", ")) + "!");
+                roots = roots.subList(0, DecreeSystem.settings.maxRoots - 1);
             }
 
             roots.forEach(r -> {
@@ -407,7 +412,7 @@ public class DecreeSystem implements Listener {
             if (registeredRootNames.isEmpty()) {
                 System.out.println(C.RED + "No root commands registered! Did you register all commands in the creator? Did you give them names?");
             } else {
-                System.out.println(C.GREEN + "Loaded root commands: " + C.YELLOW + registeredRootNames.convert(rn -> "/" + rn).toString(", "));
+                System.out.println(C.GREEN + "Loaded root commands: " + C.YELLOW + registeredRootNames.convert(rn -> "/" + rn).toString(C.GREEN + ", " + C.YELLOW));
             }
         }
     }

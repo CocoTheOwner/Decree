@@ -1,7 +1,6 @@
 package nl.codevs.decree.virtual;
 
 import lombok.Getter;
-import nl.codevs.decree.DecreeSettings;
 import nl.codevs.decree.DecreeSystem;
 import nl.codevs.decree.decrees.DecreeCommandExecutor;
 import nl.codevs.decree.util.DecreeOrigin;
@@ -132,7 +131,7 @@ public class DecreeCategory implements Decreed {
      */
     public KList<Decreed> matchAll(String in, DecreeSender sender){
 
-        if (DecreeSettings.debugMatching) {
+        if (DecreeSystem.settings.debugMatching) {
             if (!subCats.isEmpty()) {
                 debug("Comparing: " + C.GOLD + in + C.GREEN + " with Categories " + C.GOLD + (getSubCats().isEmpty() ? "NONE" : getSubCats().convert(c -> c.getNames().toString(C.GREEN + ", " + C.GOLD)).toString(C.GREEN + " / " + C.GOLD)), C.GREEN);
             }
