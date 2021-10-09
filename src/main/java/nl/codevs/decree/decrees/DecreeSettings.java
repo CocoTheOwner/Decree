@@ -26,97 +26,104 @@ public class DecreeSettings implements DecreeCommandExecutor {
     private static File file;
 
     @Decree(description = "When entering arguments, should people be allowed to enter 'null'?")
-    public void setAllowNullInput(
+    public void allowNullInput(
             @Param(
                     description = "Whether to set this setting to true or false",
-                    defaultValue = "false"
+                    defaultValue = "toggle"
             )
                     Boolean enable
     ){
-        allowNullInput = enable;
+        allowNullInput = enable == null ? !allowNullInput : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "allow null input " + C.GREEN + "to: " + C.GOLD + allowNullInput);
         save();
     }
     public boolean allowNullInput = false;
 
     @Decree(description = "Whether to use command sounds or not")
-    public void setCommandSound(
+    public void commandSound(
             @Param(
                     description = "Whether to set this setting to true or false",
-                    defaultValue = "false"
+                    defaultValue = "toggle"
             )
                     Boolean enable
     ){
-        commandSound = enable;
+        commandSound = enable == null ? !commandSound : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "command sound " + C.GREEN + "to: " + C.GOLD + commandSound);
         save();
     }
     public boolean commandSound = true;
 
     @Decree(description = "Whether to send debug messages or not")
-    public void setDebug(
+    public void debug(
             @Param(
                     description = "Whether to set this setting to true or false",
-                    defaultValue = "false"
+                    defaultValue = "toggle"
             )
                     Boolean enable
     ){
-        debug = enable;
+        debug = enable == null ? !debug : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "debug " + C.GREEN + "to: " + C.GOLD + debug);
         save();
     }
     public boolean debug = false;
 
     @Decree(description = "Whether to debug matching or not. This is also ran on tab completion.")
-    public void setDebugMatching(
+    public void debugMatching(
             @Param(
                     description = "Whether to set this setting to true or false",
-                    defaultValue = "false"
+                    defaultValue = "toggle"
             )
                     Boolean enable
     ){
-        debugMatching = enable;
+        debugMatching = enable == null ? !debugMatching : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "debug matching " + C.GREEN + "to: " + C.GOLD + debugMatching);
         save();
     }
     public boolean debugMatching = true;
 
     @Decree(description = "The maximal number of same-named root commands")
-    public void setMaxRoots(
+    public void maxRoots(
             @Param(
                     description = "The maximal amount of roots",
                     defaultValue = "10"
             )
                     Integer roots){
         maxRoots = roots;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "max roots " + C.GREEN + "to: " + C.GOLD + maxRoots);
         save();
     }
     public int maxRoots = 10;
 
     @Decree(description = "On argument parsing fail, pass 'null' instead. Can break argument parsing, best to leave 'false'", permission = "settings")
-    public void setNullOnFailure(
+    public void nullOnFailure(
             @Param(
                     description = "Whether to set this setting to true or false",
-                    defaultValue = "false"
+                    defaultValue = "toggle"
             )
             Boolean enable
     ){
-        nullOnFailure = enable;
+        nullOnFailure = enable == null ? !nullOnFailure : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "null on failure " + C.GREEN + "to: " + C.GOLD + nullOnFailure);
         save();
     }
     public boolean nullOnFailure = false;
 
     @Decree(description = "Auto-pick the first option when multiple exist?")
-    public void setPickFirstOnMultiple(
+    public void pickFirstOnMultiple(
             @Param(
                     description = "Whether to set this setting to true or false",
-                    defaultValue = "false"
+                    defaultValue = "toggle"
             )
                     Boolean enable
     ){
-        pickFirstOnMultiple = enable;
+        pickFirstOnMultiple = enable == null ? !pickFirstOnMultiple : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "pick first on multiple " + C.GREEN + "to: " + C.GOLD + pickFirstOnMultiple);
         save();
     }
     public boolean pickFirstOnMultiple = false;
 
     @Decree(description = "Command prefix")
-    public void setDecreePrefix(
+    public void decreePrefix(
             @Param(
                     description = "The prefix to have Decree debug with",
                     defaultValue = "§c[§aDecree§c]§r"
@@ -124,6 +131,7 @@ public class DecreeSettings implements DecreeCommandExecutor {
                     String prefix
     ){
         this.prefix = prefix;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "decree prefix " + C.GREEN + "to: " + this.prefix + C.RESET + " ");
         save();
     }
     public String prefix = C.RED + "[" + C.GREEN + "Decree" + C.RED + "]" + C.RESET;

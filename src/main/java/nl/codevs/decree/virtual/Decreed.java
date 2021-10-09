@@ -67,7 +67,7 @@ public interface Decreed {
      * Get whether this node requires sync runtime or not
      */
     default boolean isSync() {
-        return decree().sync() || parent().isSync();
+        return decree().sync() || (parent() != null && parent().isSync());
     }
 
     /**

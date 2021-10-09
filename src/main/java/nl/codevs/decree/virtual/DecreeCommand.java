@@ -600,7 +600,8 @@ public class DecreeCommand implements Decreed {
             if (option.hasDefault()) {
                 parseExceptionArgs.remove(option);
                 try {
-                    parameters.put(option, option.getDefaultValue());
+                    Object val = option.getDefaultValue();
+                    parameters.put(option, val == null ? nullParam : val);
                     options.remove(option);
                 } catch (DecreeParsingException e) {
                     if (DecreeSystem.settings.nullOnFailure) {
@@ -655,7 +656,7 @@ public class DecreeCommand implements Decreed {
         debug("Unmatched keyless argument" + (keylessArgs.size() == 1 ? "":"s") + ": " + C.GOLD + (keylessArgs.isNotEmpty() ? keylessArgs.toString(", ") : "NONE"), keylessArgs.isEmpty() ? C.GREEN : C.RED);
         debug("Unmatched keyed argument" + (keyedArgs.size() == 1 ? "":"s") + ": " + C.GOLD + (keyedArgs.isNotEmpty() ? keyedArgs.toString(", ") : "NONE"), keyedArgs.isEmpty() ? C.GREEN : C.RED);
         debug("Bad argument" + (badArgs.size() == 1 ? "":"s") + ": " + C.GOLD + (badArgs.isNotEmpty() ? badArgs.toString(", ") : "NONE"), badArgs.isEmpty() ? C.GREEN : C.RED);
-        debug("Failed argument" + (parseExceptionArgs.size() == 1 ? ": ":"s: \n") + C.GOLD + (parseExceptionArgs.size() != 0 ? new KList<>(parseExceptionArgs.values()).convert(DecreeParsingException::getMessage).toString("\n") : "NONE"), parseExceptionArgs.isEmpty() ? C.GREEN : C.RED);
+        debug("Failed argument" + (parseExceptionArgs.size() <= 1 ? ": ":"s: \n") + C.GOLD + (parseExceptionArgs.size() != 0 ? new KList<>(parseExceptionArgs.values()).convert(DecreeParsingException::getMessage).toString("\n") : "NONE"), parseExceptionArgs.isEmpty() ? C.GREEN : C.RED);
         debug("Unfulfilled parameter" + (options.size() == 1 ? "":"s") + ": " + C.GOLD + (options.isNotEmpty() ? options.convert(DecreeParameter::getName).toString(", ") : "NONE"), options.isEmpty() ? C.GREEN : C.RED);
 
         StringBuilder mappings = new StringBuilder("Parameter mapping:");
@@ -672,7 +673,7 @@ public class DecreeCommand implements Decreed {
                 .append(C.GREEN)
                 .append(" → ")
                 .append(C.GOLD)
-                .append(object.toString()));
+                .append(object.toString().replace(String.valueOf(nullParam), "null")));
         options.forEach(param -> mappings
                 .append("\n")
                 .append(C.GREEN)
@@ -787,7 +788,10 @@ public class DecreeCommand implements Decreed {
      */
     private boolean parseParamInto(ConcurrentHashMap<DecreeParameter, Object> parameters, KList<String> badArgs, ConcurrentHashMap<DecreeParameter, DecreeParsingException> parseExceptionArgs, DecreeParameter option, String value, DecreeSender sender) {
         try {
-            parameters.put(option, option.getHandler().parse(value));
+            Object val = option.getHandler().parse(value);
+
+
+            parameters.put(option, val == null ? nullParam : val);
             return true;
         } catch (DecreeWhichException e) {
             debug("Value " + C.GOLD + value + C.RED + " returned multiple options", C.RED);
