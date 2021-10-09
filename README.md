@@ -201,17 +201,15 @@ public class MainCommandClass implements DecreeExecutor {
 }
 ```
 Note that you shouldn't make recursive calls (loops)
-- The example setup used in this guide is included. See the `decrees` directory.
+- The example setup used in this guide is included. See the `decrees.examples` directory.
 
 
 
 # To-do
 1. Implement booleans to allow -name to turn them to true
 2. Implement tab-completions
-3. Make examples for using null parameters
 4. Show how picking options works
 5. Precache commands + tab completions
-6. Double-check that valueless keyed parameters are put into "bad"
 
 # Extra parser keywords
 Some parsers have extra keywords that do something different. They are as follows:
@@ -223,6 +221,7 @@ Some parsers have extra keywords that do something different. They are as follow
 - Boolean
   - `null/other/flip/toggle` -> Returns null, which means you can take some value (that already exists) and inverse -> save it.
     - You need to use a Boolean (not a boolean) for this to work!
+    - Check the decrees.DecreeSettings class for an implementation of this!
 - Player\*\*
   - `self/me`\* -> Return the current player (unless "self" or "me" is online)
   - `random` -> Return a random online player (unless "random" is online)
