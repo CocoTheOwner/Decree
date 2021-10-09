@@ -1,15 +1,16 @@
 package nl.codevs.decree.util;
 
 
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 public class AtomicCache<T> {
     private transient volatile T t;
     private transient volatile long a;
     private transient volatile int validations;
-    private final Lock check;
-    private final Lock time;
-    private final Lock write;
+    private final ReentrantLock check;
+    private final ReentrantLock time;
+    private final ReentrantLock write;
     private final boolean nullSupport;
 
     public AtomicCache() {
@@ -18,9 +19,9 @@ public class AtomicCache<T> {
 
     public AtomicCache(boolean nullSupport) {
         this.nullSupport = nullSupport;
-        check = new Lock("Check");
-        write = new Lock("Write");
-        time = new Lock("Time");
+        check = new ReentrantLock();
+        write = new ReentrantLock();
+        time = new ReentrantLock();
         validations = 0;
         a = -1;
         t = null;
