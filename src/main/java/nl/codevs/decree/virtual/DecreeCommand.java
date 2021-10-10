@@ -345,6 +345,11 @@ public class DecreeCommand implements Decreed {
         return true;
     }
 
+    @Override
+    public KList<String> tab(KList<String> args, DecreeSender sender) {
+        return new KList<>(getNames());
+    }
+
     /**
      * Compute parameter objects from string argument inputs
      * @param args The arguments (parameters) to parse into this command
@@ -366,6 +371,7 @@ public class DecreeCommand implements Decreed {
         ConcurrentHashMap<DecreeParameter, DecreeParsingException> parseExceptionArgs = new ConcurrentHashMap<>();
 
         KList<DecreeParameter> options = getParameters();
+        KList<String> dashBooleanArgs = new KList<>();
         KList<String> keylessArgs = new KList<>();
         KList<String> keyedArgs = new KList<>();
         KList<String> nullArgs = new KList<>();
@@ -379,7 +385,11 @@ public class DecreeCommand implements Decreed {
 
             if (splitArg.size() == 1) {
 
-                keylessArgs.add(arg);
+                if (arg.startsWith("-")) {
+                    dashBooleanArgs.add(arg.substring(1));
+                } else {
+                    keylessArgs.add(arg);
+                }
                 continue;
             }
 
@@ -551,6 +561,46 @@ public class DecreeCommand implements Decreed {
 
         // Keyless arguments
         looping: for (DecreeParameter option : options.copy()) {
+            if (option.getHandler().supports(boolean.class)) {
+                for (String dashBooleanArg : dashBooleanArgs) {
+                    if (option.getNames().contains(dashBooleanArg)) {
+                        parameters.put(option, true);
+                        dashBooleanArgs.remove(dashBooleanArg);
+                        options.remove(option);
+                    }
+                }
+
+                for (String dashBooleanArg : dashBooleanArgs) {
+                    for (String name : option.getNames()) {
+                        if (name.equalsIgnoreCase(dashBooleanArg)) {
+                            parameters.put(option, true);
+                            dashBooleanArgs.remove(dashBooleanArg);
+                            options.remove(option);
+                        }
+                    }
+                }
+
+                for (String dashBooleanArg : dashBooleanArgs) {
+                    for (String name : option.getNames()) {
+                        if (name.contains(dashBooleanArg)) {
+                            parameters.put(option, true);
+                            dashBooleanArgs.remove(dashBooleanArg);
+                            options.remove(option);
+                        }
+                    }
+                }
+
+                for (String dashBooleanArg : dashBooleanArgs) {
+                    for (String name : option.getNames()) {
+                        if (dashBooleanArg.contains(name)) {
+                            parameters.put(option, true);
+                            dashBooleanArgs.remove(dashBooleanArg);
+                            options.remove(option);
+                        }
+                    }
+                }
+            }
+
             for (String keylessArg : keylessArgs.copy()) {
 
                 if (DecreeSystem.settings.allowNullInput && keylessArg.equalsIgnoreCase("null")) {
@@ -658,6 +708,7 @@ public class DecreeCommand implements Decreed {
         debug("Bad argument" + (badArgs.size() == 1 ? "":"s") + ": " + C.GOLD + (badArgs.isNotEmpty() ? badArgs.toString(", ") : "NONE"), badArgs.isEmpty() ? C.GREEN : C.RED);
         debug("Failed argument" + (parseExceptionArgs.size() <= 1 ? ": ":"s: \n") + C.GOLD + (parseExceptionArgs.size() != 0 ? new KList<>(parseExceptionArgs.values()).convert(DecreeParsingException::getMessage).toString("\n") : "NONE"), parseExceptionArgs.isEmpty() ? C.GREEN : C.RED);
         debug("Unfulfilled parameter" + (options.size() == 1 ? "":"s") + ": " + C.GOLD + (options.isNotEmpty() ? options.convert(DecreeParameter::getName).toString(", ") : "NONE"), options.isEmpty() ? C.GREEN : C.RED);
+        debug("Unfulfilled -boolean parameter" + (dashBooleanArgs.size() == 1 ? "":"s") + ": " + C.GOLD + (dashBooleanArgs.isNotEmpty() ? dashBooleanArgs.toString(", ") : "NONE"), dashBooleanArgs.isEmpty() ? C.GREEN : C.RED);
 
         StringBuilder mappings = new StringBuilder("Parameter mapping:");
         parameters.forEach((param, object) -> mappings
