@@ -206,10 +206,8 @@ Note that you shouldn't make recursive calls (loops)
 
 
 # To-do
-1. Implement booleans to allow -name to turn them to true
-2. Implement tab-completions
-4. Show how picking options works
-5. Precache commands + tab completions
+1. Implement tab-completions
+2. Cache tab completions & suggestions
 
 # Extra parser keywords
 Some parsers have extra keywords that do something different. They are as follows:
