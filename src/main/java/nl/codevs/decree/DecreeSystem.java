@@ -108,24 +108,31 @@ public class DecreeSystem implements Listener {
     @Nullable
     public List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String[] arguments) {
 
+        settings = settings.hotload();
+
         DecreeSender sender = new DecreeSender(commandSender, getInstance());
-        KList<String> args = new KList<>(arguments).qremoveIf(String::isEmpty);
+        KList<String> args = new KList<>(arguments);
         KList<String> completions = new KList<>();
 
-        // TODO: Tab completions
+        sender.sendMessage("Command: '" + command.getName() + "'");
+        sender.sendMessage("Arguments: '" + args.toString(", ") + "'");
 
-        return completions;
+        roots.get(command.getName()).forEach(c -> completions.addAll(c.tab(args, sender)));
+
+        return completions.qremoveDuplicates();
     }
 
     @SuppressWarnings({"deprecation", "SameReturnValue"})
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String[] arguments) {
         Bukkit.getScheduler().scheduleAsyncDelayedTask(getInstance(), () -> {
 
+            settings = settings.hotload();
+
             KList<String> args = new KList<>(arguments).qremoveIf(String::isEmpty);
             DecreeSender sender = new DecreeSender(commandSender, getInstance());
             Context.touch(sender);
 
-            for (Decreed root : getRoots().get(command.getName())) {
+            for (Decreed root : roots.get(command.getName())) {
                 if (root.run(args, sender)) {
                     playSound(true, SFX.Command, sender);
                     return;

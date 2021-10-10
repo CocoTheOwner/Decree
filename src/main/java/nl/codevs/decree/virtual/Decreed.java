@@ -43,6 +43,14 @@ public interface Decreed {
     boolean run(KList<String> args, DecreeSender sender);
 
     /**
+     * Tab completions
+     * @param args Command arguments
+     * @param sender Command sender
+     * @return Tab completions for this node
+     */
+    KList<String> tab(KList<String> args, DecreeSender sender);
+
+    /**
      * Get the origin of the node
      */
     default DecreeOrigin getOrigin() {
@@ -166,7 +174,7 @@ public interface Decreed {
         for (String i : getNames()) {
             if (i.equalsIgnoreCase(in)) {
                 if (DecreeSystem.settings.debugMatching) {
-                    parent().debug(compare + "MATCHED - 1", C.GREEN);
+                    parent().debug(compare + "MATCHED - 3", C.GREEN);
                 }
                 return 3;
             }

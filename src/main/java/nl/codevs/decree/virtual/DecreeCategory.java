@@ -131,6 +131,10 @@ public class DecreeCategory implements Decreed {
      */
     public KList<Decreed> matchAll(String in, DecreeSender sender){
 
+        KList<Decreed> s3 = new KList<>();
+        KList<Decreed> s2 = new KList<>();
+        KList<Decreed> s1 = new KList<>();
+
         if (DecreeSystem.settings.debugMatching) {
             if (!subCats.isEmpty()) {
                 debug("Comparing: " + C.GOLD + in + C.GREEN + " with Categories " + C.GOLD + (getSubCats().isEmpty() ? "NONE" : getSubCats().convert(c -> c.getNames().toString(C.GREEN + ", " + C.GOLD)).toString(C.GREEN + " / " + C.GOLD)), C.GREEN);
@@ -143,18 +147,22 @@ public class DecreeCategory implements Decreed {
         KList<Decreed> matches = new KList<>();
 
         for (DecreeCategory subCat : getSubCats()) {
-            if (subCat.doesMatch(in, sender) > 0) {
-                matches.add(subCat);
+            switch (subCat.doesMatch(in, sender)) {
+                case 3: s3.add(subCat);
+                case 2: s2.add(subCat);
+                case 1: s1.add(subCat);
             }
         }
 
         for (DecreeCommand command : getCommands()) {
-            if (command.doesMatch(in, sender) > 0) {
-                matches.add(command);
+            switch (command.doesMatch(in, sender)) {
+                case 3: s3.add(command);
+                case 2: s2.add(command);
+                case 1: s1.add(command);
             }
         }
 
-        return matches.qremoveDuplicates();
+        return matches.qAddAll(s3).qAddAll(s2).qAddAll(s1).qremoveDuplicates();
     }
 
     /**
@@ -264,6 +272,14 @@ public class DecreeCategory implements Decreed {
         sender.sendMessage(C.RED + "Could not find command or subcategory " + C.GOLD + args.get(0));
         sender.sendMessage(C.YELLOW + "Please double-check your command, or click on one above.");
         return false;
+    }
+
+    @Override
+    public KList<String> tab(KList<String> args, DecreeSender sender) {
+        KList<String> tabs = new KList<>(getNames());
+        getSubCats().forEach(s -> s.tab(args.subList(1, args.size()-1), sender));
+        getCommands().forEach(c -> c.tab(args.subList(1, args.size()-1), sender));
+        return tabs;
     }
 
     @Override

@@ -23,6 +23,7 @@ import java.util.function.BiConsumer;
 public class DecreeSettings implements DecreeCommandExecutor {
 
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private static long lastChanged;
     private static File file;
 
     @Decree(description = "When entering arguments, should people be allowed to enter 'null'?")
@@ -187,6 +188,7 @@ public class DecreeSettings implements DecreeCommandExecutor {
      */
     public static DecreeSettings fromConfigJson(File file) {
         DecreeSettings.file = file;
+        DecreeSettings.lastChanged = file.lastModified();
         try {
             if (!file.exists() || file.length() == 0) {
                 file.getParentFile().mkdirs();
@@ -215,8 +217,21 @@ public class DecreeSettings implements DecreeCommandExecutor {
             gson.toJson(this, DecreeSettings.class, f);
             f.close();
             System.out.println(C.GREEN + "Saved Decree Decrees");
+            lastChanged = file.lastModified();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Hotload settings from file
+     */
+    public DecreeSettings hotload() {
+        if (lastChanged != file.lastModified()) {
+            lastChanged = file.lastModified();
+            System.out.println(C.GREEN + "Hotloaded Decree Settings");
+            return fromConfigJson(file);
+        }
+        return this;
     }
 }
