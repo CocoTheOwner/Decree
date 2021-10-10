@@ -128,7 +128,11 @@ public class DecreeCommand implements Decreed {
                 // Unordered list with '=' signs & name prefix
                 getParameters().shuffle().forEach(p -> {
                     if (p.isRequired() || Maths.r()) {
-                        params.add("<#f2e15e>" + p.getNames().getRandom() + "=<#d665f0>" + p.exampleValues().getRandom());
+                        if (p.getHandler().supports(boolean.class) && Maths.r()) {
+                            params.add("<#d665f0>-" + p.getNames().getRandom());
+                        } else {
+                            params.add("<#f2e15e>" + p.getNames().getRandom() + "=<#d665f0>" + p.exampleValues().getRandom());
+                        }
                     }
                 });
             } else {
