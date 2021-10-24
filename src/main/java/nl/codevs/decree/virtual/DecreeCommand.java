@@ -566,7 +566,7 @@ public class DecreeCommand implements Decreed {
         // Keyless arguments
         looping: for (DecreeParameter option : options.copy()) {
             if (option.getHandler().supports(boolean.class)) {
-                for (String dashBooleanArg : dashBooleanArgs) {
+                for (String dashBooleanArg : dashBooleanArgs.copy()) {
                     if (option.getNames().contains(dashBooleanArg)) {
                         parameters.put(option, true);
                         dashBooleanArgs.remove(dashBooleanArg);
@@ -574,7 +574,7 @@ public class DecreeCommand implements Decreed {
                     }
                 }
 
-                for (String dashBooleanArg : dashBooleanArgs) {
+                for (String dashBooleanArg : dashBooleanArgs.copy()) {
                     for (String name : option.getNames()) {
                         if (name.equalsIgnoreCase(dashBooleanArg)) {
                             parameters.put(option, true);
@@ -584,7 +584,7 @@ public class DecreeCommand implements Decreed {
                     }
                 }
 
-                for (String dashBooleanArg : dashBooleanArgs) {
+                for (String dashBooleanArg : dashBooleanArgs.copy()) {
                     for (String name : option.getNames()) {
                         if (name.contains(dashBooleanArg)) {
                             parameters.put(option, true);
@@ -594,7 +594,7 @@ public class DecreeCommand implements Decreed {
                     }
                 }
 
-                for (String dashBooleanArg : dashBooleanArgs) {
+                for (String dashBooleanArg : dashBooleanArgs.copy()) {
                     for (String name : option.getNames()) {
                         if (dashBooleanArg.contains(name)) {
                             parameters.put(option, true);
