@@ -279,9 +279,23 @@ public class DecreeCategory implements Decreed {
 
     @Override
     public KList<String> tab(KList<String> args, DecreeSender sender) {
-        KList<String> tabs = new KList<>(getNames());
-        getSubCats().forEach(s -> s.tab(args.subList(1, args.size()-1), sender));
-        getCommands().forEach(c -> c.tab(args.subList(1, args.size()-1), sender));
+        KList<String> tabs = new KList<>();
+        if (args.isEmpty()) {
+            getSubCats().forEach(s -> {
+                if (s.doesMatch(sender) > 0) {
+                    tabs.addAll(s.getNames());
+                }
+            });
+            getCommands().forEach(c -> {
+                if (c.doesMatch(sender) > 0) {
+                    tabs.addAll(c.getNames());
+                }
+            });
+            return tabs;
+        }
+        args.popLast();
+        getSubCats().forEach(s -> tabs.addAll(s.tab(args, sender)));
+        getCommands().forEach(c -> tabs.addAll(c.tab(args, sender)));
         return tabs;
     }
 

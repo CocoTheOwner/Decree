@@ -116,10 +116,12 @@ public class DecreeSystem implements Listener {
         KList<String> completions = new KList<>();
 
         debug(C.GREEN + "Args: " + C.GOLD + args.toString(C.GREEN + ", " + C.GOLD));
-        if (!args.getLast().equalsIgnoreCase(" ")) {
+        if (!args.getLast().isEmpty()) {
             debug(C.YELLOW + "No tab because no space!");
             return new KList<>();
         }
+
+        args.popLast();
 
         sender.sendMessage("Command: '" + command.getName() + "'");
         sender.sendMessage("Arguments: '" + args.toString(", ") + "'");
