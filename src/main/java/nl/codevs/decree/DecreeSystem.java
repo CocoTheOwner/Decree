@@ -115,7 +115,9 @@ public class DecreeSystem implements Listener {
         KList<String> args = new KList<>(arguments);
         KList<String> completions = new KList<>();
 
+        debug(C.GREEN + "Args: " + C.GOLD + args.toString(C.GREEN + ", " + C.GOLD));
         if (!args.getLast().equalsIgnoreCase(" ")) {
+            debug(C.YELLOW + "No tab because no space!");
             return new KList<>();
         }
 
@@ -124,6 +126,7 @@ public class DecreeSystem implements Listener {
 
         roots.get(command.getName()).forEach(c -> completions.addAll(c.tab(args, sender)));
 
+        debug(C.GREEN + "Tab completed as: " + C.GOLD + completions.toString(C.GREEN + ", " + C.GOLD));
         return completions.qremoveDuplicates();
     }
 
@@ -147,6 +150,7 @@ public class DecreeSystem implements Listener {
                         debug(C.GREEN + "Running command took: " + C.GOLD + s.getTime() + "ms");
                         s.stop();
                     }
+                    settings = settings.hotload();
                     return;
                 }
             }
@@ -156,6 +160,7 @@ public class DecreeSystem implements Listener {
                 debug(C.GREEN + "Running command took: " + C.GOLD + s.getTime());
                 s.stop();
             }
+            settings = settings.hotload();
         });
         return true;
     }

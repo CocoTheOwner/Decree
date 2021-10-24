@@ -241,10 +241,15 @@ public class DecreeSettings implements DecreeCommandExecutor {
      * Hotload settings from file
      */
     public DecreeSettings hotload() {
+        DecreeSettings fileSettings = fromConfigJson(file);
+        assert fileSettings != null;
         if (lastChanged != file.lastModified()) {
             lastChanged = file.lastModified();
             System.out.println(C.GREEN + "Hotloaded Decree Settings");
-            return fromConfigJson(file);
+            return fileSettings;
+        }
+        if (!fileSettings.equals(this)) {
+            saveToConfig(file);
         }
         return this;
     }
