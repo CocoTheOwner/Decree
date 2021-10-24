@@ -34,8 +34,8 @@ public class DecreeSettings implements DecreeCommandExecutor {
             )
                     Boolean enable
     ){
-        allowNullInput = enable == null ? !allowNullInput : enable;
-        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "allow null input " + C.GREEN + "to: " + C.GOLD + allowNullInput);
+        DecreeSystem.settings.allowNullInput = enable == null ? !DecreeSystem.settings.allowNullInput : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "allow null input " + C.GREEN + "to: " + C.GOLD + DecreeSystem.settings.allowNullInput);
         save();
     }
     public boolean allowNullInput = false;
@@ -48,8 +48,8 @@ public class DecreeSettings implements DecreeCommandExecutor {
             )
                     Boolean enable
     ){
-        commandSound = enable == null ? !commandSound : enable;
-        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "command sound " + C.GREEN + "to: " + C.GOLD + commandSound);
+        DecreeSystem.settings.commandSound = enable == null ? !DecreeSystem.settings.commandSound : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "command sound " + C.GREEN + "to: " + C.GOLD + DecreeSystem.settings.commandSound);
         save();
     }
     public boolean commandSound = true;
@@ -62,8 +62,8 @@ public class DecreeSettings implements DecreeCommandExecutor {
             )
                     Boolean enable
     ){
-        debug = enable == null ? !debug : enable;
-        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "debug " + C.GREEN + "to: " + C.GOLD + debug);
+        DecreeSystem.settings.debug = enable == null ? !DecreeSystem.settings.debug : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "debug " + C.GREEN + "to: " + C.GOLD + DecreeSystem.settings.debug);
         save();
     }
     public boolean debug = false;
@@ -76,8 +76,8 @@ public class DecreeSettings implements DecreeCommandExecutor {
             )
                     Boolean enable
     ){
-        debugRuntime = enable == null ? !debugRuntime : enable;
-        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "debugRuntime " + C.GREEN + "to: " + C.GOLD + debugRuntime);
+        DecreeSystem.settings.debugRuntime = enable == null ? !DecreeSystem.settings.debugRuntime : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "debugRuntime " + C.GREEN + "to: " + C.GOLD + DecreeSystem.settings.debugRuntime);
         save();
     }
     public boolean debugRuntime;
@@ -90,8 +90,8 @@ public class DecreeSettings implements DecreeCommandExecutor {
             )
                     Boolean enable
     ){
-        debugMatching = enable == null ? !debugMatching : enable;
-        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "debug matching " + C.GREEN + "to: " + C.GOLD + debugMatching);
+        DecreeSystem.settings.debugMatching = enable == null ? !DecreeSystem.settings.debugMatching : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "debug matching " + C.GREEN + "to: " + C.GOLD + DecreeSystem.settings.debugMatching);
         save();
     }
     public boolean debugMatching = true;
@@ -103,8 +103,8 @@ public class DecreeSettings implements DecreeCommandExecutor {
                     defaultValue = "10"
             )
                     Integer roots){
-        maxRoots = roots;
-        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "max roots " + C.GREEN + "to: " + C.GOLD + maxRoots);
+        DecreeSystem.settings.maxRoots = roots;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "max roots " + C.GREEN + "to: " + C.GOLD + DecreeSystem.settings.maxRoots);
         save();
     }
     public int maxRoots = 10;
@@ -117,8 +117,8 @@ public class DecreeSettings implements DecreeCommandExecutor {
             )
             Boolean enable
     ){
-        nullOnFailure = enable == null ? !nullOnFailure : enable;
-        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "null on failure " + C.GREEN + "to: " + C.GOLD + nullOnFailure);
+        DecreeSystem.settings.nullOnFailure = enable == null ? !DecreeSystem.settings.nullOnFailure : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "null on failure " + C.GREEN + "to: " + C.GOLD + DecreeSystem.settings.nullOnFailure);
         save();
     }
     public boolean nullOnFailure = false;
@@ -131,8 +131,8 @@ public class DecreeSettings implements DecreeCommandExecutor {
             )
                     Boolean enable
     ){
-        pickFirstOnMultiple = enable == null ? !pickFirstOnMultiple : enable;
-        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "pick first on multiple " + C.GREEN + "to: " + C.GOLD + pickFirstOnMultiple);
+        DecreeSystem.settings.pickFirstOnMultiple = enable == null ? !DecreeSystem.settings.pickFirstOnMultiple : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "pick first on multiple " + C.GREEN + "to: " + C.GOLD + DecreeSystem.settings.pickFirstOnMultiple);
         save();
     }
     public boolean pickFirstOnMultiple = false;
@@ -145,8 +145,8 @@ public class DecreeSettings implements DecreeCommandExecutor {
             )
                     String prefix
     ){
-        this.prefix = prefix;
-        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "decree prefix " + C.GREEN + "to: " + this.prefix + C.RESET + " ");
+        DecreeSystem.settings.prefix = prefix;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "decree prefix " + C.GREEN + "to: " + DecreeSystem.settings.prefix + C.RESET + " ");
         save();
     }
     public String prefix = C.RED + "[" + C.GREEN + "Decree" + C.RED + "]" + C.RESET;
