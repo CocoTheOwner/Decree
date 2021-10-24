@@ -148,21 +148,22 @@ public class DecreeCategory implements Decreed {
 
         for (DecreeCategory subCat : getSubCats()) {
             switch (subCat.doesMatch(in, sender)) {
-                case 3: s3.add(subCat);
-                case 2: s2.add(subCat);
-                case 1: s1.add(subCat);
+                case 3 -> s3.add(subCat);
+                case 2 -> s2.add(subCat);
+                case 1 -> s1.add(subCat);
             }
         }
 
         for (DecreeCommand command : getCommands()) {
             switch (command.doesMatch(in, sender)) {
-                case 3: s3.add(command);
-                case 2: s2.add(command);
-                case 1: s1.add(command);
+                case 3 -> s3.add(command);
+                case 2 -> s2.add(command);
+                case 1 -> s1.add(command);
             }
         }
-
-        return matches.qAddAll(s3).qAddAll(s2).qAddAll(s1).qremoveDuplicates();
+        matches.qAddAll(s3).forEach(s2::remove);
+        matches.qAddAll(s2).forEach(s1::remove);
+        return matches.qAddAll(s1);
     }
 
     /**
@@ -256,7 +257,9 @@ public class DecreeCategory implements Decreed {
             sendHelpTo(sender);
             return true;
         }
-        for (Decreed decreed : matchAll(args.get(0), sender)) {
+        KList<Decreed> matches = matchAll(args.get(0), sender);
+        debug(matches.convert(Decreed::getShortestName).toString(", "), C.YELLOW);
+        for (Decreed decreed : matches) {
             // If there are no allowed / visible nodes in a category, do not show
             if (decreed instanceof DecreeCategory c) {
                 if (c.matchAll(null, sender).isEmpty()) {
