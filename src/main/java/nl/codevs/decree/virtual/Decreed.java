@@ -149,7 +149,8 @@ public interface Decreed {
      * 1 if allowed and the input contains a name<br>
      * 2 if allowed and a name contains the input<br>
      * 3 if allowed and the input is a 1:1 match with a name, or the input is null/empty.<br>
-     * <i>Name/names includes aliases.</i>
+     * <i>Name/names includes aliases.</i><br>
+     * Higher number = better
      *
      */
     default int doesMatch(String in, DecreeSender sender){
