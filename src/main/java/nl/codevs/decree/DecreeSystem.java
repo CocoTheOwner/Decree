@@ -13,6 +13,7 @@ import nl.codevs.decree.util.*;
 import nl.codevs.decree.virtual.Decree;
 import nl.codevs.decree.virtual.DecreeCategory;
 import nl.codevs.decree.virtual.Decreed;
+import org.apache.commons.lang.time.StopWatch;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -114,6 +115,10 @@ public class DecreeSystem implements Listener {
         KList<String> args = new KList<>(arguments);
         KList<String> completions = new KList<>();
 
+        if (!args.getLast().equalsIgnoreCase(" ")) {
+            return new KList<>();
+        }
+
         sender.sendMessage("Command: '" + command.getName() + "'");
         sender.sendMessage("Arguments: '" + args.toString(", ") + "'");
 
@@ -125,7 +130,10 @@ public class DecreeSystem implements Listener {
     @SuppressWarnings({"deprecation", "SameReturnValue"})
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String[] arguments) {
         Bukkit.getScheduler().scheduleAsyncDelayedTask(getInstance(), () -> {
-
+            StopWatch s = new StopWatch();
+            if (DecreeSystem.settings.debugRuntime) {
+                s.start();
+            }
             settings = settings.hotload();
 
             KList<String> args = new KList<>(arguments).qremoveIf(String::isEmpty);
@@ -135,11 +143,19 @@ public class DecreeSystem implements Listener {
             for (Decreed root : roots.get(command.getName())) {
                 if (root.run(args, sender)) {
                     playSound(true, SFX.Command, sender);
+                    if (DecreeSystem.settings.debugRuntime) {
+                        debug(C.GREEN + "Running command took: " + C.GOLD + s.getTime() + "ms");
+                        s.stop();
+                    }
                     return;
                 }
             }
 
             playSound(false, SFX.Command, sender);
+            if (DecreeSystem.settings.debugRuntime) {
+                debug(C.GREEN + "Running command took: " + C.GOLD + s.getTime());
+                s.stop();
+            }
         });
         return true;
     }

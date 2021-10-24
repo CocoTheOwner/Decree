@@ -68,6 +68,20 @@ public class DecreeSettings implements DecreeCommandExecutor {
     }
     public boolean debug = false;
 
+    @Decree(description = "Whether to send debug runtime messages or not")
+    public void debugRuntime(
+            @Param(
+                    description = "Whether to set this setting to true or false",
+                    defaultValue = "toggle"
+            )
+                    Boolean enable
+    ){
+        debugRuntime = enable == null ? !debugRuntime : enable;
+        sender().sendMessage(C.GREEN + "Set " + C.GOLD + "debugRuntime " + C.GREEN + "to: " + C.GOLD + debugRuntime);
+        save();
+    }
+    public boolean debugRuntime;
+
     @Decree(description = "Whether to debug matching or not. This is also ran on tab completion.")
     public void debugMatching(
             @Param(
